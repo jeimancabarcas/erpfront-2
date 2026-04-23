@@ -1,12 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [MatListModule, MatIconModule, RouterLink, RouterLinkActive],
+  imports: [MatListModule, MatIconModule, MatButtonModule, MatExpansionModule, RouterLink, RouterLinkActive],
   template: `
     <div class="h-full bg-white border-r border-gray-100 w-64 flex flex-col py-6">
       <div class="px-6 mb-8 text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -50,6 +52,63 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
             <span class="text-sm font-bold tracking-wide">Ventas</span>
           </div>
         </a>
+
+        <!-- Pediatric Module Collapsible -->
+        <mat-accordion class="sidebar-accordion" multi>
+          <mat-expansion-panel 
+            class="!shadow-none !bg-transparent !border-none"
+            [expanded]="isPediatricsActive()"
+          >
+            <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 !rounded-full group">
+              <mat-panel-title class="flex items-center gap-4">
+                <mat-icon 
+                  class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
+                  [class.!text-indigo-900]="isPediatricsActive()"
+                >child_care</mat-icon>
+                <span 
+                  class="text-sm font-bold tracking-wide text-gray-700"
+                  [class.text-indigo-900]="isPediatricsActive()"
+                >Pediatría</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <nav class="flex flex-col gap-2 mt-2 pl-4">
+              <a 
+                mat-list-item 
+                routerLink="/pediatrics/patients" 
+                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+              >
+                <div class="flex items-center gap-3 px-4">
+                  <mat-icon class="!text-gray-400 !text-[20px]">groups</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Pacientes</span>
+                </div>
+              </a>
+              <a 
+                mat-list-item 
+                routerLink="/pediatrics/consultations" 
+                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+              >
+                <div class="flex items-center gap-3 px-4">
+                  <mat-icon class="!text-gray-400 !text-[20px]">medical_services</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Consultas</span>
+                </div>
+              </a>
+              <a 
+                mat-list-item 
+                routerLink="/pediatrics/agenda" 
+                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+              >
+                <div class="flex items-center gap-3 px-4">
+                  <mat-icon class="!text-gray-400 !text-[20px]">calendar_today</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Agenda</span>
+                </div>
+              </a>
+            </nav>
+          </mat-expansion-panel>
+        </mat-accordion>
       </nav>
 
       <div class="px-6 mt-auto">
@@ -68,9 +127,21 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       display: block;
       height: 100%;
     }
-    ::ng-deep .mat-mdc-list-item {
-      padding: 0 12px !important;
+    ::ng-deep .sidebar-accordion .mat-expansion-panel-body {
+      padding: 0 !important;
+    }
+    ::ng-deep .sidebar-accordion .mat-expansion-indicator::after {
+      color: #94a3b8;
+    }
+    ::ng-deep .sidebar-accordion .mat-expansion-panel-header-title {
+      margin-right: 0;
     }
   `]
 })
-export class SidebarComponent {}
+export class SidebarComponent {
+  private router = inject(Router);
+
+  isPediatricsActive(): boolean {
+    return this.router.url.includes('/pediatrics');
+  }
+}
