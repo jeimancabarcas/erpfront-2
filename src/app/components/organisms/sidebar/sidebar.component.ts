@@ -38,6 +38,18 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
             <span class="text-sm font-bold tracking-wide">Inventario</span>
           </div>
         </a>
+
+        <a 
+          mat-list-item 
+          routerLink="/sales" 
+          routerLinkActive="!bg-indigo-100 !text-indigo-900" 
+          class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group"
+        >
+          <div class="flex items-center gap-4 px-4">
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]">shopping_cart</mat-icon>
+            <span class="text-sm font-bold tracking-wide">Ventas</span>
+          </div>
+        </a>
       </nav>
 
       <div class="px-6 mt-auto">

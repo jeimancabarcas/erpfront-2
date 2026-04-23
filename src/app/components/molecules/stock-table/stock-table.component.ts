@@ -6,11 +6,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { InventoryService, StockItem } from '../../../services/inventory.service';
 import { ProductFormMolecule } from '../product-form/product-form.component';
+import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
 
 @Component({
   selector: 'app-stock-table',
   standalone: true,
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatChipsModule],
+  imports: [MatTableModule, MatButtonModule, MatIconModule, MatChipsModule, StatusTagAtom],
   template: `
     <div class="overflow-x-auto">
       <table mat-table [dataSource]="inventoryService.stock()" class="w-full">
@@ -42,12 +43,7 @@ import { ProductFormMolecule } from '../product-form/product-form.component';
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Estado</th>
           <td mat-cell *matCellDef="let item">
-            <span 
-              class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              [class]="getStatusClass(item.status)"
-            >
-              {{item.status}}
-            </span>
+            <app-status-tag [label]="item.status" [color]="getStatusColor(item.status)" />
           </td>
         </ng-container>
 
@@ -57,9 +53,6 @@ import { ProductFormMolecule } from '../product-form/product-form.component';
           <td mat-cell *matCellDef="let item" class="text-right">
             <button mat-icon-button (click)="editProduct(item)" class="!text-gray-400">
               <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button class="!text-gray-400">
-              <mat-icon>more_vert</mat-icon>
             </button>
           </td>
         </ng-container>
@@ -97,12 +90,12 @@ export class StockTableMolecule {
     });
   }
 
-  getStatusClass(status: string): string {
+  getStatusColor(status: string): 'green' | 'amber' | 'red' | 'gray' {
     switch (status) {
-      case 'In Stock': return 'bg-green-100 text-green-700';
-      case 'Low Stock': return 'bg-amber-100 text-amber-700';
-      case 'Out of Stock': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'In Stock': return 'green';
+      case 'Low Stock': return 'amber';
+      case 'Out of Stock': return 'red';
+      default: return 'gray';
     }
   }
 }
