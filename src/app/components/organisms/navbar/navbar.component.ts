@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,7 +6,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { LogoComponent } from '../../atoms/logo/logo.component';
 import { AuthService } from '../../../services/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -17,37 +17,43 @@ import { Router } from '@angular/router';
     MatIconModule, 
     MatMenuModule, 
     MatBadgeModule,
-    LogoComponent
+    LogoComponent,
+    RouterLink
   ],
   template: `
-    <mat-toolbar class="!bg-white !border-b !border-gray-100 !px-6 flex justify-between items-center !h-16 shadow-sm sticky top-0 z-50">
-      <div class="flex items-center gap-4">
+    <mat-toolbar class="!bg-white !border-b !border-gray-100 !px-4 md:!px-6 flex justify-between items-center !h-[64px] shadow-sm sticky top-0 z-50">
+      <div class="flex items-center gap-2 md:gap-4">
+        @if (showMenuButton()) {
+          <button mat-icon-button (click)="toggleSidebar.emit()" class="!text-gray-600">
+            <mat-icon>menu</mat-icon>
+          </button>
+        }
         <app-logo />
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1 md:gap-2">
         <!-- Notifications -->
-        <button mat-icon-button class="!text-gray-600 hover:!bg-gray-50 transition-colors">
+        <button mat-icon-button class="!text-gray-600 hover:!bg-gray-100 transition-colors">
           <mat-icon matBadge="3" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
         </button>
 
         <!-- User Menu -->
-        <button mat-button [matMenuTriggerFor]="userMenu" class="!px-2 !rounded-full hover:!bg-gray-50 transition-colors">
+        <button mat-button [matMenuTriggerFor]="userMenu" class="!px-2 md:!px-3 !h-10 !rounded-full hover:!bg-gray-100 transition-colors">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm">
+            <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
               JD
             </div>
-            <span class="hidden md:block font-medium text-gray-700">John Doe</span>
-            <mat-icon class="!text-gray-400">expand_more</mat-icon>
+            <span class="hidden sm:block text-sm font-medium text-gray-700">John Doe</span>
+            <mat-icon class="!text-gray-400 !m-0 !w-5 !h-5 !text-[20px]">expand_more</mat-icon>
           </div>
         </button>
 
-        <mat-menu #userMenu="matMenu" class="!rounded-2xl !mt-2 !shadow-xl !border !border-gray-100">
-          <div class="px-4 py-3 border-b border-gray-100">
-            <p class="text-sm font-semibold text-gray-900">John Doe</p>
+        <mat-menu #userMenu="matMenu" xPosition="before" class="!rounded-[28px] !mt-2 !shadow-2xl !border !border-gray-100">
+          <div class="px-6 py-4 border-b border-gray-100">
+            <p class="text-sm font-bold text-gray-900">John Doe</p>
             <p class="text-xs text-gray-500">admin@erp.com</p>
           </div>
-          <button mat-menu-item class="!py-2">
+          <button mat-menu-item class="!py-2" routerLink="/profile">
             <mat-icon>person</mat-icon>
             <span>Mi Perfil</span>
           </button>
@@ -76,6 +82,9 @@ import { Router } from '@angular/router';
 export class NavbarComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+
+  showMenuButton = input<boolean>(false);
+  toggleSidebar = output<void>();
 
   logout() {
     this.authService.logout();

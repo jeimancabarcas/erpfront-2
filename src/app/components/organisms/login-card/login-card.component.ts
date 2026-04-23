@@ -7,11 +7,11 @@ import { LoginFormComponent } from '../../molecules/login-form/login-form.compon
   standalone: true,
   imports: [LogoComponent, LoginFormComponent],
   template: `
-    <div class="bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 w-full max-w-md mx-auto">
+    <div class="bg-white/90 backdrop-blur-xl p-8 md:p-12 rounded-[28px] shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-gray-100 w-full max-w-md mx-auto">
       <div class="flex flex-col items-center mb-10">
-        <app-logo class="mb-6" />
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Bienvenido de nuevo</h1>
-        <p class="text-gray-500 mt-2 font-medium">Ingresa tus credenciales para acceder</p>
+        <app-logo class="mb-8" />
+        <h1 class="text-[22px] leading-7 font-bold text-gray-900 tracking-tight">Bienvenido de nuevo</h1>
+        <p class="text-sm text-gray-500 mt-2 font-medium">Ingresa tus credenciales para acceder</p>
       </div>
       
       <app-login-form />

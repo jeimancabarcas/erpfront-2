@@ -6,15 +6,30 @@
       "sourceType": "github",
       "computedHash": "13f864392379685bb8935f93989ac3c08c74e36391499d2748e8e0657ef0ee90"
     },
+    "angular-material": {
+      "source": "pluginagentmarketplace/custom-plugin-angular",
+      "sourceType": "github",
+      "computedHash": "539a70d810937d554a65be260d6bc28a85ad6515f8e84457303472bed7deceba"
+    },
     "atomic-design-fundamentals": {
       "source": "thebushidocollective/han",
       "sourceType": "github",
       "computedHash": "ae644e79c53f1b450aaf5fd662459da1d66402112230e5b8d4881f8deff981ba"
     },
+    "google-material-design": {
+      "source": "copyleftdev/sk1llz",
+      "sourceType": "github",
+      "computedHash": "b8587db93252e6d89e7a491a65c1cdc41a68b97dd72c6c7b870af011bf922813"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
       "computedHash": "6337038fe1fe6bbe1b9f252ab678ee575859190bab6f0f246f4061824eb40875"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474"
     }
   }
 }

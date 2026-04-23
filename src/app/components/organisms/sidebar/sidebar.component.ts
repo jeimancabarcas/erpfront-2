@@ -13,17 +13,29 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         Menú Principal
       </div>
 
-      <nav class="flex-1 px-4 space-y-1">
+      <nav class="flex-1 px-3 space-y-1">
         <a 
           mat-list-item 
           routerLink="/dashboard" 
-          routerLinkActive="!bg-indigo-50 !text-indigo-700" 
+          routerLinkActive="!bg-indigo-100 !text-indigo-900" 
           [routerLinkActiveOptions]="{exact: true}"
-          class="!rounded-xl !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+          class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group"
         >
-          <div class="flex items-center gap-3">
-            <mat-icon class="!text-gray-400 group-[.active]:!text-indigo-600">dashboard</mat-icon>
-            <span class="font-medium">Inicio</span>
+          <div class="flex items-center gap-4 px-4">
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]">dashboard</mat-icon>
+            <span class="text-sm font-bold tracking-wide">Inicio</span>
+          </div>
+        </a>
+
+        <a 
+          mat-list-item 
+          routerLink="/inventory" 
+          routerLinkActive="!bg-indigo-100 !text-indigo-900" 
+          class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group"
+        >
+          <div class="flex items-center gap-4 px-4">
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]">inventory_2</mat-icon>
+            <span class="text-sm font-bold tracking-wide">Inventario</span>
           </div>
         </a>
       </nav>

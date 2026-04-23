@@ -39,7 +39,7 @@ import { AuthService } from '../../../services/auth.service';
         <button 
           mat-flat-button 
           color="primary"
-          class="w-full !py-6 !text-lg !font-semibold !rounded-xl transition-all duration-200 active:scale-[0.98]"
+          class="w-full !py-6 !text-lg !font-bold !rounded-full transition-all duration-200 active:scale-[0.98]"
           [disabled]="isLoading()"
           (click)="handleLogin()"
         >

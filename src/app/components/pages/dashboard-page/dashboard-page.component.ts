@@ -17,13 +17,13 @@ import { MatIconModule } from '@angular/material/icon';
       <!-- Modules Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (module of modules; track module.title) {
-          <mat-card class="!rounded-3xl !border-none !shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:!shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all cursor-pointer group overflow-hidden">
-            <div class="p-6">
-              <div class="w-12 h-12 [background:{{module.color}}20] rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-300">
-                <mat-icon [style.color]="module.color">{{module.icon}}</mat-icon>
+          <mat-card class="!rounded-[28px] !border-none !shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:!shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all cursor-pointer group overflow-hidden bg-white">
+            <div class="p-8">
+              <div class="w-14 h-14 [background:{{module.color}}15] rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-300">
+                <mat-icon class="!text-[28px]" [style.color]="module.color">{{module.icon}}</mat-icon>
               </div>
-              <h3 class="text-lg font-bold text-gray-900 mb-1">{{module.title}}</h3>
-              <p class="text-gray-500 text-sm leading-relaxed mb-4">{{module.description}}</p>
+              <h3 class="text-lg font-bold text-gray-900 mb-2">{{module.title}}</h3>
+              <p class="text-sm text-gray-500 leading-relaxed mb-6">{{module.description}}</p>
               
               <div class="flex items-center text-xs font-bold uppercase tracking-wider" [style.color]="module.color">
                 Acceder al módulo
