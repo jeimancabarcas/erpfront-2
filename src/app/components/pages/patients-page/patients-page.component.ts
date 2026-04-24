@@ -3,13 +3,20 @@ import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashb
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PediatricsService } from '../../../services/pediatrics.service';
-import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
+import { PatientRegistrationWizardOrganism } from '../../organisms/patient-registration-wizard/patient-registration-wizard.component';
 
 @Component({
   selector: 'app-patients-page',
   standalone: true,
-  imports: [DashboardLayoutComponent, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [
+    DashboardLayoutComponent, 
+    MatTableModule, 
+    MatButtonModule, 
+    MatIconModule,
+    MatDialogModule
+  ],
   template: `
     <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
@@ -17,7 +24,12 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Pacientes</h1>
           <p class="text-gray-500 font-medium">Registro y gestión de pacientes pediátricos.</p>
         </div>
-        <button mat-flat-button color="primary" class="!rounded-full !h-12 !px-6 !font-bold">
+        <button 
+          mat-flat-button 
+          color="primary" 
+          (click)="openRegistrationWizard()"
+          class="!rounded-full !h-12 !px-6 !font-bold"
+        >
           <mat-icon class="mr-2">person_add</mat-icon>
           Nuevo Paciente
         </button>
@@ -32,7 +44,7 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
 
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Nombre</th>
-            <td mat-cell *matCellDef="let p" class="font-bold text-gray-900">{{p.name}}</td>
+            <td mat-cell *matCellDef="let p" class="font-bold text-gray-900">{{p.firstNames}} {{p.lastNames}}</td>
           </ng-container>
 
           <ng-container matColumnDef="age">
@@ -40,19 +52,16 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
             <td mat-cell *matCellDef="let p" class="text-gray-500">{{p.birthDate}}</td>
           </ng-container>
 
-          <ng-container matColumnDef="parent">
-            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Acudiente</th>
-            <td mat-cell *matCellDef="let p" class="text-gray-700">{{p.parentName}}</td>
+          <ng-container matColumnDef="idNumber">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Identificación</th>
+            <td mat-cell *matCellDef="let p" class="text-gray-700">{{p.idType}} {{p.idNumber}}</td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let p" class="text-right">
-              <button mat-icon-button class="!text-gray-400">
+            <td mat-cell *matCellDef="let p" class="text-right px-4">
+              <button mat-icon-button (click)="openRegistrationWizard(p)" class="!text-gray-400">
                 <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button class="!text-indigo-600 !bg-indigo-50 !rounded-xl ml-2">
-                <mat-icon>history</mat-icon>
               </button>
             </td>
           </ng-container>
@@ -71,5 +80,17 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
 })
 export class PatientsPageComponent {
   pediatricsService = inject(PediatricsService);
-  displayedColumns: string[] = ['id', 'name', 'age', 'parent', 'actions'];
+  private dialog = inject(MatDialog);
+  
+  displayedColumns: string[] = ['id', 'name', 'age', 'idNumber', 'actions'];
+
+  openRegistrationWizard(patient?: any) {
+    this.dialog.open(PatientRegistrationWizardOrganism, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: patient
+    });
+  }
 }

@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { PatientsPageComponent } from './components/pages/patients-page/patients-page.component';
-import { ConsultationsPageComponent } from './components/pages/consultations-page/consultations-page.component';
 import { AgendaPageComponent } from './components/pages/agenda-page/agenda-page.component';
 
 export const routes: Routes = [
@@ -27,10 +26,6 @@ export const routes: Routes = [
   { 
     path: 'pediatrics/patients', 
     loadComponent: () => import('./components/pages/patients-page/patients-page.component').then(m => m.PatientsPageComponent) 
-  },
-  { 
-    path: 'pediatrics/consultations', 
-    loadComponent: () => import('./components/pages/consultations-page/consultations-page.component').then(m => m.ConsultationsPageComponent) 
   },
   { 
     path: 'pediatrics/agenda', 

@@ -2,13 +2,32 @@ import { Injectable, signal } from '@angular/core';
 
 export interface Patient {
   id: string;
-  name: string;
+  firstNames: string;
+  lastNames: string;
   birthDate: string;
-  parentName: string;
-  phone: string;
-  gender: 'M' | 'F';
-  weight?: number;
-  height?: number;
+  idType: string;
+  idNumber: string;
+  address: string;
+  city: string;
+  country: string;
+  eps: string;
+  healthRegime: string;
+  gender: 'M' | 'F' | 'O';
+  zone: string;
+  postalCode?: string;
+  birthPlace: string;
+  observations?: string;
+  fatherName?: string;
+  motherName?: string;
+  fatherPhone?: string;
+  motherPhone?: string;
+  motherEmail?: string;
+  fatherEmail?: string;
+  fatherOccupation?: string;
+  motherOccupation?: string;
+  siblings?: string;
+  birthWeight?: number;
+  birthHeight?: number;
 }
 
 export interface Consultation {
@@ -36,8 +55,38 @@ export interface Appointment {
 })
 export class PediatricsService {
   private _patients = signal<Patient[]>([
-    { id: 'P-001', name: 'Mateo Garcia', birthDate: '2020-05-15', parentName: 'Ana Maria', phone: '3001234567', gender: 'M', weight: 15, height: 95 },
-    { id: 'P-002', name: 'Sofia Rodriguez', birthDate: '2022-08-10', parentName: 'Carlos Perez', phone: '3119876543', gender: 'F', weight: 10, height: 80 },
+    { 
+      id: 'P-001', 
+      firstNames: 'Mateo', 
+      lastNames: 'Garcia', 
+      birthDate: '2020-05-15', 
+      idType: 'RC', 
+      idNumber: '123456789', 
+      address: 'Calle 123', 
+      city: 'Bogotá', 
+      country: 'Colombia', 
+      eps: 'Sura', 
+      healthRegime: 'Contributivo', 
+      gender: 'M', 
+      zone: 'Urbana', 
+      birthPlace: 'Clínica del Prado' 
+    },
+    { 
+      id: 'P-002', 
+      firstNames: 'Sofia', 
+      lastNames: 'Rodriguez', 
+      birthDate: '2022-08-10', 
+      idType: 'RC', 
+      idNumber: '987654321', 
+      address: 'Carrera 45', 
+      city: 'Medellín', 
+      country: 'Colombia', 
+      eps: 'Sanitas', 
+      healthRegime: 'Contributivo', 
+      gender: 'F', 
+      zone: 'Urbana', 
+      birthPlace: 'Hospital General' 
+    },
   ]);
 
   private _consultations = signal<Consultation[]>([
@@ -67,5 +116,9 @@ export class PediatricsService {
 
   updateAppointmentStatus(id: string, status: Appointment['status']) {
     this._appointments.update(items => items.map(a => a.id === id ? { ...a, status } : a));
+  }
+
+  updatePatient(updatedPatient: Patient) {
+    this._patients.update(items => items.map(p => p.id === updatedPatient.id ? updatedPatient : p));
   }
 }

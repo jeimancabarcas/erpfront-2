@@ -4,13 +4,23 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PediatricsService, Appointment } from '../../../services/pediatrics.service';
 import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
+import { AppointmentFormOrganism } from '../../organisms/appointment-form/appointment-form.component';
 
 @Component({
   selector: 'app-agenda-page',
   standalone: true,
-  imports: [DashboardLayoutComponent, MatTableModule, MatButtonModule, MatIconModule, MatMenuModule, StatusTagAtom],
+  imports: [
+    DashboardLayoutComponent, 
+    MatTableModule, 
+    MatButtonModule, 
+    MatIconModule, 
+    MatMenuModule, 
+    MatDialogModule,
+    StatusTagAtom
+  ],
   template: `
     <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
@@ -18,7 +28,12 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Agenda Médica</h1>
           <p class="text-gray-500 font-medium">Programación y seguimiento de citas pediátricas.</p>
         </div>
-        <button mat-flat-button color="primary" class="!rounded-full !h-12 !px-6 !font-bold">
+        <button 
+          mat-flat-button 
+          color="primary" 
+          (click)="openAppointmentForm()"
+          class="!rounded-full !h-12 !px-6 !font-bold"
+        >
           <mat-icon class="mr-2">add_task</mat-icon>
           Nueva Cita
         </button>
@@ -89,6 +104,7 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
 })
 export class AgendaPageComponent {
   pediatricsService = inject(PediatricsService);
+  private dialog = inject(MatDialog);
   displayedColumns: string[] = ['time', 'patient', 'type', 'status', 'actions'];
 
   getStatusColor(status: string): 'green' | 'amber' | 'red' | 'blue' | 'gray' {
@@ -103,5 +119,13 @@ export class AgendaPageComponent {
 
   updateStatus(id: string, status: Appointment['status']) {
     this.pediatricsService.updateAppointmentStatus(id, status);
+  }
+
+  openAppointmentForm() {
+    this.dialog.open(AppointmentFormOrganism, {
+      width: '500px',
+      maxWidth: '95vw',
+      disableClose: true
+    });
   }
 }

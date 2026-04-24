@@ -86,24 +86,13 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
               </a>
               <a 
                 mat-list-item 
-                routerLink="/pediatrics/consultations" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 !text-[20px]">medical_services</mat-icon>
-                  <span class="text-xs font-bold tracking-wide">Consultas</span>
-                </div>
-              </a>
-              <a 
-                mat-list-item 
                 routerLink="/pediatrics/agenda" 
                 routerLinkActive="!bg-indigo-50 !text-indigo-600" 
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
                   <mat-icon class="!text-gray-400 !text-[20px]">calendar_today</mat-icon>
-                  <span class="text-xs font-bold tracking-wide">Agenda</span>
+                  <span class="text-xs font-bold tracking-wide">Agenda Médica</span>
                 </div>
               </a>
             </nav>
