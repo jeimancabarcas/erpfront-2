@@ -32,6 +32,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/pages/patient-detail-page/patient-detail-page.component').then(m => m.PatientDetailPageComponent) 
   },
   { 
+    path: 'pediatrics/patients/:id/consultation/new', 
+    loadComponent: () => import('./components/pages/consultation-page/consultation-page.component').then(m => m.ConsultationPageComponent) 
+  },
+  { 
     path: 'pediatrics/agenda', 
     loadComponent: () => import('./components/pages/agenda-page/agenda-page.component').then(m => m.AgendaPageComponent) 
   },

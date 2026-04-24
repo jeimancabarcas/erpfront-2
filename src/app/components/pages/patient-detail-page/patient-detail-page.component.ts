@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -54,6 +54,16 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
               </div>
             </div>
           </div>
+
+          <button 
+            mat-flat-button 
+            color="primary" 
+            class="!rounded-full !h-14 !px-10 !font-black !text-lg !shadow-xl !shadow-indigo-100"
+            (click)="goToNewConsultation()"
+          >
+            <mat-icon class="mr-2 !w-6 !h-6 !text-[24px]">add_circle</mat-icon>
+            Nueva Consulta
+          </button>
         </div>
       </header>
 
@@ -126,6 +136,7 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
 })
 export class PatientDetailPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private pediatricsService = inject(PediatricsService);
   
   patient = signal<Patient | undefined>(undefined);
@@ -140,6 +151,13 @@ export class PatientDetailPageComponent implements OnInit {
     if (id) {
       const found = this.pediatricsService.patients().find(p => p.id === id);
       this.patient.set(found);
+    }
+  }
+
+  goToNewConsultation(): void {
+    const id = this.patient()?.id;
+    if (id) {
+      this.router.navigate(['/pediatrics/patients', id, 'consultation', 'new']);
     }
   }
 }
