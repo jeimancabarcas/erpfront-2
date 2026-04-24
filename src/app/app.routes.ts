@@ -28,6 +28,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/pages/patients-page/patients-page.component').then(m => m.PatientsPageComponent) 
   },
   { 
+    path: 'pediatrics/patients/:id', 
+    loadComponent: () => import('./components/pages/patient-detail-page/patient-detail-page.component').then(m => m.PatientDetailPageComponent) 
+  },
+  { 
     path: 'pediatrics/agenda', 
     loadComponent: () => import('./components/pages/agenda-page/agenda-page.component').then(m => m.AgendaPageComponent) 
   },

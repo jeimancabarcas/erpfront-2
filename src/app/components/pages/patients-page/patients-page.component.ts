@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PediatricsService } from '../../../services/pediatrics.service';
 import { PatientRegistrationWizardOrganism } from '../../organisms/patient-registration-wizard/patient-registration-wizard.component';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-patients-page',
@@ -15,7 +16,8 @@ import { PatientRegistrationWizardOrganism } from '../../organisms/patient-regis
     MatTableModule, 
     MatButtonModule, 
     MatIconModule,
-    MatDialogModule
+    MatDialogModule,
+    RouterLink
   ],
   template: `
     <app-dashboard-layout>
@@ -60,6 +62,9 @@ import { PatientRegistrationWizardOrganism } from '../../organisms/patient-regis
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let p" class="text-right px-4">
+              <a mat-icon-button [routerLink]="['/pediatrics/patients', p.id]" class="!text-indigo-600 !bg-indigo-50 !rounded-xl mr-2">
+                <mat-icon>visibility</mat-icon>
+              </a>
               <button mat-icon-button (click)="openRegistrationWizard(p)" class="!text-gray-400">
                 <mat-icon>edit</mat-icon>
               </button>

@@ -28,6 +28,11 @@ export interface Patient {
   siblings?: string;
   birthWeight?: number;
   birthHeight?: number;
+  cephalicPerimeter?: number;
+  thoracicPerimeter?: number;
+  neonatalNotes?: string;
+  personalBackground?: string;
+  familyBackground?: string;
 }
 
 export interface Consultation {
