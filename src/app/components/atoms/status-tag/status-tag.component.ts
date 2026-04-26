@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
   template: `
     <span 
       class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center"
-      [ngClass]="colorClasses()"
+      [class]="colorClasses()"
     >
       {{ label() }}
     </span>
@@ -23,7 +23,7 @@ export class StatusTagAtom {
   label = input.required<string>();
   color = input.required<'green' | 'amber' | 'red' | 'blue' | 'gray'>();
 
-  colorClasses() {
+  colorClasses = computed(() => {
     switch (this.color()) {
       case 'green': return 'bg-green-100 text-green-700';
       case 'amber': return 'bg-amber-100 text-amber-700';
@@ -31,5 +31,5 @@ export class StatusTagAtom {
       case 'blue': return 'bg-blue-100 text-blue-700';
       default: return 'bg-gray-100 text-gray-700';
     }
-  }
+  });
 }

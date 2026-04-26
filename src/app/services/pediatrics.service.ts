@@ -1,4 +1,14 @@
 import { Injectable, signal } from '@angular/core';
+import { 
+  AnamnesisData, 
+  PhysicalExamData, 
+  DiagnosticsData, 
+  DiagnosticItem, 
+  PrescriptionData, 
+  ProcedureData, 
+  OtherTechnologyData, 
+  IncapacityData 
+} from '../models/consultation.model';
 
 export interface Patient {
   id: string;
@@ -40,9 +50,17 @@ export interface Consultation {
   patientId: string;
   patientName: string;
   date: string;
-  reason: string;
-  diagnosis: string;
   status: 'Pending' | 'Completed';
+  
+  // Clinical Data
+  anamnesis: AnamnesisData;
+  physicalExam: PhysicalExamData;
+  diagnostics: DiagnosticsData;
+  secondaryDiagnoses: DiagnosticItem[];
+  prescriptions: PrescriptionData[];
+  procedures: ProcedureData[];
+  otherTechnologies: OtherTechnologyData[];
+  incapacity: IncapacityData;
 }
 
 export interface Appointment {
@@ -95,7 +113,34 @@ export class PediatricsService {
   ]);
 
   private _consultations = signal<Consultation[]>([
-    { id: 'C-001', patientId: 'P-001', patientName: 'Mateo Garcia', date: '2026-04-23', reason: 'Fiebre y tos', diagnosis: 'Gripe común', status: 'Completed' },
+    { 
+      id: 'C-001', 
+      patientId: 'P-001', 
+      patientName: 'Mateo Garcia', 
+      date: '2026-04-20', 
+      status: 'Completed',
+      anamnesis: {
+        reason: 'Control de crecimiento y desarrollo',
+        currentIllness: 'Paciente asintomático, madre refiere adecuado apetito y sueño. Sin novedades desde la última consulta.'
+      },
+      physicalExam: {
+        weight: 15.5,
+        height: 102,
+        temperature: 36.5,
+        findings: 'Buen estado general, hidratado, eupneico. Ruidos cardiacos rítmicos, pulmones limpios. Abdomen blando, no doloroso.'
+      },
+      diagnostics: {
+        principalCode: 'Z00.1',
+        principalDescription: 'Control de salud de rutina del niño'
+      },
+      secondaryDiagnoses: [],
+      prescriptions: [
+        { code: 'V-001', name: 'Multivitamínico Jarabe', dose: '5ml', frequency: 'Cada 24 horas', route: 'Oral', duration: '30 días', observations: 'Administrar con el desayuno' }
+      ],
+      procedures: [],
+      otherTechnologies: [],
+      incapacity: { days: null, type: 'Enfermedad General', specialLicense: 'Ninguna', recommendations: '' }
+    },
   ]);
 
   private _appointments = signal<Appointment[]>([
