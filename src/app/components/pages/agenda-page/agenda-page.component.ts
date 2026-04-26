@@ -1,29 +1,34 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
-import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PediatricsService, Appointment } from '../../../services/pediatrics.service';
-import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
+import { BillingService } from '../../../services/billing.service';
 import { AppointmentFormOrganism } from '../../organisms/appointment-form/appointment-form.component';
+import { AppointmentConfirmationDialogOrganism } from '../../organisms/appointment-confirmation-dialog/appointment-confirmation-dialog.component';
+import { AppointmentCancellationDialogOrganism } from '../../organisms/appointment-cancellation-dialog/appointment-cancellation-dialog.component';
+import { AppointmentFiltersMolecule } from '../../molecules/appointment-filters/appointment-filters.component';
+import { AppointmentTableOrganism } from '../../organisms/appointment-table/appointment-table.component';
 
 @Component({
   selector: 'app-agenda-page',
   standalone: true,
   imports: [
+    CommonModule,
     DashboardLayoutComponent, 
-    MatTableModule, 
     MatButtonModule, 
     MatIconModule, 
-    MatMenuModule, 
     MatDialogModule,
-    StatusTagAtom
+    MatSnackBarModule,
+    AppointmentFiltersMolecule,
+    AppointmentTableOrganism
   ],
   template: `
     <app-dashboard-layout>
-      <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+      <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Agenda Médica</h1>
           <p class="text-gray-500 font-medium">Programación y seguimiento de citas pediátricas.</p>
@@ -32,93 +37,144 @@ import { AppointmentFormOrganism } from '../../organisms/appointment-form/appoin
           mat-flat-button 
           color="primary" 
           (click)="openAppointmentForm()"
-          class="!rounded-full !h-12 !px-6 !font-bold"
+          class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
         >
           <mat-icon class="mr-2">add_task</mat-icon>
           Nueva Cita
         </button>
       </header>
 
-      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
-        <table mat-table [dataSource]="pediatricsService.appointments()" class="w-full">
-          <ng-container matColumnDef="time">
-            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Hora</th>
-            <td mat-cell *matCellDef="let a" class="font-bold text-indigo-600">{{a.time}}</td>
-          </ng-container>
+      <!-- Filter Bar Molecule -->
+      <app-appointment-filters 
+        class="block mb-8"
+        [(searchQuery)]="searchQuery"
+        [(statusFilter)]="statusFilter"
+        [(dateFilter)]="dateFilter"
+        (clear)="clearFilters()"
+      />
 
-          <ng-container matColumnDef="patient">
-            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Paciente</th>
-            <td mat-cell *matCellDef="let a" class="font-bold text-gray-900">{{a.patientName}}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Tipo</th>
-            <td mat-cell *matCellDef="let a">
-              <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wider">
-                {{a.type}}
-              </span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Estado</th>
-            <td mat-cell *matCellDef="let a">
-              <app-status-tag [label]="a.status" [color]="getStatusColor(a.status)" />
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let a" class="text-right">
-              <button mat-icon-button [matMenuTriggerFor]="menu" class="!text-gray-400">
-                <mat-icon>more_vert</mat-icon>
-              </button>
-              <mat-menu #menu="matMenu" class="!rounded-2xl !p-2">
-                <button mat-menu-item (click)="updateStatus(a.id, 'Confirmed')">
-                  <mat-icon class="!text-green-500">check_circle</mat-icon>
-                  <span>Confirmar</span>
-                </button>
-                <button mat-menu-item (click)="updateStatus(a.id, 'Cancelled')">
-                  <mat-icon class="!text-red-500">cancel</mat-icon>
-                  <span>Cancelar</span>
-                </button>
-                <button mat-menu-item (click)="updateStatus(a.id, 'Completed')">
-                  <mat-icon class="!text-blue-500">done_all</mat-icon>
-                  <span>Completar</span>
-                </button>
-              </mat-menu>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50 transition-colors"></tr>
-        </table>
-      </div>
+      <!-- Appointment Table Organism -->
+      <app-appointment-table 
+        [appointments]="filteredAppointments()"
+        (statusUpdate)="onStatusUpdate($event.id, $event.status)"
+        (confirmRequest)="handleConfirmRequest($event)"
+        (clearFilters)="clearFilters()"
+      />
     </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }
-    .mat-mdc-header-cell { padding: 16px; }
-    .mat-mdc-cell { padding: 20px 16px; }
   `]
 })
 export class AgendaPageComponent {
   pediatricsService = inject(PediatricsService);
+  billingService = inject(BillingService);
   private dialog = inject(MatDialog);
-  displayedColumns: string[] = ['time', 'patient', 'type', 'status', 'actions'];
+  private snackBar = inject(MatSnackBar);
+  
+  // Filter Signals
+  searchQuery = signal<string>('');
+  statusFilter = signal<string>('all');
+  dateFilter = signal<Date | null>(null);
 
-  getStatusColor(status: string): 'green' | 'amber' | 'red' | 'blue' | 'gray' {
-    switch (status) {
-      case 'Confirmed': return 'green';
-      case 'Scheduled': return 'blue';
-      case 'Cancelled': return 'red';
-      case 'Completed': return 'gray';
-      default: return 'gray';
+  // Computed Filtered List
+  filteredAppointments = computed(() => {
+    let appointments = this.pediatricsService.appointments();
+    const query = this.searchQuery().toLowerCase().trim();
+    const status = this.statusFilter();
+    const date = this.dateFilter();
+
+    if (query) {
+      appointments = appointments.filter(a => a.patientName.toLowerCase().includes(query));
     }
+    if (status !== 'all') {
+      appointments = appointments.filter(a => a.status === status);
+    }
+    if (date) {
+      const dateStr = date.toISOString().split('T')[0];
+      appointments = appointments.filter(a => a.date === dateStr);
+    }
+    return appointments;
+  });
+
+  onStatusUpdate(id: string, status: Appointment['status']) {
+    if (status === 'Cancelled') {
+      const appointment = this.pediatricsService.appointments().find(a => a.id === id);
+      if (appointment?.status === 'Confirmed') {
+        this.handleCancellationRequest(appointment);
+        return;
+      }
+    }
+    this.pediatricsService.updateAppointmentStatus(id, status);
   }
 
-  updateStatus(id: string, status: Appointment['status']) {
-    this.pediatricsService.updateAppointmentStatus(id, status);
+  handleCancellationRequest(appointment: Appointment) {
+    const dialogRef = this.dialog.open(AppointmentCancellationDialogOrganism, {
+      width: '400px',
+      maxWidth: '95vw',
+      data: { appointment },
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        // Cancel appointment
+        this.pediatricsService.updateAppointmentStatus(appointment.id, 'Cancelled');
+        // Cancel associated invoice
+        this.billingService.cancelInvoiceByAppointmentId(appointment.id);
+        
+        this.snackBar.open('Cita anulada y registros financieros reversados', 'Cerrar', { duration: 5000 });
+      }
+    });
+  }
+
+  handleConfirmRequest(appointment: Appointment) {
+    const dialogRef = this.dialog.open(AppointmentConfirmationDialogOrganism, {
+      width: '450px',
+      maxWidth: '95vw',
+      data: { appointment },
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const updatedAppointment: Appointment = {
+          ...appointment,
+          status: 'Confirmed',
+          isParticular: result.isParticular,
+          provider: result.provider,
+          authorizationNumber: result.authorizationNumber
+        };
+
+        this.pediatricsService.updateAppointmentStatus(appointment.id, 'Confirmed');
+        this.createPendingInvoice(updatedAppointment, result.patientAmount, result.totalAmount, result.markAsPaid);
+
+        this.snackBar.open(
+          result.markAsPaid ? 'Cita confirmada y copago recaudado' : 'Cita confirmada y cobro pendiente creado', 
+          'Cerrar', 
+          { duration: 3000 }
+        );
+      }
+    });
+  }
+
+  private createPendingInvoice(appointment: Appointment, patientAmount: number, totalAmount: number, markAsPaid: boolean) {
+    this.billingService.addInvoice({
+      id: `FAC-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+      appointmentId: appointment.id,
+      patientId: appointment.patientId,
+      patientName: appointment.patientName,
+      provider: appointment.provider || 'Particular',
+      date: appointment.date,
+      totalAmount: totalAmount,
+      patientAmount: patientAmount,
+      patientStatus: markAsPaid ? 'Paid' : 'Pending',
+      providerAmount: appointment.isParticular ? 0 : (totalAmount - patientAmount),
+      providerStatus: appointment.isParticular ? 'Paid' : 'Pending',
+      status: markAsPaid ? (appointment.isParticular ? 'Paid' : 'Partial') : 'Pending',
+      isParticular: !!appointment.isParticular,
+      authorizationNumber: appointment.authorizationNumber
+    });
   }
 
   openAppointmentForm() {
@@ -127,5 +183,11 @@ export class AgendaPageComponent {
       maxWidth: '95vw',
       disableClose: true
     });
+  }
+
+  clearFilters() {
+    this.searchQuery.set('');
+    this.statusFilter.set('all');
+    this.dateFilter.set(null);
   }
 }

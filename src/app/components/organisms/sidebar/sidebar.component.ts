@@ -95,6 +95,17 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                   <span class="text-xs font-bold tracking-wide">Agenda Médica</span>
                 </div>
               </a>
+              <a 
+                mat-list-item 
+                routerLink="/pediatrics/billing" 
+                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+              >
+                <div class="flex items-center gap-3 px-4">
+                  <mat-icon class="!text-gray-400 !text-[20px]">receipt_long</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Facturación</span>
+                </div>
+              </a>
             </nav>
           </mat-expansion-panel>
         </mat-accordion>

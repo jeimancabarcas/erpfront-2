@@ -39,5 +39,9 @@ export const routes: Routes = [
     path: 'pediatrics/agenda', 
     loadComponent: () => import('./components/pages/agenda-page/agenda-page.component').then(m => m.AgendaPageComponent) 
   },
+  { 
+    path: 'pediatrics/billing', 
+    loadComponent: () => import('./components/pages/billing-page/billing-page.component').then(m => m.BillingPageComponent) 
+  },
   { path: '', redirectTo: 'login', pathMatch: 'full' }
 ];

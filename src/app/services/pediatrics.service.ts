@@ -71,6 +71,9 @@ export interface Appointment {
   time: string;
   type: 'Control' | 'Urgency' | 'Specialist';
   status: 'Scheduled' | 'Confirmed' | 'Cancelled' | 'Completed';
+  isParticular?: boolean;
+  provider?: string;
+  authorizationNumber?: string;
 }
 
 @Injectable({

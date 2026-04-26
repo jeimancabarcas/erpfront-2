@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -10,6 +10,7 @@ import { MatTimepickerModule } from '@angular/material/timepicker';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PediatricsService, Appointment, Patient } from '../../../services/pediatrics.service';
+import { PatientSearchMolecule } from '../../molecules/patient-search/patient-search.component';
 
 @Component({
   selector: 'app-appointment-form',
@@ -24,92 +25,97 @@ import { PediatricsService, Appointment, Patient } from '../../../services/pedia
     MatDatepickerModule,
     MatTimepickerModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    PatientSearchMolecule
   ],
   template: `
-    <div class="p-4 max-w-md">
-      <header class="flex justify-between items-center mb-8">
-        <div>
-          <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Programar Cita</h2>
-          <p class="text-gray-500 font-medium text-sm">Asigne un horario para la atención médica</p>
-        </div>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400 hover:!text-gray-600 transition-colors">
-          <mat-icon>close</mat-icon>
-        </button>
-      </header>
+    <div class="relative overflow-hidden rounded-[32px] bg-white">
+      <!-- Decorative Background Element -->
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+      
+      <div class="p-8 relative z-10">
+        <header class="flex items-center gap-5 mb-10">
+          <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 animate-in zoom-in duration-500">
+            <mat-icon class="!text-[28px] !w-7 !h-7">calendar_today</mat-icon>
+          </div>
+          <div>
+            <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">Programar Cita</h2>
+            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Agenda Médica</p>
+          </div>
+        </header>
 
-      <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="space-y-4">
-        <!-- Patient Selection -->
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Paciente</mat-label>
-          <mat-select formControlName="patientId" placeholder="Seleccione un paciente" required>
-            @for (patient of pediatricsService.patients(); track patient.id) {
-              <mat-option [value]="patient.id">
-                {{ patient.firstNames }} {{ patient.lastNames }} ({{ patient.idNumber }})
-              </mat-option>
-            }
-          </mat-select>
-          <mat-icon matPrefix class="mr-2 text-gray-400">person</mat-icon>
-        </mat-form-field>
+        <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <!-- Patient Selection Molecule -->
+          <div class="space-y-2">
+            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Paciente</label>
+            <app-patient-search 
+              label="Seleccione el paciente"
+              (selectedPatientChange)="onPatientSelected($event)"
+            />
+          </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Date -->
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Fecha</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="date" required>
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Date -->
+            <div class="space-y-2">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Fecha de Atención</label>
+              <mat-form-field appearance="outline" class="w-full !m-0">
+                <input matInput [matDatepicker]="picker" formControlName="date" required placeholder="DD/MM/AAAA">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
 
-          <!-- Time -->
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Hora</mat-label>
-            <input matInput [matTimepicker]="timePicker" formControlName="time" required>
-            <mat-timepicker-toggle matSuffix [for]="timePicker"></mat-timepicker-toggle>
-            <mat-timepicker #timePicker></mat-timepicker>
-          </mat-form-field>
-        </div>
+            <!-- Time -->
+            <div class="space-y-2">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Hora</label>
+              <mat-form-field appearance="outline" class="w-full !m-0">
+                <input matInput [matTimepicker]="timePicker" formControlName="time" required placeholder="--:--">
+                <mat-timepicker-toggle matSuffix [for]="timePicker"></mat-timepicker-toggle>
+                <mat-timepicker #timePicker></mat-timepicker>
+              </mat-form-field>
+            </div>
+          </div>
 
-        <!-- Type -->
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Tipo de Cita</mat-label>
-          <mat-select formControlName="type" required>
-            <mat-option value="Control">Control</mat-option>
-            <mat-option value="Urgency">Urgencia</mat-option>
-            <mat-option value="Specialist">Especialista</mat-option>
-          </mat-select>
-          <mat-icon matPrefix class="mr-2 text-gray-400">category</mat-icon>
-        </mat-form-field>
+          <!-- Type -->
+          <div class="space-y-2">
+            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Tipo de Consulta</label>
+            <mat-form-field appearance="outline" class="w-full !m-0">
+              <mat-select formControlName="type" required>
+                <mat-option value="Control">Consulta de Control</mat-option>
+                <mat-option value="Urgency">Urgencia Pediátrica</mat-option>
+                <mat-option value="Specialist">Especialista</mat-option>
+              </mat-select>
+              <mat-icon matPrefix class="mr-2 text-gray-400">category</mat-icon>
+            </mat-form-field>
+          </div>
 
-        <div class="pt-4 flex flex-col gap-3">
-          <button 
-            mat-flat-button 
-            color="primary" 
-            type="submit"
-            class="!h-14 !rounded-full !font-bold text-lg shadow-lg shadow-indigo-100"
-          >
-            <mat-icon class="mr-2">check_circle</mat-icon>
-            Confirmar Cita
-          </button>
-          
-          <button 
-            mat-button 
-            type="button"
-            (click)="dialogRef.close()"
-            class="!h-12 !rounded-full !font-bold !text-gray-500"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+          <div class="pt-6 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
+            <button 
+              mat-button 
+              type="button"
+              (click)="dialogRef.close()"
+              class="!h-12 !rounded-full !font-bold !text-gray-500 flex-1"
+            >
+              Cancelar
+            </button>
+            <button 
+              mat-flat-button 
+              color="primary" 
+              type="submit"
+              [disabled]="appointmentForm.invalid"
+              class="!h-12 !rounded-full !font-black text-lg !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all flex-[2]"
+            >
+              <mat-icon class="mr-2">check_circle</mat-icon>
+              Confirmar Cita
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 32px !important;
-      padding: 16px !important;
-    }
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
   `]
 })
 export class AppointmentFormOrganism {
@@ -118,31 +124,33 @@ export class AppointmentFormOrganism {
   public dialogRef = inject(MatDialogRef<AppointmentFormOrganism>);
 
   appointmentForm = this.fb.group({
-    patientId: ['', Validators.required],
+    patient: [null as Patient | null, Validators.required],
     date: ['', Validators.required],
     time: ['', Validators.required],
     type: ['Control', Validators.required]
   });
 
+  onPatientSelected(patient: Patient | null) {
+    this.appointmentForm.patchValue({ patient });
+  }
+
   onSubmit() {
     if (this.appointmentForm.valid) {
       const formValue = this.appointmentForm.value;
-      const selectedPatient = this.pediatricsService.patients().find(p => p.id === formValue.patientId);
+      const patient = formValue.patient as Patient;
 
-      if (selectedPatient) {
-        const newAppointment: Appointment = {
-          id: `APP-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-          patientId: formValue.patientId!,
-          patientName: `${selectedPatient.firstNames} ${selectedPatient.lastNames}`,
-          date: this.formatDate(formValue.date as any),
-          time: this.formatTime(formValue.time as any),
-          type: formValue.type as any,
-          status: 'Scheduled'
-        };
+      const newAppointment: Appointment = {
+        id: `APP-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+        patientId: patient.id,
+        patientName: `${patient.firstNames} ${patient.lastNames}`,
+        date: this.formatDate(formValue.date as any),
+        time: this.formatTime(formValue.time as any),
+        type: formValue.type as any,
+        status: 'Scheduled'
+      };
 
-        this.pediatricsService.addAppointment(newAppointment);
-        this.dialogRef.close(true);
-      }
+      this.pediatricsService.addAppointment(newAppointment);
+      this.dialogRef.close(true);
     }
   }
 
