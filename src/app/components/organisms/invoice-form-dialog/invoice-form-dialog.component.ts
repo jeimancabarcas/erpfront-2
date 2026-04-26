@@ -36,11 +36,11 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
     PatientSearchMolecule
   ],
   template: `
-    <div class="relative overflow-hidden rounded-[32px] bg-white">
+    <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh]">
       <!-- Decorative Background Element -->
       <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
       
-      <div class="p-10 relative z-10">
+      <div class="p-10 relative z-10 overflow-y-auto custom-scrollbar">
         <header class="flex items-center gap-5 mb-10">
           <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 animate-in zoom-in duration-500">
             <mat-icon class="!text-[28px] !w-7 !h-7">receipt_long</mat-icon>
@@ -120,24 +120,28 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Total Amount -->
-            <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Valor Total</label>
+            <div class="space-y-2" [class.md:col-span-2]="isParticular()">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">
+                {{ isParticular() ? 'Valor Total a Pagar' : 'Valor Total' }}
+              </label>
               <mat-form-field appearance="outline" class="w-full !m-0">
                 <input matInput type="number" formControlName="totalAmount" placeholder="0.00" class="!font-black text-lg">
                 <span matPrefix class="mr-1 font-black text-gray-400">$</span>
               </mat-form-field>
             </div>
 
-            <!-- Patient Amount (Copay) -->
-            <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">
-                {{ isParticular() ? 'Valor Pagado por Paciente' : 'Valor Copago' }}
-              </label>
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <input matInput type="number" formControlName="patientAmount" placeholder="0.00" class="!font-black text-lg text-green-600">
-                <span matPrefix class="mr-1 font-black text-gray-400">$</span>
-              </mat-form-field>
-            </div>
+            @if (!isParticular()) {
+              <!-- Patient Amount (Copay) -->
+              <div class="space-y-2">
+                <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">
+                  Valor Copago
+                </label>
+                <mat-form-field appearance="outline" class="w-full !m-0">
+                  <input matInput type="number" formControlName="patientAmount" placeholder="0.00" class="!font-black text-lg text-green-600">
+                  <span matPrefix class="mr-1 font-black text-gray-400">$</span>
+                </mat-form-field>
+              </div>
+            }
           </div>
 
           <!-- Provider Amount (Calculated Summary) -->
@@ -247,6 +251,13 @@ export class InvoiceFormDialogOrganism {
         this.invoiceForm.get('patientAmount')?.setValue(price);
       }
     });
+
+    // Keep amounts in sync when particular
+    this.invoiceForm.get('totalAmount')?.valueChanges.subscribe(value => {
+      if (this.isParticular()) {
+        this.invoiceForm.get('patientAmount')?.setValue(value ?? 0, { emitEvent: false });
+      }
+    });
   }
 
   // Computed Balance Calculation
@@ -282,7 +293,7 @@ export class InvoiceFormDialogOrganism {
         providerStatus: formValue.isParticular ? 'Paid' : 'Pending',
         status: 'Pending'
       };
-      
+
       this.dialogRef.close(newInvoice);
     }
   }
