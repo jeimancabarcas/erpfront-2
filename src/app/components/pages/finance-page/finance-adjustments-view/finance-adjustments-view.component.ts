@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FinanceService } from '../../../../services/finance.service';
 import { AdjustmentTableOrganism } from '../../../organisms/adjustment-table/adjustment-table.component';
+import { AdjustmentFormDialogOrganism } from '../../../organisms/adjustment-form-dialog/adjustment-form-dialog.component';
 
 @Component({
   selector: 'app-finance-adjustments-view',
@@ -14,6 +16,7 @@ import { AdjustmentTableOrganism } from '../../../organisms/adjustment-table/adj
     DashboardLayoutComponent, 
     MatButtonModule, 
     MatIconModule,
+    MatDialogModule,
     AdjustmentTableOrganism
   ],
   template: `
@@ -26,6 +29,7 @@ import { AdjustmentTableOrganism } from '../../../organisms/adjustment-table/adj
         <div class="flex gap-3">
           <button 
             mat-flat-button 
+            (click)="openAdjustment('Credit')"
             class="!rounded-full !h-12 !px-8 !font-black !bg-amber-500 !text-white shadow-xl shadow-amber-100 hover:scale-105 transition-transform"
           >
             <mat-icon class="mr-2">remove_circle</mat-icon>
@@ -33,6 +37,7 @@ import { AdjustmentTableOrganism } from '../../../organisms/adjustment-table/adj
           </button>
           <button 
             mat-flat-button 
+            (click)="openAdjustment('Debit')"
             class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 !text-white shadow-xl shadow-indigo-100 hover:scale-105 transition-transform"
           >
             <mat-icon class="mr-2">add_circle</mat-icon>
@@ -62,5 +67,14 @@ import { AdjustmentTableOrganism } from '../../../organisms/adjustment-table/adj
   `]
 })
 export class FinanceAdjustmentsViewComponent {
-  financeService = inject(FinanceService);
+  private dialog = inject(MatDialog);
+  public financeService = inject(FinanceService);
+
+  openAdjustment(type: 'Credit' | 'Debit') {
+    this.dialog.open(AdjustmentFormDialogOrganism, {
+      width: '500px',
+      maxWidth: '95vw',
+      data: { type }
+    });
+  }
 }

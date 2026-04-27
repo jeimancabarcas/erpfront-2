@@ -1,11 +1,26 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { FinanceInvoice, AdjustmentNote, FinancialMetric } from '../models/finance.model';
+import { FinanceInvoice, AdjustmentNote, FinancialMetric, FinanceCustomer, FinanceProduct } from '../models/finance.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FinanceService {
-  // In-memory state for mock demonstration
+  // Mock Customers Catalog
+  private _customers = signal<FinanceCustomer[]>([
+    { id: 'C-001', name: 'Limpiezas Industriales S.A.', taxId: '900.111.222-3', email: 'contabilidad@limpiezas.com', phone: '300 123 4567', address: 'Calle 100 #15-20' },
+    { id: 'C-002', name: 'Dotaciones Médicas Corp', taxId: '860.000.999-1', email: 'ventas@dotaciones.co', phone: '315 999 8877', address: 'Carrera 7 #72-10' },
+    { id: 'C-003', name: 'Alimentos Saludables Ltda', taxId: '800.555.444-0', email: 'facturacion@alimentos.com', phone: '320 444 5566', address: 'Avenida Chile #11-45' }
+  ]);
+
+  // Mock Products/Services Catalog
+  private _catalog = signal<FinanceProduct[]>([
+    { id: 'P-001', name: 'Mantenimiento Preventivo Mensual', price: 1200000, taxRate: 0.19, category: 'Service' },
+    { id: 'P-002', name: 'Kit de Papelería Administrativa', price: 45000, taxRate: 0.19, category: 'Product' },
+    { id: 'P-003', name: 'Servicio de Desinfección Profunda', price: 350000, taxRate: 0.19, category: 'Service' },
+    { id: 'P-004', name: 'Consultoría en Procesos', price: 2500000, taxRate: 0.19, category: 'Service' },
+    { id: 'P-005', name: 'Paquete de Insumos de Aseo', price: 85000, taxRate: 0.19, category: 'Product' }
+  ]);
+
   private _invoices = signal<FinanceInvoice[]>([
     {
       id: 'FE-1001',
@@ -20,21 +35,6 @@ export class FinanceService {
       electronicId: 'cufe-abcd-1234',
       items: [
         { id: '1', description: 'Servicio de mantenimiento', quantity: 1, unitPrice: 1000000, taxRate: 0.19, total: 1190000 }
-      ]
-    },
-    {
-      id: 'FE-1002',
-      customerName: 'Dotaciones Médicas Corp',
-      customerTaxId: '860.000.999-1',
-      date: '2026-04-25',
-      dueDate: '2026-05-25',
-      status: 'Sent',
-      subtotal: 500000,
-      tax: 95000,
-      total: 595000,
-      electronicId: 'cufe-efgh-5678',
-      items: [
-        { id: '2', description: 'Papelería y oficina', quantity: 10, unitPrice: 50000, taxRate: 0.19, total: 595000 }
       ]
     }
   ]);
@@ -52,9 +52,11 @@ export class FinanceService {
     }
   ]);
 
-  // Read-only signals for components
+  // Read-only signals
   public invoices = this._invoices.asReadonly();
   public adjustments = this._adjustments.asReadonly();
+  public customers = this._customers.asReadonly();
+  public catalog = this._catalog.asReadonly();
 
   // Metrics
   public metrics = computed<FinancialMetric[]>(() => {
@@ -76,9 +78,9 @@ export class FinanceService {
     this._adjustments.update(items => [adjustment, ...items]);
   }
 
-  updateInvoiceStatus(id: string, status: FinanceInvoice['status']) {
-    this._invoices.update(items => items.map(inv => 
-      inv.id === id ? { ...inv, status } : inv
-    ));
+  updateInvoiceStatus(invoiceId: string, status: 'Paid' | 'Sent' | 'Draft' | 'Overdue') {
+    this._invoices.update(items => 
+      items.map(inv => inv.id === invoiceId ? { ...inv, status } : inv)
+    );
   }
 }

@@ -126,7 +126,7 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
               </label>
               <mat-form-field appearance="outline" class="w-full !m-0">
                 <input matInput type="number" formControlName="totalAmount" placeholder="0.00" class="!font-black text-lg">
-                <span matPrefix class="mr-1 font-black text-gray-400">$</span>
+                <mat-icon matPrefix class="mr-2 text-gray-400">attach_money</mat-icon>
               </mat-form-field>
             </div>
 
@@ -138,7 +138,7 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
                 </label>
                 <mat-form-field appearance="outline" class="w-full !m-0">
                   <input matInput type="number" formControlName="patientAmount" placeholder="0.00" class="!font-black text-lg text-green-600">
-                  <span matPrefix class="mr-1 font-black text-gray-400">$</span>
+                  <mat-icon matPrefix class="mr-2 text-gray-400">attach_money</mat-icon>
                 </mat-form-field>
               </div>
             }

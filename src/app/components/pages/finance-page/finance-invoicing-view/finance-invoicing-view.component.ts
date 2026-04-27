@@ -1,23 +1,29 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FinanceService } from '../../../../services/finance.service';
 import { GeneralInvoiceTableOrganism } from '../../../organisms/general-invoice-table/general-invoice-table.component';
+import { GeneralInvoiceFormDialogOrganism } from '../../../organisms/general-invoice-form-dialog/general-invoice-form-dialog.component';
+import { AdjustmentFormDialogOrganism } from '../../../organisms/adjustment-form-dialog/adjustment-form-dialog.component';
+import { InvoiceDetailDialogOrganism } from '../../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
+import { FinanceInvoice } from '../../../../models/finance.model';
 
 @Component({
   selector: 'app-finance-invoicing-view',
   standalone: true,
   imports: [
-    CommonModule, 
-    DashboardLayoutComponent, 
-    MatButtonModule, 
+    CommonModule,
+    DashboardLayoutComponent,
+    MatButtonModule,
     MatIconModule,
     MatInputModule,
     MatFormFieldModule,
+    MatDialogModule,
     GeneralInvoiceTableOrganism
   ],
   template: `
@@ -38,6 +44,7 @@ import { GeneralInvoiceTableOrganism } from '../../../organisms/general-invoice-
           <button 
             mat-flat-button 
             color="primary" 
+            (click)="openNewInvoice()"
             class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-transform"
           >
             <mat-icon class="mr-2">add</mat-icon>
@@ -71,10 +78,30 @@ import { GeneralInvoiceTableOrganism } from '../../../organisms/general-invoice-
   `]
 })
 export class FinanceInvoicingViewComponent {
-  financeService = inject(FinanceService);
+  private dialog = inject(MatDialog);
+  public financeService = inject(FinanceService);
 
-  handleAction(event: {id: string, action: string}) {
-    console.log('Action triggered:', event);
-    // Logic for view, print, adjustment
+  openNewInvoice() {
+    this.dialog.open(GeneralInvoiceFormDialogOrganism, {
+      width: '600px',
+      maxWidth: '95vw',
+      panelClass: 'custom-dialog-container'
+    });
+  }
+
+  handleAction(event: { invoice: FinanceInvoice, action: string }) {
+    if (event.action === 'adjustment') {
+      this.dialog.open(AdjustmentFormDialogOrganism, {
+        width: '450px',
+        maxWidth: '95vw',
+        data: { invoice: event.invoice }
+      });
+    } else if (event.action === 'view') {
+      this.dialog.open(InvoiceDetailDialogOrganism, {
+        width: '600px',
+        maxWidth: '95vw',
+        data: { invoice: event.invoice }
+      });
+    }
   }
 }

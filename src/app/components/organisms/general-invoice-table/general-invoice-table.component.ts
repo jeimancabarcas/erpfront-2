@@ -85,16 +85,16 @@ import { FinanceInvoice } from '../../../models/finance.model';
               <mat-icon>more_vert</mat-icon>
             </button>
             <mat-menu #menu="matMenu" class="!rounded-2xl !p-2 !shadow-2xl">
-              <button mat-menu-item (click)="onAction.emit({id: inv.id, action: 'view'})">
+              <button mat-menu-item (click)="onAction.emit({invoice: inv, action: 'view'})">
                 <mat-icon class="!text-indigo-500">visibility</mat-icon>
                 <span class="font-bold">Ver Detalles</span>
               </button>
-              <button mat-menu-item (click)="onAction.emit({id: inv.id, action: 'print'})">
+              <button mat-menu-item (click)="onAction.emit({invoice: inv, action: 'print'})">
                 <mat-icon class="!text-gray-500">print</mat-icon>
                 <span class="font-bold">Imprimir PDF</span>
               </button>
               <div class="h-px bg-gray-100 my-2"></div>
-              <button mat-menu-item (click)="onAction.emit({id: inv.id, action: 'adjustment'})">
+              <button mat-menu-item (click)="onAction.emit({invoice: inv, action: 'adjustment'})">
                 <mat-icon class="!text-amber-500">history_edu</mat-icon>
                 <span class="font-bold">Crear Nota Crédito/Débito</span>
               </button>
@@ -130,7 +130,7 @@ import { FinanceInvoice } from '../../../models/finance.model';
 })
 export class GeneralInvoiceTableOrganism {
   invoices = input.required<FinanceInvoice[]>();
-  onAction = output<{id: string, action: string}>();
+  onAction = output<{invoice: FinanceInvoice, action: string}>();
 
   displayedColumns: string[] = ['id', 'customer', 'date', 'total', 'status', 'actions'];
 }

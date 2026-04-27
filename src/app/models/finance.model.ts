@@ -1,5 +1,22 @@
 export type AdjustmentType = 'Credit' | 'Debit';
 
+export interface FinanceCustomer {
+  id: string;
+  name: string;
+  taxId: string; // NIT / CC
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export interface FinanceProduct {
+  id: string;
+  name: string;
+  price: number;
+  taxRate: number;
+  category: 'Product' | 'Service';
+}
+
 export interface FinanceInvoice {
   id: string;
   customerName: string;

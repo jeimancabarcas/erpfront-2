@@ -3,12 +3,23 @@ import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FinanceService } from '../../../services/finance.service';
+import { GeneralInvoiceFormDialogOrganism } from '../../organisms/general-invoice-form-dialog/general-invoice-form-dialog.component';
+import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-dialog/adjustment-form-dialog.component';
 
 @Component({
   selector: 'app-finance-page',
   standalone: true,
-  imports: [CommonModule, DashboardLayoutComponent, MatCardModule, MatIconModule],
+  imports: [
+    CommonModule, 
+    DashboardLayoutComponent, 
+    MatCardModule, 
+    MatIconModule, 
+    MatDialogModule,
+    MatSnackBarModule
+  ],
   template: `
     <app-dashboard-layout>
       <header class="mb-10 animate-in fade-in slide-in-from-top duration-500">
@@ -20,7 +31,6 @@ import { FinanceService } from '../../../services/finance.service';
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         @for (metric of financeService.metrics(); track metric.label) {
           <mat-card class="!rounded-[28px] !border-none !shadow-xl !shadow-gray-100/50 group overflow-hidden relative">
-            <!-- Decorative Gradient -->
             <div class="absolute inset-0 bg-gradient-to-br opacity-[0.03] group-hover:opacity-[0.06] transition-opacity"
                  [ngClass]="{
                    'from-indigo-600 to-purple-600': metric.color === 'indigo',
@@ -65,11 +75,17 @@ import { FinanceService } from '../../../services/finance.service';
             <h4 class="text-lg font-black text-gray-900">Accesos Rápidos</h4>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <button class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100 group">
+            <button 
+              (click)="openNewInvoice()"
+              class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100 group text-center"
+            >
               <mat-icon class="!w-8 !h-8 !text-[32px] text-gray-400 group-hover:text-indigo-600">add_business</mat-icon>
               <span class="text-xs font-black uppercase tracking-widest text-gray-600 group-hover:text-indigo-600">Nueva Factura</span>
             </button>
-            <button class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100 group">
+            <button 
+              (click)="openNewAdjustment()"
+              class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100 group text-center"
+            >
               <mat-icon class="!w-8 !h-8 !text-[32px] text-gray-400 group-hover:text-amber-600">history_edu</mat-icon>
               <span class="text-xs font-black uppercase tracking-widest text-gray-600 group-hover:text-amber-600">Generar Nota</span>
             </button>
@@ -98,4 +114,34 @@ import { FinanceService } from '../../../services/finance.service';
 })
 export class FinancePageComponent {
   financeService = inject(FinanceService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+
+  openNewInvoice() {
+    const dialogRef = this.dialog.open(GeneralInvoiceFormDialogOrganism, {
+      width: '600px',
+      maxWidth: '95vw',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open(`Factura ${result.id} emitida con éxito`, 'Cerrar', { duration: 5000 });
+      }
+    });
+  }
+
+  openNewAdjustment() {
+    const dialogRef = this.dialog.open(AdjustmentFormDialogOrganism, {
+      width: '450px',
+      maxWidth: '95vw',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open(`Nota ${result.id} transmitida correctamente`, 'Cerrar', { duration: 5000 });
+      }
+    });
+  }
 }
