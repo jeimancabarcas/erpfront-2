@@ -1,6 +1,4 @@
 import { Routes } from '@angular/router';
-import { PatientsPageComponent } from './components/pages/patients-page/patients-page.component';
-import { AgendaPageComponent } from './components/pages/agenda-page/agenda-page.component';
 
 export const routes: Routes = [
   { 
@@ -22,6 +20,23 @@ export const routes: Routes = [
   { 
     path: 'sales', 
     loadComponent: () => import('./components/pages/sales-page/sales-page.component').then(m => m.SalesPageComponent) 
+  },
+  { 
+    path: 'finance',
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./components/pages/finance-page/finance-page.component').then(m => m.FinancePageComponent)
+      },
+      {
+        path: 'invoicing',
+        loadComponent: () => import('./components/pages/finance-page/finance-invoicing-view/finance-invoicing-view.component').then(m => m.FinanceInvoicingViewComponent)
+      },
+      {
+        path: 'adjustments',
+        loadComponent: () => import('./components/pages/finance-page/finance-adjustments-view/finance-adjustments-view.component').then(m => m.FinanceAdjustmentsViewComponent)
+      }
+    ]
   },
   { 
     path: 'pediatrics/patients', 
