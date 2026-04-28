@@ -3,15 +3,25 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { TransportService } from '../../../../services/transport.service';
 import { VehicleStatus } from '../../../../models/transport.model';
 import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-tag.component';
+import { TransportDispatchDialogOrganism } from '../../../../components/organisms/transport-dispatch-dialog/transport-dispatch-dialog.component';
+import { TransportCancelDialogOrganism } from '../../../../components/organisms/transport-cancel-dialog/transport-cancel-dialog.component';
 
 @Component({
   selector: 'app-transport-dashboard-view',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatMenuModule, MatButtonModule, StatusTagAtom],
+  imports: [
+    CommonModule, 
+    MatIconModule, 
+    MatMenuModule, 
+    MatButtonModule, 
+    MatDialogModule,
+    StatusTagAtom
+  ],
   template: `
     <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -67,6 +77,13 @@ import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-ta
                   <span class="font-bold text-gray-700">Ver Detalles</span>
                 </button>
                 
+                @if (vehicle.status === 'Available') {
+                  <button mat-menu-item (click)="onProgramService(vehicle.id)">
+                    <mat-icon class="!text-indigo-600">event_note</mat-icon>
+                    <span class="font-bold text-gray-700">Programar Servicio</span>
+                  </button>
+                }
+
                 <button mat-menu-item [matMenuTriggerFor]="statusSubMenu">
                   <mat-icon class="!text-amber-500">published_with_changes</mat-icon>
                   <span class="font-bold text-gray-700">Cambiar Estado</span>
@@ -76,6 +93,10 @@ import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-ta
                   <button mat-menu-item (click)="onStartRoute(vehicle.id)">
                     <mat-icon class="!text-blue-500">play_circle</mat-icon>
                     <span class="font-bold text-gray-700">Iniciar Ruta</span>
+                  </button>
+                  <button mat-menu-item (click)="onCancelService(vehicle.id)">
+                    <mat-icon class="!text-red-500">event_busy</mat-icon>
+                    <span class="font-bold text-gray-700">Cancelar Servicio</span>
                   </button>
                 }
 
@@ -148,9 +169,19 @@ import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-ta
 export class TransportDashboardViewComponent {
   transportService = inject(TransportService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   onViewDetail(id: string) {
     this.router.navigate(['/transport/vehicle', id]);
+  }
+
+  onProgramService(vehicleId: string) {
+    this.dialog.open(TransportDispatchDialogOrganism, {
+      data: { vehicleId },
+      width: '700px',
+      maxWidth: '95vw',
+      panelClass: 'custom-premium-dialog'
+    });
   }
 
   onUpdateStatus(id: string, status: VehicleStatus) {
@@ -159,6 +190,18 @@ export class TransportDashboardViewComponent {
 
   onStartRoute(id: string) {
     this.transportService.startRoute(id);
+  }
+
+  onCancelService(vehicleId: string) {
+    const route = this.transportService.routes().find(r => r.vehicleId === vehicleId && r.status === 'Planning');
+    if (route) {
+      this.dialog.open(TransportCancelDialogOrganism, {
+        data: { route },
+        width: '600px',
+        maxWidth: '95vw',
+        panelClass: 'custom-premium-dialog'
+      });
+    }
   }
 
   onSettleVehicle(id: string) {

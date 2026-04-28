@@ -5,7 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TransportDashboardViewComponent } from './transport-dashboard-view/transport-dashboard-view.component';
-import { TransportDispatchViewComponent } from './transport-dispatch-view/transport-dispatch-view.component';
 import { TransportTrackingViewComponent } from './transport-tracking-view/transport-tracking-view.component';
 import { TransportSettlementViewComponent } from './transport-settlement-view/transport-settlement-view.component';
 
@@ -19,7 +18,6 @@ import { TransportSettlementViewComponent } from './transport-settlement-view/tr
     MatIconModule,
     MatTabsModule,
     TransportDashboardViewComponent,
-    TransportDispatchViewComponent,
     TransportTrackingViewComponent,
     TransportSettlementViewComponent
   ],
@@ -60,17 +58,6 @@ import { TransportSettlementViewComponent } from './transport-settlement-view/tr
           </div>
         </mat-tab>
 
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <div class="flex items-center gap-2 py-2">
-              <mat-icon class="!text-[20px]">map</mat-icon>
-              <span class="font-black uppercase tracking-widest text-[10px]">Planeación</span>
-            </div>
-          </ng-template>
-          <div class="pt-8">
-            <app-transport-dispatch-view />
-          </div>
-        </mat-tab>
 
         <mat-tab>
           <ng-template mat-tab-label>

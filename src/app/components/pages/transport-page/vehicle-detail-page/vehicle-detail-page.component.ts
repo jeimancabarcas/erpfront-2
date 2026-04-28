@@ -1,7 +1,7 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
+import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -98,10 +98,14 @@ import { VehicleStatus } from '../../../../models/transport.model';
             <div *ngIf="activeRoute()" class="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
                <div class="p-10 border-b border-gray-50">
                   <h2 class="text-xl font-black text-gray-900 mb-2 flex items-center gap-3">
-                    <mat-icon class="text-blue-500">route</mat-icon>
-                    Servicio en Curso
+                    <mat-icon [class.text-blue-500]="activeRoute()?.status === 'Active'" [class.text-amber-500]="activeRoute()?.status === 'Planning'">
+                      {{ activeRoute()?.status === 'Active' ? 'route' : 'event_available' }}
+                    </mat-icon>
+                    {{ activeRoute()?.status === 'Active' ? 'Servicio en Curso' : 'Servicio Programado' }}
                   </h2>
-                  <p class="text-gray-400 text-sm font-medium">Hoja de ruta y detalles del servicio activo.</p>
+                  <p class="text-gray-400 text-sm font-medium">
+                    {{ activeRoute()?.status === 'Active' ? 'Hoja de ruta y detalles del servicio activo.' : 'Detalles del servicio próximo a iniciar.' }}
+                  </p>
                </div>
                
                <div class="p-10 space-y-10">
@@ -154,76 +158,71 @@ import { VehicleStatus } from '../../../../models/transport.model';
              </div>
           </div>
 
-          <!-- Right Column: Service & Financial Summary -->
+          <!-- Right Column: Operational History -->
           <div class="space-y-8">
-            <div *ngIf="activeRoute()" class="bg-indigo-900 rounded-[40px] p-10 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
+            <!-- Historical Summary Card -->
+            <div class="bg-indigo-900 rounded-[40px] p-10 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
                <!-- Decorative -->
                <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
                
                <h3 class="text-xl font-black mb-8 relative z-10 flex items-center gap-3">
-                 <mat-icon>payments</mat-icon>
-                 Resumen del Contrato
+                 <mat-icon>analytics</mat-icon>
+                 Resumen Operativo
                </h3>
                
                <div class="space-y-8 relative z-10">
                  <div class="flex justify-between items-center pb-6 border-b border-white/10">
-                   <span class="text-indigo-300 text-xs font-bold uppercase tracking-widest">Valor Servicio</span>
-                   <span class="text-2xl font-black tabular-nums">{{ activeRoute()?.servicePrice | currency:'USD':'symbol':'1.0-0' }}</span>
+                   <span class="text-indigo-300 text-xs font-bold uppercase tracking-widest">Total Facturado</span>
+                   <span class="text-3xl font-black tabular-nums text-emerald-400">{{ historicalStats().totalBilled | currency:'USD':'symbol':'1.0-0' }}</span>
                  </div>
                  
                  <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Duración Contratada</span>
-                      <span class="text-sm font-black">{{ activeRoute()?.durationDays }} Días</span>
+                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Servicios Realizados</span>
+                      <span class="text-lg font-black">{{ historicalStats().totalServices }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Horas Standby</span>
-                      <span class="text-sm font-black">{{ activeRoute()?.standbyHours }} H</span>
+                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Total Gastos</span>
+                      <span class="text-lg font-black text-red-400">{{ historicalStats().totalExpenses | currency:'USD':'symbol':'1.0-0' }}</span>
                     </div>
-                    <div class="flex justify-between items-center">
-                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Total Standby</span>
-                      <span class="text-sm font-black text-amber-400">{{ activeRoute()?.standbyTotal | currency:'USD':'symbol':'1.0-0' }}</span>
-                    </div>
-                 </div>
-
-                 <div class="pt-8 border-t border-white/10">
-                    <div class="flex justify-between items-center">
-                      <span class="text-indigo-100 text-xs font-bold uppercase tracking-widest">Subtotal Facturable</span>
-                      <span class="text-3xl font-black text-emerald-400 tabular-nums">
-                        {{ (activeRoute()?.servicePrice || 0) + (activeRoute()?.standbyTotal || 0) | currency:'USD':'symbol':'1.0-0' }}
+                    <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Utilidad Bruta</span>
+                      <span class="text-xl font-black text-white tabular-nums">
+                        {{ historicalStats().totalBilled - historicalStats().totalExpenses | currency:'USD':'symbol':'1.0-0' }}
                       </span>
                     </div>
                  </div>
                </div>
             </div>
 
-            <!-- Operational Expenses if Active -->
-             <div *ngIf="activeRoute()" class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
-                <h3 class="text-lg font-black text-gray-900 mb-6 flex items-center gap-3">
-                  <mat-icon class="text-red-400">request_quote</mat-icon>
-                  Gastos de Operación
-                </h3>
-                <div class="space-y-4">
-                  <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-400 font-medium">Peajes</span>
-                    <span class="font-bold text-gray-700">{{ activeRoute()?.expenses?.tolls | currency:'USD':'symbol':'1.0-0' }}</span>
+            <!-- List of performed services -->
+            <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
+              <h3 class="text-lg font-black text-gray-900 mb-6 flex items-center gap-3">
+                <mat-icon class="text-indigo-500">history</mat-icon>
+                Últimos Servicios
+              </h3>
+              <div class="space-y-6">
+                @for (route of vehicleRoutes(); track route.id) {
+                  @if (route.status === 'Settled') {
+                    <div class="p-5 rounded-3xl bg-gray-50 border border-gray-100 hover:border-indigo-100 transition-colors">
+                      <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-black text-indigo-600 uppercase">{{ route.id }}</span>
+                        <span class="text-[10px] font-bold text-gray-400">{{ route.departureDate | date:'shortDate' }}</span>
+                      </div>
+                      <p class="text-xs font-black text-gray-800 mb-1">{{ route.customerName }}</p>
+                      <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-medium text-gray-400">{{ route.origin }} → {{ route.destination }}</span>
+                        <span class="text-xs font-black text-gray-900">{{ (route.servicePrice + route.standbyTotal) | currency:'USD':'symbol':'1.0-0' }}</span>
+                      </div>
+                    </div>
+                  }
+                } @empty {
+                  <div class="py-10 text-center">
+                    <p class="text-gray-400 text-sm font-medium">No hay servicios registrados.</p>
                   </div>
-                  <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-400 font-medium">Combustible</span>
-                    <span class="font-bold text-gray-700">{{ activeRoute()?.expenses?.fuel | currency:'USD':'symbol':'1.0-0' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-400 font-medium">Viáticos</span>
-                    <span class="font-bold text-gray-700">{{ activeRoute()?.expenses?.allowances | currency:'USD':'symbol':'1.0-0' }}</span>
-                  </div>
-                  <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase">Total Gastos</span>
-                    <span class="text-lg font-black text-red-500 tabular-nums">
-                      {{ (activeRoute()?.expenses?.tolls || 0) + (activeRoute()?.expenses?.fuel || 0) + (activeRoute()?.expenses?.allowances || 0) | currency:'USD':'symbol':'1.0-0' }}
-                    </span>
-                  </div>
-                </div>
-             </div>
+                }
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -243,9 +242,26 @@ export class TransportVehicleDetailPageComponent {
     this.transportService.vehicles().find(v => v.id === this.vehicleId())
   );
 
-  activeRoute = computed(() => 
-    this.transportService.routes().find(r => r.vehicleId === this.vehicleId() && r.status === 'Active')
+  vehicleRoutes = computed(() => 
+    this.transportService.routes().filter(r => r.vehicleId === this.vehicleId())
   );
+
+  activeRoute = computed(() => 
+    this.vehicleRoutes().find(r => r.status === 'Active' || r.status === 'Planning')
+  );
+
+  historicalStats = computed(() => {
+    // Only consider settled routes for billing and finished services
+    const finishedRoutes = this.vehicleRoutes().filter(r => r.status === 'Settled');
+    return {
+      totalBilled: finishedRoutes.reduce((sum, r) => sum + (r.servicePrice + r.standbyTotal), 0),
+      totalServices: finishedRoutes.length,
+      totalExpenses: finishedRoutes.reduce((sum, r) => {
+        const e = r.expenses || { tolls: 0, fuel: 0, allowances: 0 };
+        return sum + (e.tolls + e.fuel + e.allowances);
+      }, 0)
+    };
+  });
 
   breadcrumbItems: BreadcrumbItem[] = [
     { label: 'Inicio', link: '/dashboard' },

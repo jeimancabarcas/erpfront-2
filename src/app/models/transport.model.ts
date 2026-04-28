@@ -39,7 +39,8 @@ export interface TransportRoute {
   standbyTotal: number; // Total charge for standby
   departureDate: string;
   expectedArrival: string;
-  status: 'Planning' | 'Active' | 'Completed' | 'Settled';
+  status: 'Planning' | 'Active' | 'Completed' | 'Settled' | 'Cancelled';
+  cancellationNotes?: string;
   currentMilestone?: string;
   milestones: RouteMilestone[];
   expenses: {

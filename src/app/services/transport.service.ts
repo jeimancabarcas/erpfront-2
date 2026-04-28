@@ -69,6 +69,9 @@ export class TransportService {
 
   startRoute(vehicleId: string) {
     this.updateVehicleStatus(vehicleId, 'InRoute');
+    this._routes.update(items => items.map(r => 
+      (r.vehicleId === vehicleId && r.status === 'Planning') ? { ...r, status: 'Active' } : r
+    ));
   }
 
   updateMilestone(routeId: string, milestoneId: string) {
@@ -104,6 +107,16 @@ export class TransportService {
       if (r.id === routeId) {
         this.updateVehicleStatus(r.vehicleId, 'Available');
         return { ...r, status: 'Settled' };
+      }
+      return r;
+    }));
+  }
+
+  cancelRoute(routeId: string, notes: string) {
+    this._routes.update(items => items.map(r => {
+      if (r.id === routeId) {
+        this.updateVehicleStatus(r.vehicleId, 'Available');
+        return { ...r, status: 'Cancelled', cancellationNotes: notes };
       }
       return r;
     }));

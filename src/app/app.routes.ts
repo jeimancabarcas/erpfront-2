@@ -66,5 +66,9 @@ export const routes: Routes = [
     path: 'transport/vehicle/:id',
     loadComponent: () => import('./components/pages/transport-page/vehicle-detail-page/vehicle-detail-page.component').then(m => m.TransportVehicleDetailPageComponent)
   },
+  {
+    path: 'transport/service/:id',
+    loadComponent: () => import('./components/pages/transport-page/service-detail-page/service-detail-page.component').then(m => m.TransportServiceDetailPageComponent)
+  },
   { path: '', redirectTo: 'login', pathMatch: 'full' }
 ];
