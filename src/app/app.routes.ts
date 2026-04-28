@@ -58,5 +58,13 @@ export const routes: Routes = [
     path: 'pediatrics/billing', 
     loadComponent: () => import('./components/pages/billing-page/billing-page.component').then(m => m.BillingPageComponent) 
   },
+  {
+    path: 'transport',
+    loadComponent: () => import('./components/pages/transport-page/transport-page.component').then(m => m.TransportPageComponent)
+  },
+  {
+    path: 'transport/vehicle/:id',
+    loadComponent: () => import('./components/pages/transport-page/vehicle-detail-page/vehicle-detail-page.component').then(m => m.TransportVehicleDetailPageComponent)
+  },
   { path: '', redirectTo: 'login', pathMatch: 'full' }
 ];
