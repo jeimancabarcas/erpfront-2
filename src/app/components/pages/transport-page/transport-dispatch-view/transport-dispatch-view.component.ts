@@ -34,7 +34,7 @@ import { TransportRoute } from '../../../../models/transport.model';
         <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
           <header class="mb-8">
             <h2 class="text-2xl font-black text-gray-900 tracking-tight">Programar Servicio de Transporte</h2>
-            <p class="text-gray-400 text-sm font-medium tracking-tight">Asigna un vehículo a un cliente para un servicio de X días con tarifa definida.</p>
+            <p class="text-gray-400 text-sm font-medium tracking-tight">Define el punto de origen, destino y la hora exacta de salida para el nuevo despacho.</p>
           </header>
 
           <form [formGroup]="dispatchForm" (ngSubmit)="onSubmit()" class="space-y-6">
@@ -51,15 +51,17 @@ import { TransportRoute } from '../../../../models/transport.model';
                 <mat-icon matPrefix class="mr-2 text-gray-400">business</mat-icon>
               </mat-form-field>
 
-              <!-- Service Selection -->
+              <!-- Origin & Destination -->
               <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Servicio Configurado</mat-label>
-                <mat-select formControlName="serviceId" (selectionChange)="onServiceChange($event.value)">
-                  @for (s of transportService.catalog(); track s.id) {
-                    <mat-option [value]="s.id">{{ s.name }}</mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix class="mr-2 text-gray-400">map</mat-icon>
+                <mat-label>Origen</mat-label>
+                <input matInput formControlName="origin" placeholder="Ej: Bogotá, DC">
+                <mat-icon matPrefix class="mr-2 text-gray-400">location_on</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Destino</mat-label>
+                <input matInput formControlName="destination" placeholder="Ej: Medellín, ANT">
+                <mat-icon matPrefix class="mr-2 text-gray-400">flag</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="w-full">
@@ -85,8 +87,8 @@ import { TransportRoute } from '../../../../models/transport.model';
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Duración (Días)</mat-label>
-                <input matInput type="number" formControlName="durationDays">
+                <mat-label>Hora de Inicio</mat-label>
+                <input matInput type="time" formControlName="departureTime">
                 <mat-icon matPrefix class="mr-2 text-gray-400">schedule</mat-icon>
               </mat-form-field>
 
@@ -115,10 +117,8 @@ import { TransportRoute } from '../../../../models/transport.model';
           <h3 class="text-xl font-black text-indigo-900 mb-4 tracking-tight">Resumen de Cargo</h3>
           <div class="space-y-4">
             <div class="flex justify-between items-center">
-              <span class="text-sm font-bold text-indigo-400">Tarifa por Día</span>
-              <span class="text-sm font-black text-indigo-900">
-                {{ (dispatchForm.value.servicePrice || 0) / (dispatchForm.value.durationDays || 1) | currency:'USD':'symbol':'1.0-0' }}
-              </span>
+              <span class="text-sm font-bold text-indigo-400">Estado Inicial</span>
+              <span class="text-sm font-black text-indigo-900">Programado</span>
             </div>
             <div class="flex justify-between items-center pt-4 border-t border-indigo-100">
               <span class="text-lg font-black text-indigo-900">Total Servicio</span>
@@ -148,55 +148,49 @@ export class TransportDispatchViewComponent {
 
   dispatchForm = this.fb.group({
     customerName: ['', Validators.required],
-    serviceId: ['', Validators.required],
-    vehicleId: ['', Validators.required],
+    origin: ['', Validators.required],
+    destination: ['', Validators.required],
+    vehicleId: [''],
     departureDate: [new Date(), Validators.required],
-    durationDays: [1, [Validators.required, Validators.min(1)]],
+    departureTime: [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), Validators.required],
     servicePrice: [0, [Validators.required, Validators.min(0)]]
   });
 
   onServiceChange(serviceId: string) {
-    const service = this.transportService.catalog().find(s => s.id === serviceId);
-    if (service) {
-      this.dispatchForm.patchValue({
-        durationDays: service.expectedDays,
-        servicePrice: service.basePrice
-      });
-    }
+    // Removed
   }
 
   onSubmit() {
     if (this.dispatchForm.valid) {
       const val = this.dispatchForm.value;
+      const date = val.departureDate as Date;
+      const [hours, minutes] = (val.departureTime as string).split(':');
+      date.setHours(parseInt(hours), parseInt(minutes));
+
       const vehicle = this.transportService.vehicles().find(v => v.id === val.vehicleId);
-      const service = this.transportService.catalog().find(s => s.id === val.serviceId);
       
-      const newRoute: TransportRoute = {
-        id: `RT-${Math.floor(Math.random() * 900 + 100)}`,
-        serviceId: val.serviceId!,
-        origin: service?.name.split(' ').pop() || 'Origen', // Simplified for mock
-        destination: service?.name.split(' ').pop() || 'Destino',
-        vehicleId: val.vehicleId!,
-        driverName: vehicle?.driverName || 'N/A',
+      this.transportService.addRoute({
+        id: `RT-${Math.floor(Math.random() * 10000)}`,
+        origin: val.origin!,
+        destination: val.destination!,
         customerName: val.customerName!,
-        durationDays: val.durationDays!,
+        vehicleId: val.vehicleId || '',
+        driverName: vehicle?.driverName || '',
+        departureDate: date.toISOString(),
         servicePrice: val.servicePrice!,
         standbyHours: 0,
         standbyTotal: 0,
-        departureDate: val.departureDate!.toISOString(),
-        expectedArrival: new Date(val.departureDate!.getTime() + (val.durationDays! * 24 * 60 * 60 * 1000)).toISOString(),
-        status: 'Active',
-        milestones: [
-          { id: '1', name: 'Salida de Patio', timestamp: new Date().toISOString(), status: 'Completed' as const },
-          { id: '2', name: 'En Tránsito', timestamp: '', status: 'Pending' as const },
-          { id: '3', name: 'Entrega Final', timestamp: '', status: 'Pending' as const }
-        ],
-        currentMilestone: 'Salida de Patio',
-        expenses: { tolls: 0, fuel: 0, allowances: 0 }
-      };
-
-      this.transportService.addRoute(newRoute);
-      this.dispatchForm.reset({ departureDate: new Date(), durationDays: 1, servicePrice: 0 });
+        status: 'Planning',
+        milestones: [],
+        operations: [],
+        detailedExpenses: [],
+        incidents: []
+      });
+      this.dispatchForm.reset({ 
+        departureDate: new Date(), 
+        departureTime: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), 
+        servicePrice: 0 
+      });
     }
   }
 }

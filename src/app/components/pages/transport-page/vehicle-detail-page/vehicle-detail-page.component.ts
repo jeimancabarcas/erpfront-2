@@ -1,225 +1,241 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { TransportService } from '../../../../services/transport.service';
-import { BreadcrumbMolecule, BreadcrumbItem } from '../../../molecules/breadcrumb/breadcrumb.component';
-import { StatusTagAtom } from '../../../atoms/status-tag/status-tag.component';
-import { VehicleStatus } from '../../../../models/transport.model';
+import { Vehicle, VehicleMaintenance } from '../../../../models/transport.model';
+import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
+import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-tag.component';
+import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
+import { TransportMaintenanceDialogOrganism } from '../../../../components/organisms/transport-maintenance-dialog/transport-maintenance-dialog.component';
 
 @Component({
-  selector: 'app-vehicle-detail-page',
+  selector: 'app-transport-vehicle-detail-page',
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
+    RouterModule,
     MatButtonModule,
     MatIconModule,
-    MatDividerModule,
-    BreadcrumbMolecule,
-    StatusTagAtom
+    MatDialogModule,
+    MatTooltipModule,
+    MatMenuModule,
+    DashboardLayoutComponent,
+    StatusTagAtom,
+    EmptyStateAtom
   ],
   template: `
     <app-dashboard-layout>
-      <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-        <!-- Breadcrumb -->
-        <app-breadcrumb [items]="breadcrumbItems" />
-
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div class="flex items-center gap-6">
-            <div class="w-20 h-20 bg-indigo-50 rounded-[32px] flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
-              <mat-icon class="!text-[40px] !w-10 !h-10">local_shipping</mat-icon>
+      <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div class="flex items-center gap-6">
+          <button 
+            mat-icon-button 
+            routerLink="/transport" 
+            class="!bg-white !shadow-sm !border !border-gray-100 !text-gray-400 hover:!text-indigo-600 transition-colors"
+          >
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <h1 class="text-3xl font-black text-gray-900 tracking-tight">{{ vehicleId() }}</h1>
+              <app-status-tag 
+                [label]="getStatusLabel(vehicle()?.status || 'Available')" 
+                [color]="getStatusColor(vehicle()?.status || 'Available')"
+              />
             </div>
-            <div>
-              <div class="flex items-center gap-3 mb-1">
-                <h1 class="text-4xl font-black text-gray-900 tracking-tight leading-none">{{ vehicle()?.id }}</h1>
-                <app-status-tag 
-                  *ngIf="vehicle()"
-                  [label]="getStatusLabel(vehicle()!.status)" 
-                  [color]="getStatusColor(vehicle()!.status)"
-                />
-              </div>
-              <p class="text-gray-500 font-medium tracking-tight">{{ vehicle()?.model }} • {{ vehicle()?.type }}</p>
-            </div>
+            <p class="text-gray-500 font-medium tracking-tight">Detalle técnico y gestión de mantenimiento de flota.</p>
           </div>
-          <div class="flex gap-3">
-             <button 
-              mat-stroked-button 
-              class="!rounded-full !h-12 !px-8 !font-bold !border-gray-200 hover:!bg-gray-50"
-            >
-              <mat-icon class="mr-2">edit</mat-icon>
-              Editar Vehículo
-            </button>
-            <button 
-              mat-flat-button 
-              color="primary" 
-              class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
-            >
-              <mat-icon class="mr-2">print</mat-icon>
-              Imprimir Ficha
-            </button>
-          </div>
-        </header>
+        </div>
+        
+        <div class="flex gap-3">
+          <button 
+            mat-flat-button 
+            (click)="openMaintenanceDialog()"
+            class="!rounded-full !h-12 !px-8 !font-black !bg-amber-500 !text-white shadow-xl shadow-amber-100 hover:scale-105 transition-all"
+          >
+            <mat-icon class="mr-2">engineering</mat-icon>
+            Programar Mantenimiento
+          </button>
+        </div>
+      </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Left Column: Vehicle & Driver Info -->
-          <div class="lg:col-span-2 space-y-8">
-            <!-- Information Grid -->
-            <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
-              <h2 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
-                <mat-icon class="text-indigo-500">info</mat-icon>
-                Información General
-              </h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div class="space-y-1">
-                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Conductor Asignado</p>
-                  <p class="text-lg font-bold text-gray-800">{{ vehicle()?.driverName }}</p>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        
+        <!-- Left Column: Vehicle Info -->
+        <div class="space-y-8">
+          <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 overflow-hidden relative">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+            
+            <h2 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-8 relative z-10">Ficha Técnica</h2>
+            
+            <div class="space-y-6 relative z-10">
+              <div class="flex items-center gap-6">
+                <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400">
+                  <mat-icon class="!text-2xl">local_shipping</mat-icon>
                 </div>
-                <div class="space-y-1">
-                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tarifa Standby (Hora)</p>
-                  <p class="text-lg font-black text-amber-600">{{ vehicle()?.standbyRate | currency:'USD':'symbol':'1.0-0' }}</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Último Mantenimiento</p>
-                  <p class="text-lg font-bold text-gray-800">{{ vehicle()?.lastService | date:'longDate' }}</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Próximo Mantenimiento</p>
-                  <p class="text-lg font-bold text-red-500">{{ vehicle()?.nextService | date:'longDate' }}</p>
+                <div>
+                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Modelo / Tipo</p>
+                  <p class="text-lg font-black text-gray-900 leading-tight">{{ vehicle()?.model }}</p>
+                  <p class="text-xs font-bold text-gray-400 leading-tight">{{ vehicle()?.type }}</p>
                 </div>
               </div>
-            </div>
 
-            <!-- Route Sheet / Active Service -->
-            <div *ngIf="activeRoute()" class="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
-               <div class="p-10 border-b border-gray-50">
-                  <h2 class="text-xl font-black text-gray-900 mb-2 flex items-center gap-3">
-                    <mat-icon [class.text-blue-500]="activeRoute()?.status === 'Active'" [class.text-amber-500]="activeRoute()?.status === 'Planning'">
-                      {{ activeRoute()?.status === 'Active' ? 'route' : 'event_available' }}
-                    </mat-icon>
-                    {{ activeRoute()?.status === 'Active' ? 'Servicio en Curso' : 'Servicio Programado' }}
-                  </h2>
-                  <p class="text-gray-400 text-sm font-medium">
-                    {{ activeRoute()?.status === 'Active' ? 'Hoja de ruta y detalles del servicio activo.' : 'Detalles del servicio próximo a iniciar.' }}
-                  </p>
-               </div>
-               
-               <div class="p-10 space-y-10">
-                  <div class="flex flex-col md:flex-row justify-between gap-8">
-                    <div class="space-y-1">
-                      <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cliente</p>
-                      <p class="text-xl font-black text-indigo-600">{{ activeRoute()?.customerName }}</p>
-                    </div>
-                    <div class="space-y-1 md:text-right">
-                      <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ruta</p>
-                      <p class="text-xl font-black text-gray-900">{{ activeRoute()?.origin }} → {{ activeRoute()?.destination }}</p>
-                    </div>
-                  </div>
-
-                  <div class="p-8 bg-gray-50 rounded-[32px] border border-gray-100">
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Línea de Tiempo / Hitos</p>
-                    <div class="space-y-6">
-                      @for (milestone of activeRoute()?.milestones; track milestone.id; let last = $last) {
-                        <div class="flex gap-4 relative">
-                          <div *ngIf="!last" class="absolute left-4 top-8 w-0.5 h-10 bg-gray-200"></div>
-                          <div class="w-8 h-8 rounded-full flex items-center justify-center relative z-10 shadow-sm"
-                               [class.bg-emerald-500]="milestone.status === 'Completed'"
-                               [class.text-white]="milestone.status === 'Completed'"
-                               [class.bg-white]="milestone.status === 'Pending'"
-                               [class.text-gray-300]="milestone.status === 'Pending'"
-                               [class.border]="milestone.status === 'Pending'"
-                               [class.border-gray-200]="milestone.status === 'Pending'">
-                            <mat-icon class="!text-sm !w-4 !h-4">{{ milestone.status === 'Completed' ? 'check' : 'radio_button_unchecked' }}</mat-icon>
-                          </div>
-                          <div>
-                            <p class="text-sm font-bold" [class.text-gray-900]="milestone.status === 'Completed'" [class.text-gray-400]="milestone.status === 'Pending'">
-                              {{ milestone.name }}
-                            </p>
-                            <p *ngIf="milestone.timestamp" class="text-[10px] font-medium text-gray-400">{{ milestone.timestamp | date:'short' }}</p>
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-               </div>
-            </div>
-
-            <!-- Empty State for Service -->
-             <div *ngIf="!activeRoute()" class="p-20 bg-gray-50/50 rounded-[40px] border border-gray-100 border-dashed flex flex-col items-center justify-center text-center">
-                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-gray-200 mb-6 shadow-sm">
-                  <mat-icon class="!text-[32px] !w-8 !h-8">event_busy</mat-icon>
+              <div class="flex items-center gap-6">
+                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                  <mat-icon class="!text-2xl">person</mat-icon>
                 </div>
-                <h4 class="text-lg font-black text-gray-900 mb-1">Sin Servicios Activos</h4>
-                <p class="text-gray-400 text-sm">Este vehículo no tiene una ruta o servicio asignado actualmente.</p>
+                <div>
+                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Conductor Asignado</p>
+                  <p class="text-lg font-black text-gray-900 leading-tight">{{ vehicle()?.driverName }}</p>
+                  <p class="text-xs font-bold text-gray-400 leading-tight">Licencia Vigente</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-6">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                  <mat-icon class="!text-2xl">event_repeat</mat-icon>
+                </div>
+                <div>
+                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Próximo Servicio</p>
+                  <p class="text-lg font-black text-gray-900 leading-tight">{{ vehicle()?.nextService | date:'longDate' }}</p>
+                  <p class="text-xs font-bold text-amber-500 leading-tight italic">Revisión periódica</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Card -->
+          <div class="bg-indigo-600 rounded-[40px] shadow-xl shadow-indigo-100 p-8 text-white relative overflow-hidden">
+             <mat-icon class="absolute -right-4 -bottom-4 !text-[120px] !w-[120px] !h-[120px] opacity-10 rotate-12">construction</mat-icon>
+             <h3 class="text-lg font-black mb-1">Estado de Flota</h3>
+             <p class="text-indigo-100 text-sm mb-8 font-medium opacity-80">Resumen de salud mecánica del vehículo.</p>
+             
+             <div class="grid grid-cols-2 gap-4">
+               <div class="bg-white/10 backdrop-blur-md rounded-3xl p-4">
+                 <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Mantenimientos</p>
+                 <p class="text-2xl font-black">{{ vehicle()?.maintenanceHistory?.length || 0 }}</p>
+               </div>
+               <div class="bg-white/10 backdrop-blur-md rounded-3xl p-4">
+                 <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Inversión</p>
+                 <p class="text-2xl font-black tabular-nums">{{ totalMaintenanceCost() | currency:'USD':'symbol':'1.0-0' }}</p>
+               </div>
              </div>
           </div>
+        </div>
 
-          <!-- Right Column: Operational History -->
-          <div class="space-y-8">
-            <!-- Historical Summary Card -->
-            <div class="bg-indigo-900 rounded-[40px] p-10 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
-               <!-- Decorative -->
-               <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
-               
-               <h3 class="text-xl font-black mb-8 relative z-10 flex items-center gap-3">
-                 <mat-icon>analytics</mat-icon>
-                 Resumen Operativo
-               </h3>
-               
-               <div class="space-y-8 relative z-10">
-                 <div class="flex justify-between items-center pb-6 border-b border-white/10">
-                   <span class="text-indigo-300 text-xs font-bold uppercase tracking-widest">Total Facturado</span>
-                   <span class="text-3xl font-black tabular-nums text-emerald-400">{{ historicalStats().totalBilled | currency:'USD':'symbol':'1.0-0' }}</span>
-                 </div>
-                 
-                 <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Servicios Realizados</span>
-                      <span class="text-lg font-black">{{ historicalStats().totalServices }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Total Gastos</span>
-                      <span class="text-lg font-black text-red-400">{{ historicalStats().totalExpenses | currency:'USD':'symbol':'1.0-0' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center pt-4 border-t border-white/10">
-                      <span class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest">Utilidad Bruta</span>
-                      <span class="text-xl font-black text-white tabular-nums">
-                        {{ historicalStats().totalBilled - historicalStats().totalExpenses | currency:'USD':'symbol':'1.0-0' }}
-                      </span>
-                    </div>
-                 </div>
-               </div>
+        <!-- Main Column: Maintenance History -->
+        <div class="lg:col-span-2 space-y-8">
+          <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+            <div class="p-10 border-b border-gray-50 flex justify-between items-center">
+              <div>
+                <h2 class="text-2xl font-black text-gray-900 mb-1">Historial de Mantenimientos</h2>
+                <p class="text-gray-400 text-sm font-medium">Cronograma de servicios preventivos y correctivos.</p>
+              </div>
             </div>
-
-            <!-- List of performed services -->
-            <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
-              <h3 class="text-lg font-black text-gray-900 mb-6 flex items-center gap-3">
-                <mat-icon class="text-indigo-500">history</mat-icon>
-                Últimos Servicios
-              </h3>
+            
+            <div class="p-10">
               <div class="space-y-6">
-                @for (route of vehicleRoutes(); track route.id) {
-                  @if (route.status === 'Settled') {
-                    <div class="p-5 rounded-3xl bg-gray-50 border border-gray-100 hover:border-indigo-100 transition-colors">
-                      <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-black text-indigo-600 uppercase">{{ route.id }}</span>
-                        <span class="text-[10px] font-bold text-gray-400">{{ route.departureDate | date:'shortDate' }}</span>
+                @for (maint of sortedMaintenance(); track maint.id) {
+                  <div class="p-8 rounded-[32px] bg-gray-50 border border-gray-100 transition-all hover:border-amber-100 hover:bg-white group">
+                    <div class="flex justify-between items-start mb-6">
+                      <div class="flex items-center gap-6">
+                        <div class="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center transition-colors"
+                             [class.text-amber-500]="maint.status === 'Scheduled'"
+                             [class.text-blue-500]="maint.status === 'InProcess'"
+                             [class.text-emerald-500]="maint.status === 'Completed'"
+                             [class.text-red-400]="maint.status === 'Cancelled'">
+                          <mat-icon class="!text-2xl">{{ getMaintenanceIcon(maint.type) }}</mat-icon>
+                        </div>
+                        <div>
+                          <div class="flex items-center gap-3 mb-1">
+                            <h4 class="text-xl font-black text-gray-900">{{ maint.type }}</h4>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest"
+                                  [class.bg-amber-100]="maint.status === 'Scheduled'"
+                                  [class.text-amber-600]="maint.status === 'Scheduled'"
+                                  [class.bg-blue-100]="maint.status === 'InProcess'"
+                                  [class.text-blue-600]="maint.status === 'InProcess'"
+                                  [class.bg-emerald-100]="maint.status === 'Completed'"
+                                  [class.text-emerald-600]="maint.status === 'Completed'"
+                                  [class.bg-red-100]="maint.status === 'Cancelled'"
+                                  [class.text-red-600]="maint.status === 'Cancelled'">
+                              {{ getMaintenanceStatusLabel(maint.status) }}
+                            </span>
+                          </div>
+                          <p class="text-xs font-bold text-gray-400">
+                            {{ maint.scheduledDate | date:'fullDate' }}
+                            @if (maint.completedDate) {
+                              <span class="text-emerald-500 ml-2 italic">• Completado el {{ maint.completedDate | date:'shortDate' }}</span>
+                            }
+                          </p>
+                        </div>
                       </div>
-                      <p class="text-xs font-black text-gray-800 mb-1">{{ route.customerName }}</p>
-                      <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-medium text-gray-400">{{ route.origin }} → {{ route.destination }}</span>
-                        <span class="text-xs font-black text-gray-900">{{ (route.servicePrice + route.standbyTotal) | currency:'USD':'symbol':'1.0-0' }}</span>
+
+                      <button mat-icon-button [matMenuTriggerFor]="maintMenu" class="text-gray-300">
+                        <mat-icon>more_vert</mat-icon>
+                      </button>
+                      <mat-menu #maintMenu="matMenu" class="custom-premium-menu">
+                        @if (maint.status !== 'Completed' && maint.status !== 'Cancelled') {
+                          <button mat-menu-item (click)="updateStatus(maint.id, 'InProcess')">
+                            <mat-icon class="text-blue-500">play_circle</mat-icon>
+                            <span>Iniciar Trabajo</span>
+                          </button>
+                          <button mat-menu-item (click)="updateStatus(maint.id, 'Completed')">
+                            <mat-icon class="text-emerald-500">check_circle</mat-icon>
+                            <span>Completar</span>
+                          </button>
+                          <button mat-menu-item (click)="updateStatus(maint.id, 'Cancelled')">
+                            <mat-icon class="text-red-500">cancel</mat-icon>
+                            <span>Cancelar</span>
+                          </button>
+                        }
+                      </mat-menu>
+                    </div>
+
+                    <p class="text-sm font-medium text-gray-600 mb-8 leading-relaxed italic border-l-4 border-gray-200 pl-4 py-2">
+                      {{ maint.description }}
+                    </p>
+
+                    <!-- Supports / Attachments -->
+                    <div class="space-y-4">
+                      <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Soportes y Evidencias</p>
+                      <div class="flex flex-wrap gap-3">
+                        @for (file of maint.attachments; track file) {
+                          <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-gray-100 text-xs font-bold text-gray-500 shadow-sm transition-all hover:border-indigo-200 hover:text-indigo-600 cursor-pointer">
+                            <mat-icon class="!text-sm !w-4 !h-4">description</mat-icon>
+                            {{ file }}
+                          </div>
+                        }
+                        
+                        @if (maint.status !== 'Completed' && maint.status !== 'Cancelled') {
+                          <button 
+                            (click)="addSupport(maint.id)"
+                            class="flex items-center gap-2 bg-white text-gray-400 px-4 py-2 rounded-2xl border border-dashed border-gray-200 text-xs font-bold hover:border-indigo-400 hover:text-indigo-600 transition-all"
+                          >
+                            <mat-icon class="!text-sm !w-4 !h-4">add</mat-icon>
+                            Adjuntar Soporte
+                          </button>
+                        }
                       </div>
                     </div>
-                  }
-                } @empty {
-                  <div class="py-10 text-center">
-                    <p class="text-gray-400 text-sm font-medium">No hay servicios registrados.</p>
+
+                    @if (maint.cost) {
+                      <div class="mt-8 pt-6 border-t border-gray-50 flex justify-end">
+                        <div class="flex items-center gap-3">
+                          <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Inversión:</span>
+                          <span class="text-lg font-black text-indigo-600 tabular-nums">{{ maint.cost | currency:'USD':'symbol':'1.0-0' }}</span>
+                        </div>
+                      </div>
+                    }
                   </div>
+                } @empty {
+                  <app-empty-state 
+                    icon="construction"
+                    description="No se registran actividades de mantenimiento para este vehículo."
+                  />
                 }
               </div>
             </div>
@@ -230,62 +246,96 @@ import { VehicleStatus } from '../../../../models/transport.model';
   `,
   styles: [`
     :host { display: block; }
+    ::ng-deep .custom-premium-menu {
+      border-radius: 20px !important;
+      padding: 8px !important;
+      border: 1px solid #f1f5f9 !important;
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05) !important;
+    }
   `]
 })
 export class TransportVehicleDetailPageComponent {
   private route = inject(ActivatedRoute);
-  public transportService = inject(TransportService);
+  private transportService = inject(TransportService);
+  private dialog = inject(MatDialog);
+  
+  vehicleId = signal<string | null>(null);
 
-  vehicleId = signal<string | null>(this.route.snapshot.paramMap.get('id'));
-
-  vehicle = computed(() => 
-    this.transportService.vehicles().find(v => v.id === this.vehicleId())
-  );
-
-  vehicleRoutes = computed(() => 
-    this.transportService.routes().filter(r => r.vehicleId === this.vehicleId())
-  );
-
-  activeRoute = computed(() => 
-    this.vehicleRoutes().find(r => r.status === 'Active' || r.status === 'Planning')
-  );
-
-  historicalStats = computed(() => {
-    // Only consider settled routes for billing and finished services
-    const finishedRoutes = this.vehicleRoutes().filter(r => r.status === 'Settled');
-    return {
-      totalBilled: finishedRoutes.reduce((sum, r) => sum + (r.servicePrice + r.standbyTotal), 0),
-      totalServices: finishedRoutes.length,
-      totalExpenses: finishedRoutes.reduce((sum, r) => {
-        const e = r.expenses || { tolls: 0, fuel: 0, allowances: 0 };
-        return sum + (e.tolls + e.fuel + e.allowances);
-      }, 0)
-    };
+  vehicle = computed(() => {
+    const id = this.vehicleId();
+    return id ? this.transportService.vehicles().find(v => v.id === id) : null;
   });
 
-  breadcrumbItems: BreadcrumbItem[] = [
-    { label: 'Inicio', link: '/dashboard' },
-    { label: 'Transporte', link: '/transport' },
-    { label: 'Detalle de Vehículo', link: '' }
-  ];
+  sortedMaintenance = computed(() => {
+    const history = this.vehicle()?.maintenanceHistory || [];
+    return [...history].sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
+  });
 
-  getStatusLabel(status: VehicleStatus): string {
-    const labels: Record<VehicleStatus, string> = {
+  totalMaintenanceCost = computed(() => {
+    return this.vehicle()?.maintenanceHistory?.reduce((acc, m) => acc + (m.cost || 0), 0) || 0;
+  });
+
+  constructor() {
+    this.route.params.subscribe(params => {
+      this.vehicleId.set(params['id']);
+    });
+  }
+
+  openMaintenanceDialog() {
+    this.dialog.open(TransportMaintenanceDialogOrganism, {
+      data: { vehicleId: this.vehicleId() },
+      width: '600px',
+      panelClass: 'custom-premium-dialog'
+    });
+  }
+
+  updateStatus(maintenanceId: string, status: VehicleMaintenance['status']) {
+    this.transportService.updateMaintenanceStatus(this.vehicleId()!, maintenanceId, status);
+  }
+
+  addSupport(maintenanceId: string) {
+    const filename = prompt('Nombre del archivo de soporte (simulado):', `SOP-${Math.floor(Math.random() * 1000)}.pdf`);
+    if (filename) {
+      this.transportService.addMaintenanceAttachment(this.vehicleId()!, maintenanceId, filename);
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    const labels: any = {
       'Available': 'Disponible',
       'InRoute': 'En Ruta',
       'Committed': 'Comprometido',
-      'Workshop': 'Taller'
+      'Workshop': 'En Taller'
     };
-    return labels[status];
+    return labels[status] || status;
   }
 
-  getStatusColor(status: VehicleStatus): 'green' | 'blue' | 'amber' | 'red' {
-    const colors: Record<VehicleStatus, 'green' | 'blue' | 'amber' | 'red'> = {
+  getStatusColor(status: string): any {
+    const colors: any = {
       'Available': 'green',
       'InRoute': 'blue',
       'Committed': 'amber',
       'Workshop': 'red'
     };
-    return colors[status];
+    return colors[status] || 'gray';
+  }
+
+  getMaintenanceStatusLabel(status: string): string {
+    const labels: any = {
+      'Scheduled': 'Programado',
+      'InProcess': 'En Curso',
+      'Completed': 'Completado',
+      'Cancelled': 'Cancelado'
+    };
+    return labels[status] || status;
+  }
+
+  getMaintenanceIcon(type: string): string {
+    switch(type) {
+      case 'Preventivo': return 'event_available';
+      case 'Correctivo': return 'build';
+      case 'Inspección': return 'fact_check';
+      default: return 'engineering';
+    }
   }
 }

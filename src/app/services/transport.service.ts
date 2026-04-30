@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Vehicle, TransportRoute, TransportServiceDefinition, VehicleStatus } from '../models/transport.model';
+import { Vehicle, TransportRoute, TransportServiceDefinition, VehicleStatus, TransportOperation, TransportExpense, TransportIncident, VehicleMaintenance } from '../models/transport.model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,26 +23,20 @@ export class TransportService {
   private _routes = signal<TransportRoute[]>([
     {
       id: 'RT-001',
-      serviceId: 'S-001',
-      origin: 'Bogotá',
-      destination: 'Medellín',
+      origin: 'Bogotá, DC',
+      destination: 'Medellín, ANT',
       vehicleId: 'ABC-456',
       driverName: 'Juan Perez',
       customerName: 'Distribuidora Nacional S.A.',
-      durationDays: 2,
       servicePrice: 1500000,
       standbyHours: 4,
       standbyTotal: 140000, // 4 * 35000
       departureDate: '2026-04-27T08:00:00',
-      expectedArrival: '2026-04-29T18:00:00',
       status: 'Active',
-      currentMilestone: 'Paso por Peaje Guaduas',
-      milestones: [
-        { id: '1', name: 'Salida Bogotá', timestamp: '2026-04-27T08:15:00', status: 'Completed' as const },
-        { id: '2', name: 'Paso por Peaje Guaduas', timestamp: '2026-04-27T11:30:00', status: 'Completed' as const },
-        { id: '3', name: 'Llegada Medellín', timestamp: '', status: 'Pending' as const }
-      ],
-      expenses: { tolls: 45000, fuel: 120000, allowances: 50000 }
+      milestones: [],
+      operations: [],
+      detailedExpenses: [],
+      incidents: []
     }
   ]);
 
@@ -63,8 +57,101 @@ export class TransportService {
   });
 
   addRoute(route: TransportRoute) {
-    this._routes.update(items => [route, ...items]);
-    this.updateVehicleStatus(route.vehicleId, 'Committed');
+    this._routes.update(items => [{ 
+      ...route, 
+      operations: route.operations || [],
+      detailedExpenses: route.detailedExpenses || [],
+      incidents: route.incidents || []
+    }, ...items]);
+    if (route.vehicleId) {
+      this.updateVehicleStatus(route.vehicleId, 'Committed');
+    }
+  }
+
+  addOperation(routeId: string, operation: Omit<TransportOperation, 'id'>) {
+    this._routes.update(items => items.map(r => {
+      if (r.id === routeId) {
+        const newOp: TransportOperation = { 
+          ...operation, 
+          id: `OP-${Math.floor(Math.random() * 10000)}`,
+          timestamp: operation.timestamp || new Date().toISOString()
+        };
+
+        let updatedVehicleId = r.vehicleId;
+        let updatedDriverName = r.driverName;
+
+        // If a new operation starts in process and has a vehicle, it takes over the service
+        if (newOp.status === 'InProcess' && newOp.vehicleId) {
+          updatedVehicleId = newOp.vehicleId;
+          const v = this._vehicles().find(vh => vh.id === updatedVehicleId);
+          updatedDriverName = v?.driverName || updatedDriverName;
+        }
+
+        return { 
+          ...r, 
+          vehicleId: updatedVehicleId,
+          driverName: updatedDriverName,
+          operations: [...(r.operations || []), newOp] 
+        };
+      }
+      return r;
+    }));
+  }
+
+  updateOperationStatus(routeId: string, operationId: string, status: 'InProcess' | 'Completed' | 'Cancelled', notes?: string) {
+    this._routes.update(items => items.map(r => {
+      if (r.id === routeId) {
+        let updatedVehicleId = r.vehicleId;
+        let updatedDriverName = r.driverName;
+
+        const operations = r.operations.map(op => {
+          if (op.id === operationId) {
+            const description = notes ? `${op.description} | Notas: ${notes}` : op.description;
+            const updatedOp = { 
+              ...op, 
+              status, 
+              description,
+              timestamp: new Date().toISOString() 
+            };
+            
+            if (status === 'InProcess' && updatedOp.vehicleId) {
+              updatedVehicleId = updatedOp.vehicleId;
+              const v = this._vehicles().find(vh => vh.id === updatedVehicleId);
+              updatedDriverName = v?.driverName || updatedDriverName;
+            }
+            
+            return updatedOp;
+          }
+          return op;
+        });
+
+        return { 
+          ...r, 
+          vehicleId: updatedVehicleId,
+          driverName: updatedDriverName,
+          operations 
+        };
+      }
+      return r;
+    }));
+  }
+
+  addExpense(routeId: string, expense: Omit<TransportExpense, 'id' | 'timestamp'>) {
+    this._routes.update(items => items.map(r => {
+      if (r.id === routeId) {
+        const newExp: TransportExpense = {
+          ...expense,
+          id: `EXP-${Math.floor(Math.random() * 10000)}`,
+          timestamp: new Date().toISOString()
+        };
+
+        return { 
+          ...r, 
+          detailedExpenses: [...(r.detailedExpenses || []), newExp]
+        };
+      }
+      return r;
+    }));
   }
 
   startRoute(vehicleId: string) {
@@ -119,6 +206,104 @@ export class TransportService {
         return { ...r, status: 'Cancelled', cancellationNotes: notes };
       }
       return r;
+    }));
+  }
+
+  addIncident(routeId: string, incident: Omit<TransportIncident, 'id' | 'timestamp'>) {
+    this._routes.update(items => items.map(r => {
+      if (r.id === routeId) {
+        const newIncident: TransportIncident = {
+          ...incident,
+          id: `INC-${Math.floor(Math.random() * 10000)}`,
+          timestamp: new Date().toISOString()
+        };
+        return { 
+          ...r, 
+          incidents: [...(r.incidents || []), newIncident] 
+        };
+      }
+      return r;
+    }));
+  }
+
+  changeVehicle(routeId: string, newVehicleId: string, reason: string) {
+    this._routes.update(items => items.map(r => {
+      if (r.id === routeId) {
+        const previousVehicleId = r.vehicleId;
+        
+        // Update vehicle statuses
+        this.updateVehicleStatus(previousVehicleId, 'Available');
+        this.updateVehicleStatus(newVehicleId, r.status === 'Planning' ? 'Committed' : 'InRoute');
+
+        const incident: TransportIncident = {
+          id: `INC-${Math.floor(Math.random() * 10000)}`,
+          type: 'Cambio de Vehículo',
+          description: reason,
+          timestamp: new Date().toISOString(),
+          previousVehicleId,
+          newVehicleId,
+          reportedBy: 'Sistema'
+        };
+
+        const newVehicle = this._vehicles().find(v => v.id === newVehicleId);
+
+        return { 
+          ...r, 
+          vehicleId: newVehicleId,
+          driverName: newVehicle?.driverName || r.driverName,
+          incidents: [...(r.incidents || []), incident] 
+        };
+      }
+      return r;
+    }));
+  }
+
+  addMaintenanceAttachment(vehicleId: string, maintenanceId: string, filename: string) {
+    this._vehicles.update(items => items.map(v => {
+      if (v.id === vehicleId) {
+        return {
+          ...v,
+          maintenanceHistory: v.maintenanceHistory?.map(m => 
+            m.id === maintenanceId ? { ...m, attachments: [...(m.attachments || []), filename] } : m
+          )
+        };
+      }
+      return v;
+    }));
+  }
+
+  scheduleMaintenance(maintenance: Omit<VehicleMaintenance, 'id'>) {
+    this._vehicles.update(items => items.map(v => {
+      const m = maintenance as any;
+      if (v.id === m.vehicleId) {
+        const newMaint: VehicleMaintenance = {
+          ...maintenance,
+          id: `MAINT-${Math.floor(Math.random() * 10000)}`
+        };
+        return {
+          ...v,
+          maintenanceHistory: [...(v.maintenanceHistory || []), newMaint]
+        };
+      }
+      return v;
+    }));
+  }
+
+  updateMaintenanceStatus(vehicleId: string, maintenanceId: string, status: VehicleMaintenance['status']) {
+    this._vehicles.update(items => items.map(v => {
+      if (v.id === vehicleId) {
+        return {
+          ...v,
+          maintenanceHistory: v.maintenanceHistory?.map(m => 
+            m.id === maintenanceId ? { 
+              ...m, 
+              status, 
+              completedDate: status === 'Completed' ? new Date().toISOString() : m.completedDate 
+            } : m
+          )
+        };
+      }
+      return v;
     }));
   }
 }

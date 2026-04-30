@@ -71,7 +71,7 @@ import { TransportRoute } from '../../../../models/transport.model';
                     <span class="text-sm font-bold text-indigo-600">{{ route.customerName }}</span>
                   </div>
                   <p class="text-gray-400 text-xs font-medium mt-1">
-                    {{ route.id }} • {{ route.durationDays }} días • Inicio: {{ route.departureDate | date:'shortDate' }}
+                    {{ route.id }} • Inicio: {{ route.departureDate | date:'short' }}
                   </p>
                 </div>
                 <div class="text-right">

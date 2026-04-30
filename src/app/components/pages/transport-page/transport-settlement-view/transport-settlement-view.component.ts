@@ -46,12 +46,12 @@ import { TransportRoute } from '../../../../models/transport.model';
                   </td>
                   <td class="p-8">
                     <span class="text-sm font-bold text-red-400 tabular-nums">
-                      -{{ (route.expenses.tolls + route.expenses.fuel + route.expenses.allowances) | currency:'USD':'symbol':'1.0-0' }}
+                      -{{ getRouteExpenses(route) | currency:'USD':'symbol':'1.0-0' }}
                     </span>
                   </td>
                   <td class="p-8 text-right">
                     <span class="text-sm font-black text-gray-900 tabular-nums">
-                      {{ (route.servicePrice + route.standbyTotal - (route.expenses.tolls + route.expenses.fuel + route.expenses.allowances)) | currency:'USD':'symbol':'1.0-0' }}
+                      {{ (route.servicePrice + route.standbyTotal - getRouteExpenses(route)) | currency:'USD':'symbol':'1.0-0' }}
                     </span>
                   </td>
                   <td class="p-8 text-right">
@@ -84,7 +84,7 @@ import { TransportRoute } from '../../../../models/transport.model';
                     <span class="text-[10px] text-gray-400">{{ route.destination }} • Liquidado</span>
                   </div>
                 </div>
-                <span class="text-xs font-black text-gray-900">{{ (route.expenses.tolls + route.expenses.fuel + route.expenses.allowances) | currency:'USD':'symbol':'1.0-0' }}</span>
+                <span class="text-xs font-black text-gray-900">{{ getRouteExpenses(route) | currency:'USD':'symbol':'1.0-0' }}</span>
               </div>
             }
           }
@@ -104,5 +104,9 @@ export class TransportSettlementViewComponent {
     if (confirm(`¿Deseas liquidar la ruta ${route.id}? Esto liberará el vehículo ${route.vehicleId}.`)) {
       this.transportService.settleRoute(route.id);
     }
+  }
+
+  getRouteExpenses(route: TransportRoute): number {
+    return route.detailedExpenses?.reduce((acc, exp) => acc + exp.amount, 0) || 0;
   }
 }

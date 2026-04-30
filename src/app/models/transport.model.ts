@@ -9,6 +9,19 @@ export interface Vehicle {
   standbyRate: number; // Hourly rate for standby time
   lastService: string;
   nextService: string;
+  maintenanceHistory?: VehicleMaintenance[];
+}
+
+export interface VehicleMaintenance {
+  id: string;
+  vehicleId: string;
+  type: 'Preventivo' | 'Correctivo' | 'Inspección' | 'Otros';
+  description: string;
+  scheduledDate: string;
+  completedDate?: string;
+  status: 'Scheduled' | 'InProcess' | 'Completed' | 'Cancelled';
+  attachments?: string[];
+  cost?: number;
 }
 
 export interface TransportServiceDefinition {
@@ -25,29 +38,55 @@ export interface RouteMilestone {
   status: 'Pending' | 'Completed';
 }
 
+export type OperationType = 'Cargue' | 'Descargue' | 'Consolidacion' | 'Desconsolidacion';
+
+export interface TransportOperation {
+  id: string;
+  type: OperationType;
+  timestamp: string;
+  vehicleId?: string; // Optional for most, but relevant for Cargue as per requirements
+  description: string;
+  status: 'InProcess' | 'Completed' | 'Cancelled';
+  attachments?: string[]; // Array of filenames or URLs
+}
+
+export interface TransportExpense {
+  id: string;
+  type: 'Peaje' | 'Combustible' | 'Viáticos' | 'Mantenimiento' | 'Otros';
+  amount: number;
+  description: string;
+  timestamp: string;
+  attachments?: string[];
+}
+
+export interface TransportIncident {
+  id: string;
+  type: 'Cambio de Vehículo' | 'Retraso' | 'Accidente' | 'Clima' | 'Otros';
+  description: string;
+  timestamp: string;
+  previousVehicleId?: string;
+  newVehicleId?: string;
+  reportedBy: string;
+}
+
 export interface TransportRoute {
   id: string;
-  serviceId: string;
   origin: string;
   destination: string;
+  customerName: string;
   vehicleId: string;
   driverName: string;
-  customerName: string;
-  durationDays: number;
+  departureDate: string; // ISO string including time
   servicePrice: number;
-  standbyHours: number; // Hours exceeded from original schedule
-  standbyTotal: number; // Total charge for standby
-  departureDate: string;
-  expectedArrival: string;
+  standbyHours: number;
+  standbyTotal: number;
   status: 'Planning' | 'Active' | 'Completed' | 'Settled' | 'Cancelled';
   cancellationNotes?: string;
   currentMilestone?: string;
   milestones: RouteMilestone[];
-  expenses: {
-    tolls: number;
-    fuel: number;
-    allowances: number;
-  };
+  operations: TransportOperation[];
+  detailedExpenses: TransportExpense[];
+  incidents: TransportIncident[];
 }
 
 export interface TransportSettlement {
