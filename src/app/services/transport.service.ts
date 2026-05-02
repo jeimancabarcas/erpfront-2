@@ -189,11 +189,11 @@ export class TransportService {
     }
   }
 
-  settleRoute(routeId: string) {
+  settleRoute(routeId: string, notes?: string) {
     this._routes.update(items => items.map(r => {
       if (r.id === routeId) {
         this.updateVehicleStatus(r.vehicleId, 'Available');
-        return { ...r, status: 'Settled' };
+        return { ...r, status: 'Settled', settlementNotes: notes };
       }
       return r;
     }));
@@ -204,6 +204,20 @@ export class TransportService {
       if (r.id === routeId) {
         this.updateVehicleStatus(r.vehicleId, 'Available');
         return { ...r, status: 'Cancelled', cancellationNotes: notes };
+      }
+      return r;
+    }));
+  }
+
+  addStandby(routeId: string, hours: number, amount: number, notes: string) {
+    this._routes.update(items => items.map(r => {
+      if (r.id === routeId) {
+        return { 
+          ...r, 
+          standbyHours: (r.standbyHours || 0) + hours,
+          standbyTotal: (r.standbyTotal || 0) + amount,
+          standbyNotes: notes
+        };
       }
       return r;
     }));

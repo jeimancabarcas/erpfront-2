@@ -87,6 +87,8 @@ export interface TransportRoute {
   operations: TransportOperation[];
   detailedExpenses: TransportExpense[];
   incidents: TransportIncident[];
+  settlementNotes?: string;
+  standbyNotes?: string;
 }
 
 export interface TransportSettlement {

@@ -14,15 +14,18 @@ import { EmptyStateAtom } from '../../../atoms/empty-state/empty-state.component
 import { TransportChangeVehicleDialogOrganism } from '../../../organisms/transport-change-vehicle-dialog/transport-change-vehicle-dialog.component';
 import { TransportIncidentDialogOrganism } from '../../../organisms/transport-incident-dialog/transport-incident-dialog.component';
 import { TransportOperationClosureDialogOrganism } from '../../../organisms/transport-operation-closure-dialog/transport-operation-closure-dialog.component';
+import { TransportSettleDialogOrganism } from '../../../organisms/transport-settle-dialog/transport-settle-dialog.component';
+import { TransportCancelDialogOrganism } from '../../../organisms/transport-cancel-dialog/transport-cancel-dialog.component';
+import { TransportStandbyDialogOrganism } from '../../../organisms/transport-standby-dialog/transport-standby-dialog.component';
 
 @Component({
   selector: 'app-transport-service-detail-page',
   standalone: true,
   imports: [
-    CommonModule, 
-    MatIconModule, 
-    MatButtonModule, 
-    RouterModule, 
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    RouterModule,
     BreadcrumbMolecule,
     DashboardLayoutComponent,
     MatDialogModule,
@@ -68,6 +71,28 @@ import { TransportOperationClosureDialogOrganism } from '../../../organisms/tran
           </div>
           
           <div class="flex gap-4">
+            @if (routeData()?.status === 'Active' || routeData()?.status === 'Completed') {
+              <button 
+                mat-flat-button 
+                (click)="openSettleDialog()"
+                class="!rounded-full !h-12 !px-8 !font-black !bg-emerald-600 shadow-xl shadow-emerald-100 hover:scale-105 transition-all !text-white"
+              >
+                <mat-icon class="mr-2">check_circle</mat-icon>
+                Liquidar Servicio
+              </button>
+            }
+
+            @if (routeData()?.status === 'Active' || routeData()?.status === 'Planning') {
+              <button 
+                mat-stroked-button 
+                (click)="openCancelDialog()"
+                class="!rounded-full !h-12 !px-8 !font-black !border-red-100 !text-red-600 hover:!bg-red-50 transition-all"
+              >
+                <mat-icon class="mr-2">cancel</mat-icon>
+                Cancelar
+              </button>
+            }
+            
             <button mat-flat-button color="primary" class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all">
               Imprimir Factura
             </button>
@@ -431,6 +456,16 @@ import { TransportOperationClosureDialogOrganism } from '../../../organisms/tran
                   <span class="text-sm font-bold opacity-80">Total Gastos Reportados</span>
                   <span class="text-lg font-black tabular-nums">- {{ totalExpenses() | currency:'USD':'symbol':'1.0-0' }}</span>
                 </div>
+                <div class="pt-4" *ngIf="routeData()?.status === 'Active' || routeData()?.status === 'Completed'">
+                  <button 
+                    mat-stroked-button 
+                    (click)="openStandbyDialog()"
+                    class="!w-full !rounded-2xl !h-12 !font-black !border-indigo-100 !text-indigo-600 hover:!bg-indigo-50 transition-all"
+                  >
+                    <mat-icon class="mr-2">hourglass_empty</mat-icon>
+                    Agregar Standby
+                  </button>
+                </div>
                 <div class="pt-6 border-t border-gray-50 flex justify-between items-center">
                   <div class="flex flex-col">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Resultado Final</span>
@@ -521,14 +556,14 @@ export class TransportServiceDetailPageComponent {
 
   routeId = signal<string | null>(this.route.snapshot.paramMap.get('id'));
 
-  routeData = computed(() => 
+  routeData = computed(() =>
     this.transportService.routes().find(r => r.id === this.routeId())
   );
 
   sortedOperations = computed(() => {
     const data = this.routeData();
     if (!data || !data.operations) return [];
-    return [...data.operations].sort((a, b) => 
+    return [...data.operations].sort((a, b) =>
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
   });
@@ -569,7 +604,7 @@ export class TransportServiceDetailPageComponent {
     const data = this.routeData();
     const summary = { tolls: 0, fuel: 0, allowances: 0, maintenance: 0, others: 0 };
     if (!data || !data.detailedExpenses) return summary;
-    
+
     data.detailedExpenses.forEach(exp => {
       if (exp.type === 'Peaje') summary.tolls += exp.amount;
       if (exp.type === 'Combustible') summary.fuel += exp.amount;
@@ -587,9 +622,9 @@ export class TransportServiceDetailPageComponent {
   openOperationDialog() {
     this.dialog.open(TransportOperationDialogOrganism, {
       width: '600px',
-      data: { 
+      data: {
         routeId: this.routeId(),
-        vehicleId: this.routeData()?.vehicleId 
+        vehicleId: this.routeData()?.vehicleId
       },
       panelClass: 'custom-dialog-container'
     });
@@ -635,8 +670,32 @@ export class TransportServiceDetailPageComponent {
     });
   }
 
+  openSettleDialog() {
+    this.dialog.open(TransportSettleDialogOrganism, {
+      width: '600px',
+      data: { route: this.routeData() },
+      panelClass: 'custom-dialog-container'
+    });
+  }
+
+  openCancelDialog() {
+    this.dialog.open(TransportCancelDialogOrganism, {
+      width: '600px',
+      data: { route: this.routeData() },
+      panelClass: 'custom-dialog-container'
+    });
+  }
+
+  openStandbyDialog() {
+    this.dialog.open(TransportStandbyDialogOrganism, {
+      width: '600px',
+      data: { route: this.routeData() },
+      panelClass: 'custom-dialog-container'
+    });
+  }
+
   getOperationIcon(type: string): string {
-    switch(type) {
+    switch (type) {
       case 'Cargue': return 'file_upload';
       case 'Descargue': return 'file_download';
       case 'Consolidacion': return 'view_module';
@@ -646,7 +705,7 @@ export class TransportServiceDetailPageComponent {
   }
 
   getExpenseIcon(type: string): string {
-    switch(type) {
+    switch (type) {
       case 'Peaje': return 'toll';
       case 'Combustible': return 'local_gas_station';
       case 'Viáticos': return 'restaurant';
@@ -656,7 +715,7 @@ export class TransportServiceDetailPageComponent {
   }
 
   getStatusLabel(status: string | undefined): string {
-    switch(status) {
+    switch (status) {
       case 'Active': return 'En Tránsito';
       case 'Planning': return 'Programado';
       case 'Settled': return 'Liquidado';
