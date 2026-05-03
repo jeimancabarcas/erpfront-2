@@ -17,3 +17,4 @@ trigger: always_on
 13. Todos los diseños que hagas deben ser responsive obligatoriamente y como primera opcion para lograrlo siembre debes usar las clases de tailwind
 14. Antes de hacer cualquier cosa deberias revisar si hay algun atomo creado que puedas reutilizar
 15. Si algun otro componente tiene un componente que peudas reutilizar sacalo a un atomo o lo que corresponda para reutilizarlo
+16. Antes de integrar cualquier servicio quiero que 

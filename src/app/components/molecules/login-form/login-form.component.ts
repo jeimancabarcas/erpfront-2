@@ -5,6 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 
+import { Router } from '@angular/router';
+
 @Component({
   selector: 'app-login-form',
   standalone: true,
@@ -64,13 +66,14 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class LoginFormComponent {
   private authService = inject(AuthService);
+  private router = inject(Router);
   
   email = signal('');
   password = signal('');
   isLoading = signal(false);
   error = signal('');
 
-  async handleLogin() {
+  handleLogin() {
     if (!this.email() || !this.password()) {
       this.error.set('Por favor completa todos los campos.');
       return;
@@ -79,14 +82,25 @@ export class LoginFormComponent {
     this.isLoading.set(true);
     this.error.set('');
 
-    try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      this.authService.login(this.email(), this.password());
-    } catch (e) {
-      this.error.set('Error al iniciar sesión. Inténtalo de nuevo.');
-    } finally {
-      this.isLoading.set(false);
-    }
+    this.authService.login({ email: this.email(), password: this.password() }).subscribe({
+      next: (response) => {
+        const user = response.user;
+        if (user.role === 'admin' && !user.isProfileCompleted) {
+          this.router.navigate(['/complete-profile']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Login error:', err);
+        if (err.status === 401) {
+          this.error.set('Credenciales inválidas. Por favor intenta de nuevo.');
+        } else {
+          this.error.set('Error de conexión con el servidor. Inténtalo más tarde.');
+        }
+        this.isLoading.set(false);
+      }
+    });
   }
 }
