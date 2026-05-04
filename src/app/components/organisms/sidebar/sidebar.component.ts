@@ -93,6 +93,17 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                         <span class="text-[11px] font-bold tracking-wide">Categorías</span>
                       </div>
                     </a>
+                    <a 
+                      mat-list-item 
+                      routerLink="/inventory/products" 
+                      routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+                      class="!rounded-full !h-10 hover:!bg-gray-50 transition-all flex items-center group"
+                    >
+                      <div class="flex items-center gap-3 px-4">
+                        <mat-icon class="!text-gray-400 !text-[18px]">inventory_2</mat-icon>
+                        <span class="text-[11px] font-bold tracking-wide">Productos</span>
+                      </div>
+                    </a>
                   </nav>
                 </mat-expansion-panel>
               </mat-accordion>
@@ -256,7 +267,7 @@ export class SidebarComponent {
   }
 
   isInventorySettingsActive(): boolean {
-    return this.router.url.includes('/inventory/categories');
+    return this.router.url.includes('/inventory/categories') || this.router.url.includes('/inventory/products');
   }
 
   isPediatricsActive(): boolean {
