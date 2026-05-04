@@ -61,6 +61,18 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                   <span class="text-xs font-bold tracking-wide">Resumen</span>
                 </div>
               </a>
+
+              <a 
+                mat-list-item 
+                routerLink="/inventory/purchases" 
+                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+              >
+                <div class="flex items-center gap-3 px-4">
+                  <mat-icon class="!text-gray-400 !text-[20px]">shopping_cart</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Compras</span>
+                </div>
+              </a>
               
               <!-- Configuración Sub-menu -->
               <mat-accordion class="inner-accordion" multi>

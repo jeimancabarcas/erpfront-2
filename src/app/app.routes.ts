@@ -41,6 +41,10 @@ export const routes: Routes = [
       {
         path: 'suppliers',
         loadComponent: () => import('./components/pages/inventory-page/inventory-suppliers-page/inventory-suppliers-page.component').then(m => m.InventorySuppliersPageComponent)
+      },
+      {
+        path: 'purchases',
+        loadComponent: () => import('./components/pages/inventory-page/inventory-purchases-page/inventory-purchases-page.component').then(m => m.InventoryPurchasesPageComponent)
       }
     ]
   },
