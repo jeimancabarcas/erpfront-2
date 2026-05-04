@@ -2,6 +2,10 @@ import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * Guard para proteger rutas privadas. 
+ * Si no hay sesión, redirige al login.
+ */
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -14,6 +18,25 @@ export const authGuard: CanActivateFn = (route, state) => {
   return false;
 };
 
+/**
+ * Guard para proteger rutas públicas (como el login).
+ * Si ya hay una sesión iniciada, redirige al dashboard.
+ */
+export const publicGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isLoggedIn()) {
+    return true;
+  }
+
+  router.navigate(['/dashboard']);
+  return false;
+};
+
+/**
+ * Guard para asegurar que el perfil esté completado si es necesario.
+ */
 export const profileGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -35,7 +58,7 @@ export const profileGuard: CanActivateFn = (route, state) => {
 
   // Si ya completó perfil e intenta ir a /complete-profile, redirigir al dashboard
   if (user.isProfileCompleted && state.url === '/complete-profile') {
-    router.navigate(['/']);
+    router.navigate(['/dashboard']);
     return false;
   }
 

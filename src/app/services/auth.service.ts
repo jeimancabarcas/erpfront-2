@@ -4,13 +4,15 @@ import { Observable, tap } from 'rxjs';
 import { AuthResponse, LoginDto, User } from '../models/auth.model';
 import { Router } from '@angular/router';
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly apiUrl = 'http://localhost:3000';
+  private readonly apiUrl = environment.apiUrl;
 
   private readonly _currentUser = signal<User | null>(this.getStoredUser());
   public readonly currentUser = this._currentUser.asReadonly();
