@@ -1,4 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -6,12 +7,15 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { InventoryService, StockItem } from '../../../services/inventory.service';
+import { ProductService } from '../../../services/product.service';
+import { CategoryService } from '../../../services/category.service';
+import { Product } from '../../../models/product.model';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
   imports: [
+    CommonModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
@@ -45,32 +49,41 @@ import { InventoryService, StockItem } from '../../../services/inventory.service
 
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Categoría</mat-label>
-            <mat-select [(ngModel)]="product().category" name="category" required>
-              @for (cat of categories; track cat) {
-                <mat-option [value]="cat">{{cat}}</mat-option>
+            <mat-select [(ngModel)]="product().categoryId" name="categoryId" required>
+              @for (cat of categoryList(); track cat.id) {
+                <mat-option [value]="cat.id">{{cat.name}}</mat-option>
               }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Stock Actual</mat-label>
-            <input matInput type="number" [(ngModel)]="product().quantity" name="quantity" required>
+            <input matInput type="number" [(ngModel)]="product().currentStock" name="currentStock" required min="0">
             <span matSuffix class="pr-2 text-gray-400 text-sm">unidades</span>
+            @if (productForm.controls['currentStock']?.errors?.['min']) {
+              <mat-error>El stock no puede ser negativo</mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Stock Mínimo</mat-label>
-            <input matInput type="number" [(ngModel)]="product().minStock" name="minStock" required>
+            <input matInput type="number" [(ngModel)]="product().minStock" name="minStock" required min="0">
+            @if (productForm.controls['minStock']?.errors?.['min']) {
+              <mat-error>El stock mínimo no puede ser negativo</mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Stock Máximo</mat-label>
-            <input matInput type="number" [(ngModel)]="product().maxStock" name="maxStock" required>
+            <input matInput type="number" [(ngModel)]="product().maxStock" name="maxStock" required min="0">
+            @if (productForm.controls['maxStock']?.errors?.['min']) {
+              <mat-error>El stock máximo no puede ser negativo</mat-error>
+            }
           </mat-form-field>
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
-          <button mat-button (click)="dialogRef.close()" class="!h-12 !px-8 !rounded-full !font-bold">
+          <button mat-button (click)="dialogRef.close()" class="!h-12 !px-8 !rounded-full !font-bold text-gray-500">
             Cancelar
           </button>
           <button 
@@ -78,7 +91,7 @@ import { InventoryService, StockItem } from '../../../services/inventory.service
             color="primary" 
             [disabled]="!productForm.valid"
             (click)="saveProduct()"
-            class="!h-12 !px-8 !rounded-full !font-bold"
+            class="!h-12 !px-8 !rounded-full !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
           >
             {{ isEditMode ? 'Guardar Cambios' : 'Crear Producto' }}
           </button>
@@ -87,35 +100,37 @@ import { InventoryService, StockItem } from '../../../services/inventory.service
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+    :host { display: block; }
     ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 28px !important;
-      padding: 24px !important;
+      border-radius: 40px !important;
+      padding: 32px !important;
     }
   `]
 })
 export class ProductFormMolecule implements OnInit {
   public dialogRef = inject(MatDialogRef<ProductFormMolecule>);
   private data = inject(MAT_DIALOG_DATA, { optional: true });
-  private inventoryService = inject(InventoryService);
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
 
   isEditMode = false;
-  categories = ['Electrónica', 'Accesorios', 'Muebles', 'Herramientas', 'Otros'];
+  categoryList = this.categoryService.categories;
 
-  product = signal<Partial<StockItem>>({
+  product = signal<any>({
     name: '',
     sku: '',
-    category: 'Electrónica',
-    quantity: 0,
+    categoryId: null,
+    currentStock: 0,
     minStock: 0,
-    maxStock: 0,
-    unit: 'unidades',
-    status: 'In Stock'
+    maxStock: 0
   });
 
   ngOnInit() {
+    // Cargar categorías si no están cargadas
+    if (this.categoryList().length === 0) {
+      this.categoryService.loadCategories({ limit: 100 }).subscribe();
+    }
+
     if (this.data && this.data.product) {
       this.isEditMode = true;
       this.product.set({ ...this.data.product });
@@ -123,24 +138,17 @@ export class ProductFormMolecule implements OnInit {
   }
 
   saveProduct() {
-    const qty = this.product().quantity || 0;
-    const min = this.product().minStock || 0;
-    const status = qty === 0 ? 'Out of Stock' : (qty <= min ? 'Low Stock' : 'In Stock');
+    const { id, name, sku, categoryId, currentStock, minStock, maxStock } = this.product();
+    const payload = { name, sku, categoryId, currentStock, minStock, maxStock };
     
-    if (this.isEditMode) {
-      this.inventoryService.updateProduct({
-        ...this.product() as StockItem,
-        status
-      });
-    } else {
-      const newProduct: StockItem = {
-        ...this.product() as StockItem,
-        id: Math.random().toString(36).substring(2, 9),
-        status
-      };
-      this.inventoryService.addProduct(newProduct);
-    }
-    
-    this.dialogRef.close(true);
+    const request = this.isEditMode 
+      ? this.productService.updateProduct(id, payload)
+      : this.productService.createProduct(payload);
+
+    request.subscribe({
+      next: () => this.dialogRef.close(true),
+      error: (err) => console.error('Error saving product:', err)
+    });
   }
 }
+
