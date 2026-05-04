@@ -22,10 +22,19 @@ export const routes: Routes = [
     canActivate: [authGuard, profileGuard],
     loadComponent: () => import('./components/pages/profile-page/profile-page.component').then(m => m.ProfilePageComponent) 
   },
-  { 
+  {
     path: 'inventory', 
     canActivate: [authGuard, profileGuard],
-    loadComponent: () => import('./components/pages/inventory-page/inventory-page.component').then(m => m.InventoryPageComponent) 
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./components/pages/inventory-page/inventory-page.component').then(m => m.InventoryPageComponent)
+      },
+      {
+        path: 'categories',
+        loadComponent: () => import('./components/pages/inventory-page/inventory-categories-page/inventory-categories-page.component').then(m => m.InventoryCategoriesPageComponent)
+      }
+    ]
   },
   { 
     path: 'sales', 

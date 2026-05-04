@@ -22,10 +22,23 @@ export interface Movement {
   destination: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  productCount: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class InventoryService {
+  private _categories = signal<Category[]>([
+    { id: '1', name: 'Electrónica', description: 'Equipos electrónicos y gadgets', productCount: 15 },
+    { id: '2', name: 'Accesorios', description: 'Periféricos y complementos', productCount: 42 },
+    { id: '3', name: 'Mobiliario', description: 'Muebles de oficina', productCount: 8 },
+  ]);
+
   private _stock = signal<StockItem[]>([
     { id: '1', name: 'Laptop Pro 14', sku: 'LAP-001', category: 'Electrónica', quantity: 45, minStock: 10, maxStock: 100, unit: 'unidades', status: 'In Stock' },
     { id: '2', name: 'Monitor 27" 4K', sku: 'MON-002', category: 'Electrónica', quantity: 8, minStock: 10, maxStock: 50, unit: 'unidades', status: 'Low Stock' },
@@ -41,6 +54,11 @@ export class InventoryService {
 
   public stock = this._stock.asReadonly();
   public movements = this._movements.asReadonly();
+  public categories = this._categories.asReadonly();
+
+  addCategory(category: Category) {
+    this._categories.update(items => [...items, category]);
+  }
 
   addProduct(product: StockItem) {
     this._stock.update(items => [...items, product]);
