@@ -2,12 +2,13 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
+import { PaginatedResponse, PaginatedMeta, QueryParams } from '../models/pagination.model';
 
 export interface InventoryCategory {
   id: string; // UUID
   name: string;
   description?: string;
-  productCount?: number; // Opcional, dependiendo de si el backend lo retorna
+  productCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -33,12 +34,33 @@ export class CategoryService {
   private _categories = signal<InventoryCategory[]>([]);
   public categories = this._categories.asReadonly();
 
+  // Estado reactivo para los metadatos de paginación
+  private _meta = signal<PaginatedMeta | null>(null);
+  public meta = this._meta.asReadonly();
+
   /**
-   * Carga la lista completa de categorías desde el servidor
+   * Carga la lista completa de categorías desde el servidor con filtros, orden y paginación
    */
-  loadCategories(): Observable<InventoryCategory[]> {
-    return this.http.get<InventoryCategory[]>(this.apiUrl).pipe(
-      tap(categories => this._categories.set(categories))
+  loadCategories(params?: QueryParams): Observable<PaginatedResponse<InventoryCategory>> {
+    const queryParams: any = {};
+    
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          queryParams[key] = params[key];
+        }
+      });
+    }
+
+    return this.http.get<any>(this.apiUrl, { params: queryParams }).pipe(
+      tap((response: any) => {
+        // Handle both { data: [...] } and { items: [...] } or direct array [...]
+        const data = response.data || response.items || (Array.isArray(response) ? response : []);
+        const meta = response.meta || null;
+        
+        this._categories.set(data);
+        this._meta.set(meta);
+      })
     );
   }
 
