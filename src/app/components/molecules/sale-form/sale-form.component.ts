@@ -10,13 +10,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
-import { SalesService, Invoice, InvoiceProduct } from '../../../services/sales.service';
+import { InvoiceService } from '../../../services/invoice.service';
 import { Product } from '../../../models/product.model';
 import { Customer } from '../../../models/customer.model';
+import { CreateInvoiceDto } from '../../../models/invoice.model';
 import { startWith, map } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-sale-form',
@@ -34,6 +35,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
     MatIconModule,
     MatTableModule,
     MatTooltipModule,
+    MatSnackBarModule,
     CurrencyPipe
   ],
   template: `
@@ -48,8 +50,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
               <mat-icon class="!text-[28px] !w-7 !h-7">shopping_cart</mat-icon>
             </div>
             <div>
-              <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">Nueva Venta</h2>
-              <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Inventario & Ventas</p>
+              <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">Nueva Factura de Venta</h2>
+              <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Facturación & Inventario</p>
             </div>
           </div>
           <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
@@ -59,25 +61,36 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
         <form [formGroup]="saleForm" (ngSubmit)="onSubmit()" class="space-y-8">
           
-          <!-- Customer Selection -->
-          <div class="space-y-2">
-            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Cliente</label>
-            <mat-form-field appearance="outline" class="w-full !m-0">
-              <mat-label>Seleccione un cliente</mat-label>
-              <mat-select formControlName="customer" required>
-                @for (customer of customers(); track customer.id) {
-                  <mat-option [value]="customer">{{ customer.name }} ({{ customer.documentNumber }})</mat-option>
-                }
-              </mat-select>
-              <mat-icon matPrefix class="mr-2 text-gray-400">person</mat-icon>
-            </mat-form-field>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Customer Selection -->
+            <div class="space-y-2">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Cliente</label>
+              <mat-form-field appearance="outline" class="w-full !m-0">
+                <mat-label>Seleccione un cliente</mat-label>
+                <mat-select formControlName="customerId" required>
+                  @for (customer of customers(); track customer.id) {
+                    <mat-option [value]="customer.id">{{ customer.name }} ({{ customer.documentNumber }})</mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix class="mr-2 text-gray-400">person</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <!-- Notes -->
+            <div class="space-y-2">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Notas (Opcional)</label>
+              <mat-form-field appearance="outline" class="w-full !m-0">
+                <input matInput formControlName="notes" placeholder="Ej: Pago a 30 días">
+                <mat-icon matPrefix class="mr-2 text-gray-400">description</mat-icon>
+              </mat-form-field>
+            </div>
           </div>
 
           <!-- Product Selection Area -->
           <div class="bg-gray-50/50 rounded-[28px] p-6 border border-gray-100 space-y-4">
             <div class="flex items-center gap-2 mb-2">
               <mat-icon class="text-indigo-600 scale-75">add_circle</mat-icon>
-              <h3 class="text-xs font-black text-gray-900 uppercase tracking-widest">Añadir Productos del Inventario</h3>
+              <h3 class="text-xs font-black text-gray-900 uppercase tracking-widest">Añadir Productos</h3>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
@@ -118,11 +131,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
             @if (selectedProduct()) {
               <div class="flex items-center gap-4 animate-in fade-in slide-in-from-left duration-300">
                 <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-100 shadow-sm">
-                  <span class="text-[10px] font-black text-gray-400 uppercase">Precio Unit:</span>
-                  <span class="text-xs font-black text-indigo-600">{{ selectedProduct()?.averagePurchasePrice | currency }}</span>
+                  <span class="text-[10px] font-black text-gray-400 uppercase">Precio Sugerido:</span>
+                  <span class="text-xs font-black text-indigo-600">{{ selectedProduct()?.sellingPrice | currency }}</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-100 shadow-sm">
-                  <span class="text-[10px] font-black text-gray-400 uppercase">Stock Disponible:</span>
+                  <span class="text-[10px] font-black text-gray-400 uppercase">Stock Actual:</span>
                   <span class="text-xs font-black" [class.text-red-600]="selectedProduct()!.currentStock < 5">{{ selectedProduct()?.currentStock }}</span>
                 </div>
               </div>
@@ -132,7 +145,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
           <!-- Added Products Table -->
           @if (items.length > 0) {
             <div class="space-y-4 animate-in fade-in slide-in-from-bottom duration-500">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Resumen de Venta</label>
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Detalle de Factura</label>
               <div class="border border-gray-100 rounded-[24px] overflow-hidden bg-white shadow-sm">
                 <table mat-table [dataSource]="items.controls" class="w-full">
                   <ng-container matColumnDef="product">
@@ -146,9 +159,17 @@ import { toSignal } from '@angular/core/rxjs-interop';
                   </ng-container>
 
                   <ng-container matColumnDef="price">
-                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-right">Precio</th>
+                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-right">Precio Unit.</th>
                     <td mat-cell *matCellDef="let control" class="px-4 text-right">
-                      <span class="text-xs font-medium text-gray-500">{{ control.value.price | currency }}</span>
+                      <div class="flex items-center justify-end gap-2">
+                        <mat-icon class="!text-gray-300 scale-75">edit</mat-icon>
+                        <input 
+                          type="number" 
+                          [value]="control.value.unitPrice" 
+                          (change)="updatePrice(control, $event)"
+                          class="w-24 text-right bg-transparent border-b border-dashed border-gray-200 focus:border-indigo-500 outline-none font-bold text-xs"
+                        >
+                      </div>
                     </td>
                   </ng-container>
 
@@ -168,9 +189,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
                   </ng-container>
 
                   <ng-container matColumnDef="total">
-                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-6 bg-gray-50/50 text-right">Total</th>
+                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-6 bg-gray-50/50 text-right">Subtotal</th>
                     <td mat-cell *matCellDef="let control" class="px-6 text-right">
-                      <span class="text-sm font-black text-indigo-600">{{ control.value.price * control.value.quantity | currency }}</span>
+                      <span class="text-sm font-black text-indigo-600">{{ control.value.unitPrice * control.value.quantity | currency }}</span>
                     </td>
                   </ng-container>
 
@@ -195,8 +216,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
                     <mat-icon>payments</mat-icon>
                   </div>
                   <div>
-                    <p class="text-[10px] text-indigo-100 font-black uppercase tracking-widest">Total a Pagar</p>
-                    <p class="text-xs text-indigo-200 font-medium italic">Incluye todos los productos</p>
+                    <p class="text-[10px] text-indigo-100 font-black uppercase tracking-widest">Total Facturado</p>
+                    <p class="text-xs text-indigo-200 font-medium italic">Venta sujeta a descuento de inventario</p>
                   </div>
                 </div>
                 <span class="text-3xl font-black text-white tabular-nums">{{ totalAmount() | currency }}</span>
@@ -205,11 +226,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
           } @else {
              <div class="p-12 text-center border-2 border-dashed border-gray-100 rounded-[28px] space-y-4">
                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
-                 <mat-icon class="!text-gray-300 !text-3xl !w-7 !h-7">shopping_bag</mat-icon>
+                 <mat-icon class="!text-gray-300 !text-3xl !w-7 !h-7">receipt</mat-icon>
                </div>
                <div>
-                 <p class="text-sm font-bold text-gray-900">Tu carrito está vacío</p>
-                 <p class="text-xs text-gray-400">Busca y añade productos del inventario para iniciar la venta.</p>
+                 <p class="text-sm font-bold text-gray-900">No hay ítems en la factura</p>
+                 <p class="text-xs text-gray-400">Busca productos y agrégalos para generar la venta.</p>
                </div>
              </div>
           }
@@ -220,9 +241,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
               Descartar
             </button>
             <button mat-flat-button color="primary" type="submit" 
-              [disabled]="saleForm.invalid || items.length === 0"
+              [disabled]="saleForm.invalid || items.length === 0 || isSubmitting()"
               class="!rounded-full !px-12 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all">
-              Finalizar Venta
+              {{ isSubmitting() ? 'Procesando...' : 'Generar Factura (PAID)' }}
             </button>
           </div>
         </form>
@@ -244,9 +265,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
       color: #9ca3af !important;
       cursor: not-allowed;
     }
-    mat-icon {
-      font-size: 24px;
-    }
+    mat-icon { font-size: 24px; }
   `]
 })
 export class SaleFormMolecule implements OnInit {
@@ -254,22 +273,25 @@ export class SaleFormMolecule implements OnInit {
   public dialogRef = inject(MatDialogRef<SaleFormMolecule>);
   private productService = inject(ProductService);
   private customerService = inject(CustomerService);
-  private salesService = inject(SalesService);
+  private invoiceService = inject(InvoiceService);
+  private snackBar = inject(MatSnackBar);
 
   // Local state signals
   customers = this.customerService.customers;
   allProducts = this.productService.products;
   selectedProduct = signal<Product | null>(null);
+  isSubmitting = signal(false);
   
   productSearchControl = new FormControl('');
   quantityControl = new FormControl(1, [Validators.required, Validators.min(1)]);
 
   saleForm = this.fb.group({
-    customer: [null as Customer | null, Validators.required],
+    customerId: ['', Validators.required],
+    notes: [''],
     items: this.fb.array([])
   });
 
-  // Reactive Autocomplete
+  // Reactive Autocomplete Search results
   filteredProducts = signal<Product[]>([]);
 
   // Trigger for total computation
@@ -279,7 +301,7 @@ export class SaleFormMolecule implements OnInit {
   totalAmount = computed(() => {
     this.itemsTrigger();
     const currentItems = this.items.value || [];
-    return currentItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+    return currentItems.reduce((acc: number, item: any) => acc + (item.unitPrice * item.quantity), 0);
   });
 
   get items() {
@@ -299,16 +321,15 @@ export class SaleFormMolecule implements OnInit {
     this.productSearchControl.valueChanges.pipe(
       startWith(''),
       map(value => {
-        const name = typeof value === 'string' ? value : (value as Product | null)?.name || '';
+        const name = typeof value === 'string' ? value : (value as any)?.name || '';
         return this._filterProducts(name);
       })
     ).subscribe(products => this.filteredProducts.set(products));
   }
 
-  private _filterProducts(value: string | Product): Product[] {
-    const filterValue = typeof value === 'string' ? value.toLowerCase() : '';
+  private _filterProducts(filterValue: string): Product[] {
     return this.allProducts().filter(product => 
-      product.name.toLowerCase().includes(filterValue) && product.currentStock > 0
+      product.name.toLowerCase().includes(filterValue.toLowerCase()) && product.currentStock > 0
     );
   }
 
@@ -326,14 +347,13 @@ export class SaleFormMolecule implements OnInit {
     const qty = this.quantityControl.value || 0;
 
     if (product && qty > 0) {
-      // Check if already in array
       const existingIndex = this.items.controls.findIndex(c => c.value.productId === product.id);
       
       if (existingIndex !== -1) {
         const currentQty = this.items.at(existingIndex).get('quantity')?.value || 0;
         const newQty = currentQty + qty;
         if (newQty > product.currentStock) {
-          // Could show a snackbar here
+          this.snackBar.open(`Stock insuficiente para ${product.name}`, 'Cerrar', { duration: 3000 });
           return;
         }
         this.items.at(existingIndex).get('quantity')?.setValue(newQty);
@@ -341,7 +361,7 @@ export class SaleFormMolecule implements OnInit {
         this.items.push(this.fb.group({
           productId: [product.id],
           name: [product.name],
-          price: [product.averagePurchasePrice || 1500], // Using price or fallback
+          unitPrice: [product.sellingPrice || product.averagePurchasePrice * 1.3],
           quantity: [qty, [Validators.required, Validators.max(product.currentStock)]]
         }));
       }
@@ -355,11 +375,22 @@ export class SaleFormMolecule implements OnInit {
 
   updateQty(index: number, delta: number) {
     const control = this.items.at(index).get('quantity');
-    const product = this.allProducts().find(p => p.id === this.items.at(index).get('productId')?.value);
+    const productId = this.items.at(index).get('productId')?.value;
+    const product = this.allProducts().find(p => p.id === productId);
     const newQty = (control?.value || 0) + delta;
     
     if (newQty > 0 && (!product || newQty <= product.currentStock)) {
       control?.setValue(newQty);
+      this.itemsTrigger.update(v => v + 1);
+    } else if (product && newQty > product.currentStock) {
+      this.snackBar.open(`No puedes exceder el stock disponible (${product.currentStock})`, 'Cerrar', { duration: 2000 });
+    }
+  }
+
+  updatePrice(control: any, event: any) {
+    const newPrice = parseFloat(event.target.value);
+    if (!isNaN(newPrice) && newPrice >= 0) {
+      control.patchValue({ unitPrice: newPrice });
       this.itemsTrigger.update(v => v + 1);
     }
   }
@@ -370,26 +401,31 @@ export class SaleFormMolecule implements OnInit {
   }
 
   onSubmit() {
-    if (this.saleForm.valid) {
+    if (this.saleForm.valid && this.items.length > 0) {
+      this.isSubmitting.set(true);
       const formValue = this.saleForm.value;
-      const customer = formValue.customer as Customer;
       
-      const newInvoice: Invoice = {
-        id: `INV-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-        customer: customer.name,
-        date: new Date().toISOString().split('T')[0],
-        amount: this.totalAmount(),
-        status: 'Pending',
-        products: formValue.items?.map((item: any) => ({
-          id: item.productId,
-          name: item.name,
+      const dto: CreateInvoiceDto = {
+        customerId: formValue.customerId!,
+        notes: formValue.notes || undefined,
+        items: (formValue.items || []).map((item: any) => ({
+          productId: item.productId,
           quantity: item.quantity,
-          price: item.price
-        })) || []
+          unitPrice: item.unitPrice
+        }))
       };
 
-      this.salesService.addInvoice(newInvoice);
-      this.dialogRef.close(true);
+      this.invoiceService.createInvoice(dto).subscribe({
+        next: () => {
+          this.snackBar.open('Factura generada exitosamente', 'Aceptar', { duration: 3000 });
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          const message = err.error?.message || 'Error al procesar la venta';
+          this.snackBar.open(message, 'Cerrar', { duration: 5000, panelClass: ['bg-red-500', 'text-white'] });
+        }
+      });
     }
   }
 }

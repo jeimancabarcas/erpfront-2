@@ -10,6 +10,7 @@ export interface Product {
   categoryId: string | null;
   category: InventoryCategory; // Objeto de la categoría relacionada
   averagePurchasePrice: number;
+  sellingPrice: number;
   createdAt: string;
   updatedAt: string;
 }

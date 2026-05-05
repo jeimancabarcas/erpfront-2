@@ -1,11 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
-import { FinanceService } from '../../../services/finance.service';
-import { FinanceInvoice } from '../../../models/finance.model';
+import { InvoiceService } from '../../../services/invoice.service';
+import { Invoice } from '../../../models/invoice.model';
 
 @Component({
   selector: 'app-invoice-detail-dialog',
@@ -13,143 +13,178 @@ import { FinanceInvoice } from '../../../models/finance.model';
   imports: [
     CommonModule,
     MatDialogModule,
-    MatButtonModule,
     MatIconModule,
-    MatDividerModule
+    MatButtonModule,
+    MatDividerModule,
+    CurrencyPipe,
+    DatePipe
   ],
   template: `
-    <div class="relative overflow-hidden rounded-[40px] bg-white flex flex-col max-h-[95vh] w-full max-w-2xl">
-      <!-- Decorative Background -->
-      <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-50 transition-colors duration-500"></div>
-      
-      <!-- Fixed Header -->
-      <header class="flex items-center justify-between p-10 pb-6 relative z-10">
-        <div class="flex items-center gap-6">
-          <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-[24px] flex items-center justify-center shadow-xl shadow-indigo-100">
-            <mat-icon class="!text-[32px] !w-8 !h-8">receipt_long</mat-icon>
-          </div>
-          <div>
-            <h2 class="text-3xl font-black text-gray-900 tracking-tight !m-0">{{ data.invoice.id }}</h2>
-            <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1.5 flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full"
-                    [class.bg-green-500]="data.invoice.status === 'Paid'"
-                    [class.bg-blue-500]="data.invoice.status === 'Sent'"
-                    [class.bg-amber-500]="data.invoice.status === 'Draft'"
-                    [class.bg-red-500]="data.invoice.status === 'Overdue'"></span>
-              Estado: {{ getStatusLabel(data.invoice.status) }}
-            </p>
-          </div>
+    <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[950px]">
+      @if (loading()) {
+        <div class="p-20 flex flex-col items-center justify-center space-y-4">
+          <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Cargando Factura...</p>
         </div>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-300 hover:!text-gray-600 transition-colors">
-          <mat-icon>close</mat-icon>
-        </button>
-      </header>
-
-      <!-- Scrollable Content -->
-      <div class="flex-1 overflow-y-auto px-10 py-2 custom-scrollbar" style="max-height: 65vh;">
-        <div class="space-y-8 pb-8">
-          
-          <!-- Customer & Summary Card -->
-          <div class="grid grid-cols-2 gap-6">
-            <div class="p-6 bg-gray-50/50 rounded-3xl border border-gray-100">
-              <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Información del Cliente</p>
-              <div class="flex flex-col gap-1">
-                <span class="text-lg font-black text-gray-900">{{ data.invoice.customerName }}</span>
-                <span class="text-sm font-bold text-indigo-600">{{ data.invoice.customerTaxId }}</span>
+      } @else if (invoice(); as inv) {
+        <div class="p-8 relative z-10 overflow-y-auto custom-scrollbar">
+          <header class="flex items-start justify-between mb-10">
+            <div class="flex items-center gap-5">
+              <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
+                <mat-icon class="!text-[28px] !w-7 !h-7">verified</mat-icon>
+              </div>
+              <div>
+                <div class="flex items-center gap-3">
+                  <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">Factura {{ inv.invoiceNumber }}</h2>
+                  <span class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                    {{ inv.status }}
+                  </span>
+                </div>
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Detalle de Operación</p>
               </div>
             </div>
-            <div class="p-6 bg-indigo-50/30 rounded-3xl border border-indigo-100/50">
-              <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">Resumen Financiero</p>
-              <div class="flex flex-col gap-1">
-                <span class="text-xs font-bold text-gray-500">Total a Pagar</span>
-                <span class="text-2xl font-black text-indigo-900 tracking-tighter">{{ data.invoice.total | currency:'USD':'symbol':'1.0-0' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Items Detail -->
-          <div class="space-y-4">
-            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Detalle de Productos / Servicios</p>
-            <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-              <div class="p-4 bg-gray-50/50 flex items-center justify-between border-b border-gray-100">
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Descripción</span>
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Subtotal</span>
-              </div>
-              <div class="divide-y divide-gray-50">
-                @for (item of data.invoice.items; track item.id) {
-                  <div class="p-5 flex items-center justify-between hover:bg-gray-50/30 transition-colors">
-                    <div class="flex flex-col gap-1">
-                      <span class="text-sm font-bold text-gray-800">{{ item.description }}</span>
-                      <span class="text-[10px] font-medium text-gray-400">{{ item.quantity }} un. x {{ item.unitPrice | currency:'USD':'symbol':'1.0-0' }}</span>
-                    </div>
-                    <span class="text-sm font-black text-gray-900">{{ (item.quantity * item.unitPrice) | currency:'USD':'symbol':'1.0-0' }}</span>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-
-          <!-- Electronic Information -->
-          <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100 space-y-4">
-            <div class="flex items-center gap-3">
-              <mat-icon class="text-indigo-400">qr_code_2</mat-icon>
-              <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest !m-0">Información Electrónica DIAN</p>
-            </div>
-            <div class="grid grid-cols-1 gap-4">
-              <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-gray-400 mb-1">Código Único de Factura Electrónica (CUFE)</span>
-                <span class="text-[11px] font-mono font-bold text-gray-600 bg-white p-2 rounded-xl border border-gray-100 break-all">
-                  {{ data.invoice.electronicId || 'Generando código...' }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Fixed Footer Actions -->
-      <div class="p-10 pt-6 border-t border-gray-50 bg-white relative z-20">
-        <div class="flex flex-col gap-4">
-          @if (data.invoice.status !== 'Paid') {
-            <button mat-flat-button color="primary" type="button" (click)="markAsPaid()"
-              class="!rounded-full !h-16 !font-black !bg-green-600 shadow-xl shadow-green-100 hover:scale-[1.02] active:scale-[0.98] transition-all">
-              <mat-icon class="mr-2">check_circle</mat-icon>
-              Registrar Pago Completo
+            <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
+              <mat-icon>close</mat-icon>
             </button>
+          </header>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
+            <!-- Customer Info -->
+            <div class="space-y-4">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Información del Cliente</label>
+              <div class="p-6 bg-gray-50 rounded-[28px] border border-gray-100 flex items-start gap-4">
+                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-indigo-600">
+                  <mat-icon>person</mat-icon>
+                </div>
+                <div>
+                  <h4 class="font-black text-gray-900 leading-none mb-1">{{ inv.customer?.name }}</h4>
+                  <p class="text-xs text-gray-500 font-medium mb-2">{{ inv.customer?.documentType }}: {{ inv.customer?.documentNumber }}</p>
+                  <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2 text-[11px] text-gray-400">
+                      <mat-icon class="!text-[14px] !w-3.5 !h-3.5">email</mat-icon>
+                      {{ inv.customer?.email }}
+                    </div>
+                    @if (inv.customer?.phone) {
+                      <div class="flex items-center gap-2 text-[11px] text-gray-400">
+                        <mat-icon class="!text-[14px] !w-3.5 !h-3.5">phone</mat-icon>
+                        {{ inv.customer?.phone }}
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Invoice Summary -->
+            <div class="space-y-4">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Resumen General</label>
+              <div class="p-6 bg-indigo-50/50 rounded-[28px] border border-indigo-100/50 space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-bold text-gray-500">Fecha de Emisión</span>
+                  <span class="text-xs font-black text-gray-900">{{ inv.date | date:'longDate' }}</span>
+                </div>
+                <mat-divider></mat-divider>
+                <div class="flex justify-between items-center pt-2">
+                  <span class="text-xs font-bold text-gray-500">Total Facturado</span>
+                  <span class="text-xl font-black text-indigo-600">{{ inv.totalAmount | currency }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="space-y-4 mb-10">
+            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Productos / Servicios</label>
+            <div class="border border-gray-100 rounded-[28px] overflow-hidden shadow-sm bg-white">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-gray-50/50 border-b border-gray-100">
+                    <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto</th>
+                    <th class="py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Cant.</th>
+                    <th class="py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Precio Unit.</th>
+                    <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of inv.items; track item.productId) {
+                    <tr class="border-b border-gray-50 last:border-0">
+                      <td class="py-4 px-6">
+                        <div class="flex flex-col">
+                          <span class="font-bold text-gray-900">{{ item.product?.name || 'Producto Desconocido' }}</span>
+                          <span class="text-[10px] text-gray-400 font-medium">SKU: {{ item.product?.sku }}</span>
+                        </div>
+                      </td>
+                      <td class="py-4 px-4 text-center">
+                        <span class="px-3 py-1 bg-gray-100 rounded-lg text-xs font-black text-gray-600">{{ item.quantity }}</span>
+                      </td>
+                      <td class="py-4 px-4 text-right text-xs font-medium text-gray-500">
+                        {{ item.unitPrice | currency }}
+                      </td>
+                      <td class="py-4 px-6 text-right font-black text-gray-900">
+                        {{ item.subtotal | currency }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          @if (inv.notes) {
+            <div class="p-6 bg-amber-50/30 border border-amber-100 rounded-[24px] mb-10">
+              <div class="flex items-center gap-2 mb-2">
+                <mat-icon class="text-amber-500 scale-75">description</mat-icon>
+                <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Observaciones</span>
+              </div>
+              <p class="text-sm text-amber-900 font-medium">{{ inv.notes }}</p>
+            </div>
           }
-          <button mat-button type="button" (click)="dialogRef.close()" class="!rounded-full !h-12 !font-bold text-gray-400 hover:text-gray-600">
-            Cerrar Detalle
-          </button>
+
+          <footer class="flex justify-end gap-3 pt-6 border-t border-gray-100">
+            <button mat-button class="!rounded-full !px-8 !h-12 !font-bold text-gray-500" (click)="dialogRef.close()">
+              Cerrar
+            </button>
+            <button mat-flat-button color="primary" class="!rounded-full !px-10 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100">
+              <mat-icon class="mr-2">print</mat-icon>
+              Imprimir Factura
+            </button>
+          </footer>
         </div>
-      </div>
+      }
     </div>
   `,
   styles: [`
     :host { display: block; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 10px;
+    }
   `]
 })
-export class InvoiceDetailDialogOrganism {
+export class InvoiceDetailDialogOrganism implements OnInit {
   public dialogRef = inject(MatDialogRef<InvoiceDetailDialogOrganism>);
-  public data = inject<{ invoice: FinanceInvoice }>(MAT_DIALOG_DATA);
-  public financeService = inject(FinanceService);
+  private data = inject(MAT_DIALOG_DATA);
+  private invoiceService = inject(InvoiceService);
 
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      'Paid': 'Pagada',
-      'Sent': 'Enviada / Pendiente de Pago',
-      'Draft': 'Borrador',
-      'Overdue': 'Vencida'
-    };
-    return labels[status] || status;
-  }
+  invoice = signal<Invoice | null>(null);
+  loading = signal(true);
 
-  markAsPaid() {
-    this.financeService.updateInvoiceStatus(this.data.invoice.id, 'Paid');
-    this.dialogRef.close({ action: 'paid', invoiceId: this.data.invoice.id });
+  ngOnInit() {
+    if (this.data?.invoiceId) {
+      this.invoiceService.getInvoiceById(this.data.invoiceId).subscribe({
+        next: (inv) => {
+          this.invoice.set(inv);
+          this.loading.set(false);
+        },
+        error: () => this.dialogRef.close()
+      });
+    } else if (this.data?.invoice) {
+      this.invoice.set(this.data.invoice);
+      this.loading.set(false);
+    }
   }
 }
