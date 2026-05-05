@@ -1,7 +1,7 @@
 import { Supplier } from './supplier.model';
 import { Product } from './product.model';
 
-export type PurchaseOrderStatus = 'DRAFT' | 'SENT' | 'IN_TRANSIT' | 'CANCELLED';
+export type PurchaseOrderStatus = 'DRAFT' | 'SENT' | 'IN_TRANSIT' | 'CANCELLED' | 'COMPLETED';
 
 export interface PurchaseOrderItem {
   productId: string;
@@ -19,6 +19,7 @@ export interface PurchaseOrder {
   supplierId: string;
   supplier: Supplier;
   items: PurchaseOrderItem[];
+  receiptUrl?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -36,4 +37,5 @@ export interface CreatePurchaseOrderDto {
 
 export interface UpdatePurchaseOrderStatusDto {
   status: PurchaseOrderStatus;
+  receiptUrl?: string;
 }

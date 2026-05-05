@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { PaginatedResponse, PaginatedMeta, QueryParams } from '../models/pagination.model';
 import { Product, CreateProductDto, UpdateProductDto } from '../models/product.model';
+import { InventoryBatch } from '../models/inventory-batch.model';
 
 @Injectable({
   providedIn: 'root'
@@ -36,7 +37,6 @@ export class ProductService {
 
     return this.http.get<any>(this.apiUrl, { params: queryParams }).pipe(
       tap((response: any) => {
-        // Manejamos formatos { data: [...] }, { items: [...] } o array directo [...]
         const data = response.data || response.items || (Array.isArray(response) ? response : []);
         const meta = response.meta || null;
         
@@ -86,5 +86,12 @@ export class ProductService {
         this._products.update(items => items.filter(item => item.id !== id));
       })
     );
+  }
+
+  /**
+   * Obtiene el historial de ingresos (lotes) de un producto
+   */
+  getProductBatches(id: string): Observable<InventoryBatch[]> {
+    return this.http.get<InventoryBatch[]>(`${this.apiUrl}/${id}/batches`);
   }
 }

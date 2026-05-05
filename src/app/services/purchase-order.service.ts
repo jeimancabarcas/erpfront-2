@@ -56,8 +56,8 @@ export class PurchaseOrderService {
     );
   }
 
-  updateStatus(id: string, status: PurchaseOrderStatus): Observable<PurchaseOrder> {
-    const dto: UpdatePurchaseOrderStatusDto = { status };
+  updateStatus(id: string, status: PurchaseOrderStatus, receiptUrl?: string): Observable<PurchaseOrder> {
+    const dto: UpdatePurchaseOrderStatusDto = { status, receiptUrl };
     return this.http.patch<PurchaseOrder>(`${this.apiUrl}/${id}/status`, dto).pipe(
       tap(updatedOrder => {
         this._orders.update(items => 

@@ -20,6 +20,7 @@ import { CategoryService } from '../../../../services/category.service';
 import { Product } from '../../../../models/product.model';
 import { ProductFormMolecule } from '../../../../components/molecules/product-form/product-form.component';
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
+import { InventoryBatchDialogOrganism } from '../../../../components/organisms/inventory-batch-dialog/inventory-batch-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
 
 @Component({
@@ -127,6 +128,21 @@ import { QueryParams } from '../../../../models/pagination.model';
             </td>
           </ng-container>
 
+          <!-- PMP Column -->
+          <ng-container matColumnDef="averagePurchasePrice">
+            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="averagePurchasePrice">PMP (Costo)</th>
+            <td mat-cell *matCellDef="let product" [class]="cellClass">
+              <div class="flex flex-col">
+                <span class="font-bold text-gray-900">
+                  {{ product.averagePurchasePrice | currency }}
+                </span>
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                  Precio Medio Ponderado
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
           <!-- Stock Column -->
           <ng-container matColumnDef="currentStock">
             <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="currentStock">Stock</th>
@@ -149,7 +165,16 @@ import { QueryParams } from '../../../../models/pagination.model';
               <div class="flex justify-end gap-2">
                 <button 
                   mat-icon-button 
+                  (click)="openBatchesDialog(product)"
+                  matTooltip="Trazabilidad por lotes"
+                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
+                >
+                  <mat-icon>history</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
                   (click)="openProductDialog(product)"
+                  matTooltip="Editar producto"
                   class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
                 >
                   <mat-icon>edit</mat-icon>
@@ -228,7 +253,7 @@ export class InventoryProductsPageComponent implements OnInit {
   sortBy = signal('name');
   order = signal<'ASC' | 'DESC'>('ASC');
 
-  displayedColumns = ['sku', 'name', 'category', 'currentStock', 'actions'];
+  displayedColumns = ['sku', 'name', 'category', 'averagePurchasePrice', 'currentStock', 'actions'];
   headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
   cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
 
@@ -303,6 +328,14 @@ export class InventoryProductsPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) this.loadData();
+    });
+  }
+
+  openBatchesDialog(product: Product) {
+    this.dialog.open(InventoryBatchDialogOrganism, {
+      width: '800px',
+      maxWidth: '95vw',
+      data: { product }
     });
   }
 

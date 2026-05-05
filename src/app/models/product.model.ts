@@ -9,6 +9,7 @@ export interface Product {
   maxStock: number;
   categoryId: string | null;
   category: InventoryCategory; // Objeto de la categoría relacionada
+  averagePurchasePrice: number;
   createdAt: string;
   updatedAt: string;
 }

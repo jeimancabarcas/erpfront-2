@@ -16,6 +16,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { TableContainerMolecule } from '../../../../components/molecules/table-container/table-container.component';
 import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
 import { PurchaseOrderDialogOrganism } from '../../../../components/organisms/purchase-order-dialog/purchase-order-dialog.component';
+import { PurchaseOrderDetailDialogOrganism } from '../../../../components/organisms/purchase-order-detail-dialog/purchase-order-detail-dialog.component';
 import { PurchaseOrderService } from '../../../../services/purchase-order.service';
 import { SupplierService } from '../../../../services/supplier.service';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../../models/purchase-order.model';
@@ -141,7 +142,8 @@ import { QueryParams } from '../../../../models/pagination.model';
                 [ngClass]="{
                   'bg-amber-50 text-amber-600': order.status === 'DRAFT',
                   'bg-indigo-50 text-indigo-600': order.status === 'SENT',
-                  'bg-emerald-50 text-emerald-600': order.status === 'IN_TRANSIT',
+                  'bg-amber-100 text-amber-700': order.status === 'IN_TRANSIT',
+                  'bg-emerald-50 text-emerald-600': order.status === 'COMPLETED',
                   'bg-gray-50 text-gray-600': order.status === 'CANCELLED'
                 }"
               >
@@ -165,6 +167,7 @@ import { QueryParams } from '../../../../models/pagination.model';
                 </button>
                 <button 
                   mat-icon-button 
+                  (click)="openOrderDetailDialog(order)"
                   matTooltip="Ver detalles"
                   class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
                 >
@@ -241,6 +244,7 @@ export class InventoryPurchasesPageComponent implements OnInit {
     { label: 'Borrador', value: 'DRAFT' },
     { label: 'Enviado', value: 'SENT' },
     { label: 'En Tránsito', value: 'IN_TRANSIT' },
+    { label: 'Completado', value: 'COMPLETED' },
     { label: 'Cancelado', value: 'CANCELLED' }
   ];
 
@@ -248,6 +252,7 @@ export class InventoryPurchasesPageComponent implements OnInit {
     'DRAFT': 'Borrador',
     'SENT': 'Enviado',
     'IN_TRANSIT': 'En Tránsito',
+    'COMPLETED': 'Completado',
     'CANCELLED': 'Cancelado'
   };
 
@@ -309,6 +314,18 @@ export class InventoryPurchasesPageComponent implements OnInit {
   openPurchaseOrderDialog(order?: PurchaseOrder) {
     const dialogRef = this.dialog.open(PurchaseOrderDialogOrganism, {
       width: '900px',
+      maxWidth: '95vw',
+      data: { order }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) this.loadData();
+    });
+  }
+
+  openOrderDetailDialog(order: PurchaseOrder) {
+    const dialogRef = this.dialog.open(PurchaseOrderDetailDialogOrganism, {
+      width: '1000px',
       maxWidth: '95vw',
       data: { order }
     });
