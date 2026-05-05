@@ -57,6 +57,12 @@ import { Supplier } from '../../../models/supplier.model';
             <input matInput [(ngModel)]="form().phone" name="phone" required placeholder="Ej. +57 300 123 4567">
             <mat-icon matPrefix class="!text-gray-400 mr-2">phone</mat-icon>
           </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Correo Electrónico</mat-label>
+            <input matInput type="email" [(ngModel)]="form().email" name="email" required placeholder="Ej. contacto@proveedor.com" email>
+            <mat-icon matPrefix class="!text-gray-400 mr-2">email</mat-icon>
+          </mat-form-field>
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
@@ -94,7 +100,8 @@ export class SupplierDialogOrganism implements OnInit {
     nit: '',
     name: '',
     address: '',
-    phone: ''
+    phone: '',
+    email: ''
   });
 
   ngOnInit() {
@@ -105,8 +112,8 @@ export class SupplierDialogOrganism implements OnInit {
   }
 
   saveSupplier() {
-    const { id, nit, name, address, phone } = this.form();
-    const payload = { nit, name, address, phone };
+    const { id, nit, name, address, phone, email } = this.form();
+    const payload = { nit, name, address, phone, email };
     
     const request = this.isEditMode 
       ? this.supplierService.updateSupplier(id, payload)

@@ -4,6 +4,7 @@ export interface Supplier {
   name: string;
   address: string;
   phone: string;
+  email: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -13,6 +14,7 @@ export interface CreateSupplierDto {
   name: string;
   address: string;
   phone: string;
+  email: string;
 }
 
 export interface UpdateSupplierDto {
@@ -20,4 +22,5 @@ export interface UpdateSupplierDto {
   name?: string;
   address?: string;
   phone?: string;
+  email?: string;
 }

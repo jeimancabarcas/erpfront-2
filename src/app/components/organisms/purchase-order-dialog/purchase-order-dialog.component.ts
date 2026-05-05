@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { CommonModule, formatDate, CurrencyPipe } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,8 +13,7 @@ import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { CreatePurchaseOrderDto } from '../../../models/purchase-order.model';
 import { FormsModule } from '@angular/forms';
-import { Observable, tap } from 'rxjs';
-import { formatDate } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-purchase-order-dialog',
@@ -40,10 +39,10 @@ import { formatDate } from '@angular/common';
           </div>
           <div>
             <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
-              {{ isEditMode ? 'Editar Orden' : 'Nueva Orden de Compra' }}
+              {{ isEditMode() ? 'Editar Orden' : 'Nueva Orden de Compra' }}
             </h2>
             <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
-              {{ isEditMode ? 'Orden ' + form().orderNumber : 'Registro de pedido' }}
+              {{ isEditMode() ? 'Orden ' + header().orderNumber : 'Registro de pedido' }}
             </p>
           </div>
         </div>
@@ -52,19 +51,33 @@ import { formatDate } from '@angular/common';
         </button>
       </header>
 
-      <div *ngIf="isEditMode && form().status !== 'DRAFT'" class="mx-2 mb-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3 text-amber-700">
-        <mat-icon>warning</mat-icon>
-        <p class="text-xs font-bold uppercase tracking-wide">Esta orden ya no se puede editar porque no está en estado BORRADOR.</p>
-      </div>
+      @if (isEditMode() && header().status !== 'DRAFT') {
+        <div class="mx-2 mb-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3 text-amber-700">
+          <mat-icon>warning</mat-icon>
+          <p class="text-xs font-bold uppercase tracking-wide">Esta orden ya no se puede editar porque no está en estado BORRADOR.</p>
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="mx-2 mb-4 bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center justify-between gap-3 text-red-700 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div class="flex items-center gap-3">
+            <mat-icon class="!text-red-500">error_outline</mat-icon>
+            <p class="text-xs font-bold uppercase tracking-wide">{{ errorMessage() }}</p>
+          </div>
+          <button mat-icon-button (click)="errorMessage.set(null)" class="!text-red-400">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
 
       <mat-dialog-content class="flex-1 !px-2 custom-scrollbar">
-        <fieldset [disabled]="isEditMode && form().status !== 'DRAFT'" class="contents">
+        <fieldset [disabled]="isEditMode() && header().status !== 'DRAFT'" class="contents">
           <form #orderForm="ngForm" class="space-y-8 pb-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Proveedor -->
             <mat-form-field appearance="outline" class="w-full">
               <mat-label>Proveedor</mat-label>
-              <mat-select [(ngModel)]="form().supplierId" name="supplierId" required>
+              <mat-select [(ngModel)]="header().supplierId" name="supplierId" required>
                 @for (supplier of suppliers(); track supplier.id) {
                   <mat-option [value]="supplier.id">{{ supplier.name }}</mat-option>
                 }
@@ -75,7 +88,7 @@ import { formatDate } from '@angular/common';
             <!-- Fecha -->
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Fecha de Pedido</mat-label>
-            <input matInput [matDatepicker]="picker" [(ngModel)]="form().orderDate" name="orderDate" required>
+            <input matInput [matDatepicker]="picker" [(ngModel)]="header().orderDate" name="orderDate" required>
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
@@ -84,7 +97,7 @@ import { formatDate } from '@angular/common';
           <!-- Observaciones -->
           <mat-form-field appearance="outline" class="w-full md:col-span-2">
             <mat-label>Observaciones / Notas</mat-label>
-            <textarea matInput [(ngModel)]="form().observations" name="observations" rows="3" placeholder="Detalles adicionales sobre el pedido..."></textarea>
+            <textarea matInput [(ngModel)]="header().observations" name="observations" rows="3" placeholder="Detalles adicionales sobre el pedido..."></textarea>
           </mat-form-field>
           </div>
 
@@ -101,9 +114,9 @@ import { formatDate } from '@angular/common';
               </button>
             </div>
 
-            @if (form().items.length > 0) {
+            @if (items().length > 0) {
               <div class="space-y-6 pr-1">
-                @for (item of form().items; track $index) {
+                @for (item of items(); track $index) {
                   <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md group relative">
                     <!-- Botón Eliminar -->
                     <button 
@@ -120,10 +133,12 @@ import { formatDate } from '@angular/common';
                         <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
                           <mat-label>Producto</mat-label>
                           <mat-select [(ngModel)]="item.productId" [name]="'product_'+$index" required (selectionChange)="onItemChange($index)">
-                            @for (prod of products(); track prod.id) {
-                              <mat-option [value]="prod.id">{{ prod.name }} ({{ prod.sku }})</mat-option>
-                            }
-                          </mat-select>
+                          @for (prod of products(); track prod.id) {
+                            <mat-option [value]="prod.id" [disabled]="isProductSelected(prod.id, $index)">
+                              {{ prod.name }} ({{ prod.sku }})
+                            </mat-option>
+                          }
+                        </mat-select>
                           <mat-icon matPrefix class="!text-gray-400 mr-2">inventory_2</mat-icon>
                         </mat-form-field>
                       </div>
@@ -160,7 +175,7 @@ import { formatDate } from '@angular/common';
               <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
                 <div class="text-right">
                   <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total de la Orden</p>
-                  <p class="text-3xl font-black text-gray-900 tracking-tighter">{{ form().total | currency }}</p>
+                  <p class="text-3xl font-black text-gray-900 tracking-tighter">{{ orderTotal() | currency }}</p>
                 </div>
               </div>
             } @else {
@@ -188,7 +203,7 @@ import { formatDate } from '@angular/common';
           (click)="saveOrder()"
           class="!h-12 !px-8 !rounded-full !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
         >
-          {{ isEditMode ? 'Guardar Cambios' : 'Generar Orden de Compra' }}
+          {{ isEditMode() ? 'Guardar Cambios' : 'Generar Orden de Compra' }}
         </button>
       </mat-dialog-actions>
     </div>
@@ -208,18 +223,24 @@ export class PurchaseOrderDialogOrganism implements OnInit {
   private productService = inject(ProductService);
   private purchaseOrderService = inject(PurchaseOrderService);
 
-  isEditMode = false;
+  isEditMode = signal(false);
+  errorMessage = signal<string | null>(null);
   suppliers = this.supplierService.suppliers;
   products = this.productService.products;
 
-  form = signal<any>({
-    id: null,
+  header = signal({
+    id: null as string | null,
+    orderNumber: '' as string | null,
     supplierId: '',
     orderDate: new Date(),
     status: 'DRAFT',
-    observations: '',
-    total: 0,
-    items: []
+    observations: ''
+  });
+
+  items = signal<any[]>([]);
+
+  orderTotal = computed(() => {
+    return this.items().reduce((acc, item) => acc + (item.quantity * item.unitPrice || 0), 0);
   });
 
   ngOnInit() {
@@ -231,60 +252,71 @@ export class PurchaseOrderDialogOrganism implements OnInit {
       this.productService.loadProducts({ limit: 100 }).subscribe();
     }
 
-    if (this.data && this.data.order) {
-      this.isEditMode = true;
-      this.form.set({ 
-        ...this.data.order, 
-        orderDate: new Date(this.data.order.orderDate),
-        items: this.data.order.items?.map((i: any) => ({ ...i, unitPrice: i.price })) || [] 
+    if (this.data?.order) {
+      this.isEditMode.set(true);
+      const { items, orderDate, ...rest } = this.data.order;
+
+      this.header.set({
+        ...rest,
+        orderDate: new Date(orderDate)
       });
-      this.calculateTotal();
+
+      this.items.set(items?.map((i: any) => ({
+        ...i,
+        unitPrice: i.price,
+        total: i.quantity * i.price
+      })) || []);
     }
   }
 
   addItem() {
-    const currentItems = this.form().items;
-    this.form.update(f => ({
-      ...f,
-      items: [...currentItems, { productId: '', quantity: 1, unitPrice: 0, total: 0 }]
-    }));
+    this.items.update(items => [...items, { productId: '', quantity: 1, unitPrice: 0, total: 0 }]);
   }
 
   removeItem(index: number) {
-    const currentItems = [...this.form().items];
-    currentItems.splice(index, 1);
-    this.form.update(f => ({ ...f, items: currentItems }));
-    this.calculateTotal();
+    this.items.update(items => items.filter((_, i) => i !== index));
   }
 
   onItemChange(index: number) {
-    const items = [...this.form().items];
-    const item = items[index];
-    item.total = item.quantity * item.unitPrice;
-    this.form.update(f => ({ ...f, items }));
-    this.calculateTotal();
+    this.items.update(items => {
+      const newItems = [...items];
+      const item = newItems[index];
+      item.total = item.quantity * item.unitPrice;
+      return newItems;
+    });
   }
 
-  calculateTotal() {
-    const total = this.form().items.reduce((acc: number, item: any) => acc + (item.total || 0), 0);
-    this.form.update(f => ({ ...f, total }));
+  isProductSelected(productId: string, index: number): boolean {
+    return this.items().some((item, i) => item.productId === productId && i !== index);
   }
 
   saveOrder() {
-    const f = this.form();
+    const h = this.header();
+    const items = this.items();
+
+    // Validación de duplicados
+    const productIds = items.map(i => i.productId).filter(id => !!id);
+    const uniqueProductIds = new Set(productIds);
+    if (productIds.length !== uniqueProductIds.size) {
+      this.errorMessage.set('Existen productos duplicados en la orden. Por favor revisa los items.');
+      return;
+    }
+
+    this.errorMessage.set(null);
+
     const payload: CreatePurchaseOrderDto = {
-      supplierId: f.supplierId,
-      orderDate: formatDate(f.orderDate, 'yyyy-MM-dd', 'en-US'),
-      observations: f.observations,
-      items: f.items.map((i: any) => ({
+      supplierId: h.supplierId,
+      orderDate: formatDate(h.orderDate, 'yyyy-MM-dd', 'en-US'),
+      observations: h.observations,
+      items: items.map(i => ({
         productId: i.productId,
         quantity: Number(i.quantity),
         price: Number(i.unitPrice)
       }))
     };
-    
-    const request = this.isEditMode 
-      ? this.purchaseOrderService.updateOrder(f.id, payload)
+
+    const request = this.isEditMode()
+      ? this.purchaseOrderService.updateOrder(h.id!, payload)
       : this.purchaseOrderService.createOrder(payload);
 
     request.subscribe({
