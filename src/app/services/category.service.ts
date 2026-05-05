@@ -8,7 +8,7 @@ export interface InventoryCategory {
   id: string; // UUID
   name: string;
   description?: string;
-  productCount?: number;
+  productsCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -51,7 +51,16 @@ export const routes: Routes = [
   { 
     path: 'sales', 
     canActivate: [authGuard, profileGuard],
-    loadComponent: () => import('./components/pages/sales-page/sales-page.component').then(m => m.SalesPageComponent) 
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./components/pages/sales-page/sales-page.component').then(m => m.SalesPageComponent)
+      },
+      {
+        path: 'customers',
+        loadComponent: () => import('./components/pages/sales-page/sales-customers-page/sales-customers-page.component').then(m => m.SalesCustomersPageComponent)
+      }
+    ]
   },
   { 
     path: 'finance',

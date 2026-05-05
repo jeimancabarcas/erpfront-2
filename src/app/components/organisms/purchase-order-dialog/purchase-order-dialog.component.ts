@@ -51,10 +51,10 @@ import { firstValueFrom } from 'rxjs';
         </button>
       </header>
 
-      @if (isEditMode() && header().status !== 'DRAFT') {
+      @if (isEditMode() && ['COMPLETED', 'CANCELLED'].includes(header().status)) {
         <div class="mx-2 mb-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3 text-amber-700">
           <mat-icon>warning</mat-icon>
-          <p class="text-xs font-bold uppercase tracking-wide">Esta orden ya no se puede editar porque no está en estado BORRADOR.</p>
+          <p class="text-xs font-bold uppercase tracking-wide">Esta orden ya no se puede editar porque está finalizada o anulada.</p>
         </div>
       }
 
@@ -71,7 +71,7 @@ import { firstValueFrom } from 'rxjs';
       }
 
       <mat-dialog-content class="flex-1 !px-2 custom-scrollbar">
-        <fieldset [disabled]="isEditMode() && header().status !== 'DRAFT'" class="contents">
+        <fieldset [disabled]="isEditMode() && ['COMPLETED', 'CANCELLED'].includes(header().status)" class="contents">
           <form #orderForm="ngForm" class="space-y-8 pb-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Proveedor -->
@@ -192,20 +192,24 @@ import { firstValueFrom } from 'rxjs';
       </fieldset>
     </mat-dialog-content>
 
-      <mat-dialog-actions class="!justify-end !gap-3 !pt-6 !px-2 !min-h-0">
-        <button mat-button (click)="dialogRef.close()" class="!h-12 !px-8 !rounded-full !font-bold text-gray-500">
+      <!-- Footer -->
+      <footer class="flex justify-end gap-3 mt-8 px-2 pt-4 border-t border-gray-100">
+        <button mat-button (click)="dialogRef.close()" class="!rounded-full !h-12 !px-6 !font-bold">
           Cancelar
         </button>
-        <button 
-          mat-flat-button 
-          color="primary" 
-          [disabled]="!orderForm.valid"
-          (click)="saveOrder()"
-          class="!h-12 !px-8 !rounded-full !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
-        >
-          {{ isEditMode() ? 'Guardar Cambios' : 'Generar Orden de Compra' }}
-        </button>
-      </mat-dialog-actions>
+        
+        @if (!isEditMode() || !['COMPLETED', 'CANCELLED'].includes(header().status)) {
+          <button 
+            mat-flat-button 
+            color="primary" 
+            [disabled]="orderForm.invalid || items().length === 0"
+            (click)="saveOrder()"
+            class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
+          >
+            {{ isEditMode() ? 'Guardar Cambios' : 'Crear Orden' }}
+          </button>
+        }
+      </footer>
     </div>
   `,
   styles: [`

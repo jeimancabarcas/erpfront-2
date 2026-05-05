@@ -95,11 +95,11 @@ import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-s
           </ng-container>
 
           <!-- Productos Column -->
-          <ng-container matColumnDef="productCount">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="productCount">Productos</th>
+          <ng-container matColumnDef="productsCount">
+            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="productsCount">Productos</th>
             <td mat-cell *matCellDef="let category" [class]="cellClass">
               <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">
-                {{ category.productCount || 0 }} productos
+                {{ category.productsCount || 0 }} productos
               </span>
             </td>
           </ng-container>
@@ -210,7 +210,7 @@ export class InventoryCategoriesPageComponent implements OnInit {
   // Controles para filtros
   nameFilter = new FormControl('');
 
-  displayedColumns = ['name', 'productCount', 'actions'];
+  displayedColumns = ['name', 'productsCount', 'actions'];
   headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
   cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
 
