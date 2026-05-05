@@ -82,8 +82,8 @@ import { Customer, CreateCustomerDto } from '../../../models/customer.model';
             <mat-form-field appearance="outline" class="w-full">
               <mat-label>Estado</mat-label>
               <mat-select [(ngModel)]="customer().status" name="status" required>
-                <mat-option value="Active">Activo</mat-option>
-                <mat-option value="Inactive">Inactivo</mat-option>
+                <mat-option value="ACTIVE">Activo</mat-option>
+                <mat-option value="INACTIVE">Inactivo</mat-option>
               </mat-select>
               <mat-icon matPrefix class="!text-indigo-600 mr-2">toggle_on</mat-icon>
             </mat-form-field>
@@ -141,7 +141,7 @@ export class CustomerDialogOrganism implements OnInit {
     email: '',
     phone: '',
     address: '',
-    status: 'Active'
+    status: 'ACTIVE'
   });
 
   isEditMode = signal(false);
@@ -156,11 +156,14 @@ export class CustomerDialogOrganism implements OnInit {
 
   save() {
     this.isLoading.set(true);
-    const customerData = this.customer() as Customer;
-    const dto = this.customer() as CreateCustomerDto;
+    const fullData = this.customer() as Customer;
+    
+    // Extraemos solo los campos editables para el DTO
+    const { id, createdAt, updatedAt, ...editableFields } = fullData;
+    const dto = editableFields as CreateCustomerDto;
     
     const obs = this.isEditMode() 
-      ? this.customerService.updateCustomer(customerData.id, dto)
+      ? this.customerService.updateCustomer(id, dto)
       : this.customerService.createCustomer(dto);
 
     obs.subscribe({

@@ -87,8 +87,8 @@ import { QueryParams } from '../../../../models/pagination.model';
             <mat-label>Estado</mat-label>
             <mat-select [formControl]="statusFilter">
               <mat-option [value]="''">Todos los estados</mat-option>
-              <mat-option value="Active">Activo</mat-option>
-              <mat-option value="Inactive">Inactivo</mat-option>
+              <mat-option value="ACTIVE">Activo</mat-option>
+              <mat-option value="INACTIVE">Inactivo</mat-option>
             </mat-select>
             <mat-icon matPrefix class="!text-indigo-600 mr-2">filter_list</mat-icon>
           </mat-form-field>
@@ -147,9 +147,9 @@ import { QueryParams } from '../../../../models/pagination.model';
             <td mat-cell *matCellDef="let customer" [class]="cellClass">
               <span 
                 class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                [ngClass]="customer.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'"
+                [ngClass]="customer.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'"
               >
-                {{ customer.status === 'Active' ? 'Activo' : 'Inactivo' }}
+                {{ customer.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
           </ng-container>

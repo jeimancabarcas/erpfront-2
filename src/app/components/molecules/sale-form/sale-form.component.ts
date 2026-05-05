@@ -1,244 +1,395 @@
-import { Component, inject, signal } from '@angular/core';
-import { MatDialogModule, MatDialogRef, MatDialogContent } from '@angular/material/dialog';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTableModule } from '@angular/material/table';
-import { FormsModule } from '@angular/forms';
-import { CurrencyPipe } from '@angular/common';
-import { SalesService, Invoice, InvoiceProduct, Customer } from '../../../services/sales.service';
-import { InventoryService } from '../../../services/inventory.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ProductService } from '../../../services/product.service';
+import { CustomerService } from '../../../services/customer.service';
+import { SalesService, Invoice, InvoiceProduct } from '../../../services/sales.service';
+import { Product } from '../../../models/product.model';
+import { Customer } from '../../../models/customer.model';
+import { startWith, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-sale-form',
   standalone: true,
   imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatAutocompleteModule,
     MatIconModule,
     MatTableModule,
-    FormsModule,
+    MatTooltipModule,
     CurrencyPipe
   ],
   template: `
-    <div class="flex flex-col h-full max-h-[85vh]">
-      <header class="flex justify-between items-center mb-8 px-2">
-        <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">Nueva Venta</h2>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-          <mat-icon>close</mat-icon>
-        </button>
-      </header>
+    <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[900px]">
+      <!-- Decorative Background Element -->
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+      
+      <div class="p-8 relative z-10 overflow-y-auto custom-scrollbar">
+        <header class="flex items-center justify-between mb-10">
+          <div class="flex items-center gap-5">
+            <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 animate-in zoom-in duration-500">
+              <mat-icon class="!text-[28px] !w-7 !h-7">shopping_cart</mat-icon>
+            </div>
+            <div>
+              <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">Nueva Venta</h2>
+              <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Inventario & Ventas</p>
+            </div>
+          </div>
+          <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
+            <mat-icon>close</mat-icon>
+          </button>
+        </header>
 
-      <mat-dialog-content class="!m-0 !p-2 flex-1 scrollbar-hide">
-        <div class="space-y-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Seleccionar Cliente</mat-label>
-            <mat-select [(ngModel)]="selectedCustomer" required>
-              @for (c of salesService.customers(); track c.id) {
-                <mat-option [value]="c">{{c.name}} ({{c.company}})</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+        <form [formGroup]="saleForm" (ngSubmit)="onSubmit()" class="space-y-8">
+          
+          <!-- Customer Selection -->
+          <div class="space-y-2">
+            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Cliente</label>
+            <mat-form-field appearance="outline" class="w-full !m-0">
+              <mat-label>Seleccione un cliente</mat-label>
+              <mat-select formControlName="customer" required>
+                @for (customer of customers(); track customer.id) {
+                  <mat-option [value]="customer">{{ customer.name }} ({{ customer.documentNumber }})</mat-option>
+                }
+              </mat-select>
+              <mat-icon matPrefix class="mr-2 text-gray-400">person</mat-icon>
+            </mat-form-field>
+          </div>
 
-          <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100">
-            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Añadir Productos</h3>
-            <div class="flex flex-col md:flex-row gap-4 items-start">
-              <mat-form-field appearance="outline" class="flex-1 !mb-0">
-                <mat-label>Producto</mat-label>
-                <mat-select [(ngModel)]="selectedProduct">
-                  @for (item of inventoryService.stock(); track item.id) {
-                    <mat-option [value]="item">{{item.name}} (Stock: {{item.quantity}})</mat-option>
+          <!-- Product Selection Area -->
+          <div class="bg-gray-50/50 rounded-[28px] p-6 border border-gray-100 space-y-4">
+            <div class="flex items-center gap-2 mb-2">
+              <mat-icon class="text-indigo-600 scale-75">add_circle</mat-icon>
+              <h3 class="text-xs font-black text-gray-900 uppercase tracking-widest">Añadir Productos del Inventario</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+              <mat-form-field appearance="outline" class="md:col-span-7 !mb-0">
+                <mat-label>Buscar Producto</mat-label>
+                <input type="text" matInput [formControl]="productSearchControl" [matAutocomplete]="auto" placeholder="Escriba el nombre del producto...">
+                <mat-icon matPrefix class="mr-2 text-gray-400">search</mat-icon>
+                <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn" (optionSelected)="onProductSelected($event.option.value)">
+                  @for (product of filteredProducts(); track product.id) {
+                    <mat-option [value]="product">
+                      <div class="flex justify-between items-center w-full">
+                        <span class="font-bold">{{ product.name }}</span>
+                        <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black uppercase">Stock: {{ product.currentStock }}</span>
+                      </div>
+                    </mat-option>
                   }
-                </mat-select>
+                </mat-autocomplete>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="w-full md:w-32 !mb-0" [hintLabel]="selectedProduct ? 'Stock: ' + selectedProduct.quantity : ''">
+              <mat-form-field appearance="outline" class="md:col-span-3 !mb-0">
                 <mat-label>Cantidad</mat-label>
-                <input matInput type="number" [(ngModel)]="quantity" min="1" [max]="selectedProduct?.quantity || 9999">
+                <input matInput type="number" [formControl]="quantityControl" min="1" [max]="selectedProduct()?.currentStock || 999">
+                <mat-icon matPrefix class="mr-2 text-gray-400">inventory_2</mat-icon>
               </mat-form-field>
 
               <button 
+                type="button"
                 mat-flat-button 
                 color="primary" 
-                class="!h-[56px] !rounded-2xl !px-8"
-                [disabled]="!selectedProduct || quantity < 1 || quantity > selectedProduct.quantity"
+                class="md:col-span-2 !h-[56px] !rounded-2xl !bg-indigo-600 shadow-lg shadow-indigo-100"
+                [disabled]="!selectedProduct() || quantityControl.invalid || quantityControl.value! > selectedProduct()!.currentStock"
                 (click)="addProduct()"
               >
-                <mat-icon class="mr-2">add</mat-icon>
-                Añadir
+                <mat-icon>add</mat-icon>
               </button>
             </div>
+
+            @if (selectedProduct()) {
+              <div class="flex items-center gap-4 animate-in fade-in slide-in-from-left duration-300">
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-100 shadow-sm">
+                  <span class="text-[10px] font-black text-gray-400 uppercase">Precio Unit:</span>
+                  <span class="text-xs font-black text-indigo-600">{{ selectedProduct()?.averagePurchasePrice | currency }}</span>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-100 shadow-sm">
+                  <span class="text-[10px] font-black text-gray-400 uppercase">Stock Disponible:</span>
+                  <span class="text-xs font-black" [class.text-red-600]="selectedProduct()!.currentStock < 5">{{ selectedProduct()?.currentStock }}</span>
+                </div>
+              </div>
+            }
           </div>
 
-          @if (addedProducts().length > 0) {
-            <div class="border border-gray-100 rounded-3xl overflow-hidden">
-              <table mat-table [dataSource]="addedProducts()" class="w-full">
-                <ng-container matColumnDef="name">
-                  <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase px-4">Producto</th>
-                  <td mat-cell *matCellDef="let p" class="px-4">
-                    <div class="font-bold text-gray-900">{{p.name}}</div>
-                  </td>
-                </ng-container>
+          <!-- Added Products Table -->
+          @if (items.length > 0) {
+            <div class="space-y-4 animate-in fade-in slide-in-from-bottom duration-500">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Resumen de Venta</label>
+              <div class="border border-gray-100 rounded-[24px] overflow-hidden bg-white shadow-sm">
+                <table mat-table [dataSource]="items.controls" class="w-full">
+                  <ng-container matColumnDef="product">
+                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-6 bg-gray-50/50">Producto</th>
+                    <td mat-cell *matCellDef="let control; let i = index" class="px-6 py-4">
+                      <div class="flex flex-col">
+                        <span class="font-bold text-gray-900">{{ control.value.name }}</span>
+                        <span class="text-[10px] text-gray-400 font-medium">Ref: {{ control.value.productId.split('-')[0] }}</span>
+                      </div>
+                    </td>
+                  </ng-container>
 
-                <ng-container matColumnDef="qty">
-                  <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase text-center">Cant.</th>
-                  <td mat-cell *matCellDef="let p" class="text-center">
-                    <div class="flex items-center justify-center gap-2">
-                      <button mat-icon-button class="!bg-gray-100" (click)="updateQty(p, -1)" [disabled]="p.quantity <= 1">
-                        <mat-icon class="">remove</mat-icon>
+                  <ng-container matColumnDef="price">
+                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-right">Precio</th>
+                    <td mat-cell *matCellDef="let control" class="px-4 text-right">
+                      <span class="text-xs font-medium text-gray-500">{{ control.value.price | currency }}</span>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="qty">
+                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-center">Cant.</th>
+                    <td mat-cell *matCellDef="let control; let i = index" class="px-4 text-center">
+                      <div class="flex items-center justify-center gap-3">
+                        <button type="button" mat-icon-button class="!w-8 !h-8 !min-w-[32px] !bg-gray-100 !rounded-lg" (click)="updateQty(i, -1)" [disabled]="control.value.quantity <= 1">
+                          <mat-icon>remove</mat-icon>
+                        </button>
+                        <span class="text-sm font-black w-6 text-gray-900">{{ control.value.quantity }}</span>
+                        <button type="button" mat-icon-button class="!w-8 !h-8 !min-w-[32px] !bg-gray-100 !rounded-lg" (click)="updateQty(i, 1)">
+                          <mat-icon>add</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="total">
+                    <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-6 bg-gray-50/50 text-right">Total</th>
+                    <td mat-cell *matCellDef="let control" class="px-6 text-right">
+                      <span class="text-sm font-black text-indigo-600">{{ control.value.price * control.value.quantity | currency }}</span>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef class="bg-gray-50/50"></th>
+                    <td mat-cell *matCellDef="let control; let i = index" class="text-right px-4">
+                      <button type="button" mat-icon-button (click)="removeItem(i)" class="!text-red-400 hover:!bg-red-50 transition-colors">
+                        <mat-icon>delete_outline</mat-icon>
                       </button>
-                      <span class="font-bold">{{p.quantity}}</span>
-                      <button mat-icon-button class="!bg-gray-100" (click)="updateQty(p, 1)" [disabled]="isMaxStockReached(p)">
-                        <mat-icon class="">add</mat-icon>
-                      </button>
-                    </div>
-                  </td>
-                </ng-container>
+                    </td>
+                  </ng-container>
 
-                <ng-container matColumnDef="price">
-                  <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase text-right">Precio</th>
-                  <td mat-cell *matCellDef="let p" class="text-right text-gray-500">{{p.price | currency}}</td>
-                </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="['product', 'price', 'qty', 'total', 'actions']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['product', 'price', 'qty', 'total', 'actions']" class="hover:bg-gray-50/5 transition-colors border-b border-gray-50 last:border-0"></tr>
+                </table>
+              </div>
 
-                <ng-container matColumnDef="total">
-                  <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase text-right">Total</th>
-                  <td mat-cell *matCellDef="let p" class="text-right font-black text-indigo-600">{{p.quantity * p.price | currency}}</td>
-                </ng-container>
-
-                <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef></th>
-                  <td mat-cell *matCellDef="let p" class="text-right px-4">
-                    <button mat-icon-button (click)="removeProduct(p)" class="!text-red-400 hover:!bg-red-50">
-                      <mat-icon>delete_outline</mat-icon>
-                    </button>
-                  </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="['name', 'qty', 'price', 'total', 'actions']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['name', 'qty', 'price', 'total', 'actions']" class="hover:bg-gray-50/50"></tr>
-              </table>
+              <!-- Total Summary -->
+              <div class="p-6 bg-indigo-600 rounded-[24px] border border-indigo-700 flex justify-between items-center shadow-xl shadow-indigo-100 animate-in zoom-in duration-300">
+                <div class="flex items-center gap-3 text-white">
+                  <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                    <mat-icon>payments</mat-icon>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-indigo-100 font-black uppercase tracking-widest">Total a Pagar</p>
+                    <p class="text-xs text-indigo-200 font-medium italic">Incluye todos los productos</p>
+                  </div>
+                </div>
+                <span class="text-3xl font-black text-white tabular-nums">{{ totalAmount() | currency }}</span>
+              </div>
             </div>
-
-            <div class="flex justify-between items-center p-6 bg-indigo-50 rounded-3xl border border-indigo-100">
-              <span class="text-indigo-900 font-bold uppercase tracking-widest text-xs">Total de la Venta</span>
-              <span class="text-2xl font-black text-indigo-600">{{ calculateTotal() | currency }}</span>
-            </div>
+          } @else {
+             <div class="p-12 text-center border-2 border-dashed border-gray-100 rounded-[28px] space-y-4">
+               <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
+                 <mat-icon class="!text-gray-300 !text-3xl !w-7 !h-7">shopping_bag</mat-icon>
+               </div>
+               <div>
+                 <p class="text-sm font-bold text-gray-900">Tu carrito está vacío</p>
+                 <p class="text-xs text-gray-400">Busca y añade productos del inventario para iniciar la venta.</p>
+               </div>
+             </div>
           }
-        </div>
-      </mat-dialog-content>
 
-      <footer class="flex justify-end gap-3 pt-8 px-2">
-        <button mat-button (click)="dialogRef.close()" class="!h-12 !px-8 !rounded-full !font-bold">
-          Cancelar
-        </button>
-        <button 
-          mat-flat-button 
-          color="primary" 
-          [disabled]="!selectedCustomer || addedProducts().length === 0"
-          (click)="saveSale()"
-          class="!h-12 !px-12 !rounded-full !font-bold"
-        >
-          Confirmar Venta
-        </button>
-      </footer>
+          <!-- Footer Actions -->
+          <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100">
+            <button mat-button type="button" class="!rounded-full !px-8 !h-12 !font-bold text-gray-500" (click)="dialogRef.close()">
+              Descartar
+            </button>
+            <button mat-flat-button color="primary" type="submit" 
+              [disabled]="saleForm.invalid || items.length === 0"
+              class="!rounded-full !px-12 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              Finalizar Venta
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 32px !important;
-      padding: 24px !important;
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
     }
-    .scrollbar-hide::-webkit-scrollbar {
-      display: none;
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 10px;
     }
-    .scrollbar-hide {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    button:disabled {
+      background-color: #f3f4f6 !important;
+      color: #9ca3af !important;
+      cursor: not-allowed;
     }
-    .mat-mdc-table {
-      background: transparent;
+    mat-icon {
+      font-size: 24px;
     }
   `]
 })
-export class SaleFormMolecule {
+export class SaleFormMolecule implements OnInit {
+  private fb = inject(FormBuilder);
   public dialogRef = inject(MatDialogRef<SaleFormMolecule>);
-  public inventoryService = inject(InventoryService);
-  public salesService = inject(SalesService);
+  private productService = inject(ProductService);
+  private customerService = inject(CustomerService);
+  private salesService = inject(SalesService);
 
-  selectedCustomer: Customer | null = null;
-  selectedProduct: any = null;
-  quantity = 1;
-  addedProducts = signal<InvoiceProduct[]>([]);
+  // Local state signals
+  customers = this.customerService.customers;
+  allProducts = this.productService.products;
+  selectedProduct = signal<Product | null>(null);
+  
+  productSearchControl = new FormControl('');
+  quantityControl = new FormControl(1, [Validators.required, Validators.min(1)]);
+
+  saleForm = this.fb.group({
+    customer: [null as Customer | null, Validators.required],
+    items: this.fb.array([])
+  });
+
+  // Reactive Autocomplete
+  filteredProducts = signal<Product[]>([]);
+
+  // Trigger for total computation
+  private itemsTrigger = signal(0);
+
+  // Total Amount Computation
+  totalAmount = computed(() => {
+    this.itemsTrigger();
+    const currentItems = this.items.value || [];
+    return currentItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+  });
+
+  get items() {
+    return this.saleForm.get('items') as FormArray;
+  }
+
+  ngOnInit() {
+    // Load data if not available
+    if (this.customers().length === 0) {
+      this.customerService.loadCustomers({ limit: 100 }).subscribe();
+    }
+    if (this.allProducts().length === 0) {
+      this.productService.loadProducts({ limit: 100 }).subscribe();
+    }
+
+    // Setup autocomplete search
+    this.productSearchControl.valueChanges.pipe(
+      startWith(''),
+      map(value => {
+        const name = typeof value === 'string' ? value : (value as Product | null)?.name || '';
+        return this._filterProducts(name);
+      })
+    ).subscribe(products => this.filteredProducts.set(products));
+  }
+
+  private _filterProducts(value: string | Product): Product[] {
+    const filterValue = typeof value === 'string' ? value.toLowerCase() : '';
+    return this.allProducts().filter(product => 
+      product.name.toLowerCase().includes(filterValue) && product.currentStock > 0
+    );
+  }
+
+  displayFn(product: Product): string {
+    return product ? product.name : '';
+  }
+
+  onProductSelected(product: Product) {
+    this.selectedProduct.set(product);
+    this.quantityControl.setValue(1);
+  }
 
   addProduct() {
-    if (!this.selectedProduct) return;
+    const product = this.selectedProduct();
+    const qty = this.quantityControl.value || 0;
 
-    const currentProducts = this.addedProducts();
-    const existingIndex = currentProducts.findIndex(p => p.id === this.selectedProduct.id);
-
-    if (existingIndex !== -1) {
-      const updated = [...currentProducts];
-      const newTotalQty = updated[existingIndex].quantity + this.quantity;
-      if (newTotalQty > this.selectedProduct.quantity) return;
-      updated[existingIndex] = { ...updated[existingIndex], quantity: newTotalQty };
-      this.addedProducts.set(updated);
-    } else {
-      if (this.quantity > this.selectedProduct.quantity) return;
-      const newProduct: InvoiceProduct = {
-        id: this.selectedProduct.id,
-        name: this.selectedProduct.name,
-        quantity: this.quantity,
-        price: 1200
-      };
-      this.addedProducts.update(products => [...products, newProduct]);
-    }
-    this.selectedProduct = null;
-    this.quantity = 1;
-  }
-
-  isMaxStockReached(product: InvoiceProduct): boolean {
-    const stockItem = this.inventoryService.stock().find(item => item.id === product.id);
-    return stockItem ? product.quantity >= stockItem.quantity : false;
-  }
-
-  updateQty(product: InvoiceProduct, delta: number) {
-    this.addedProducts.update(products => products.map(p => {
-      if (p.id === product.id) {
-        const newQty = p.quantity + delta;
-        const stockItem = this.inventoryService.stock().find(item => item.id === product.id);
-        const maxQty = stockItem ? stockItem.quantity : 9999;
-        if (newQty > maxQty) return p;
-        return { ...p, quantity: newQty > 0 ? newQty : 1 };
+    if (product && qty > 0) {
+      // Check if already in array
+      const existingIndex = this.items.controls.findIndex(c => c.value.productId === product.id);
+      
+      if (existingIndex !== -1) {
+        const currentQty = this.items.at(existingIndex).get('quantity')?.value || 0;
+        const newQty = currentQty + qty;
+        if (newQty > product.currentStock) {
+          // Could show a snackbar here
+          return;
+        }
+        this.items.at(existingIndex).get('quantity')?.setValue(newQty);
+      } else {
+        this.items.push(this.fb.group({
+          productId: [product.id],
+          name: [product.name],
+          price: [product.averagePurchasePrice || 1500], // Using price or fallback
+          quantity: [qty, [Validators.required, Validators.max(product.currentStock)]]
+        }));
       }
-      return p;
-    }));
+
+      this.selectedProduct.set(null);
+      this.productSearchControl.setValue('');
+      this.quantityControl.setValue(1);
+      this.itemsTrigger.update(v => v + 1);
+    }
   }
 
-  removeProduct(product: InvoiceProduct) {
-    this.addedProducts.update(products => products.filter(p => p.id !== product.id));
+  updateQty(index: number, delta: number) {
+    const control = this.items.at(index).get('quantity');
+    const product = this.allProducts().find(p => p.id === this.items.at(index).get('productId')?.value);
+    const newQty = (control?.value || 0) + delta;
+    
+    if (newQty > 0 && (!product || newQty <= product.currentStock)) {
+      control?.setValue(newQty);
+      this.itemsTrigger.update(v => v + 1);
+    }
   }
 
-  calculateTotal() {
-    return this.addedProducts().reduce((acc, p) => acc + (p.quantity * p.price), 0);
+  removeItem(index: number) {
+    this.items.removeAt(index);
+    this.itemsTrigger.update(v => v + 1);
   }
 
-  saveSale() {
-    if (!this.selectedCustomer) return;
-    const newInvoice: Invoice = {
-      id: `INV-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      customer: this.selectedCustomer.name,
-      date: new Date().toISOString().split('T')[0],
-      amount: this.calculateTotal(),
-      status: 'Pending',
-      products: this.addedProducts()
-    };
-    this.salesService.addInvoice(newInvoice);
-    this.dialogRef.close(true);
+  onSubmit() {
+    if (this.saleForm.valid) {
+      const formValue = this.saleForm.value;
+      const customer = formValue.customer as Customer;
+      
+      const newInvoice: Invoice = {
+        id: `INV-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        customer: customer.name,
+        date: new Date().toISOString().split('T')[0],
+        amount: this.totalAmount(),
+        status: 'Pending',
+        products: formValue.items?.map((item: any) => ({
+          id: item.productId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })) || []
+      };
+
+      this.salesService.addInvoice(newInvoice);
+      this.dialogRef.close(true);
+    }
   }
 }

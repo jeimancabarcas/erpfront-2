@@ -29,6 +29,18 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
           </div>
         </a>
 
+        <a 
+          mat-list-item 
+          routerLink="/sales/customers" 
+          routerLinkActive="!bg-indigo-100 !text-indigo-900" 
+          class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group mb-1"
+        >
+          <div class="flex items-center gap-4 px-4">
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]">people</mat-icon>
+            <span class="text-sm font-bold tracking-wide">Clientes</span>
+          </div>
+        </a>
+
         <!-- Inventory Module Collapsible -->
         <mat-accordion class="sidebar-accordion" multi>
           <mat-expansion-panel 
@@ -59,6 +71,19 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                 <div class="flex items-center gap-3 px-4">
                   <mat-icon class="!text-gray-400 !text-[20px]">analytics</mat-icon>
                   <span class="text-xs font-bold tracking-wide">Resumen</span>
+                </div>
+              </a>
+
+              <a 
+                mat-list-item 
+                routerLink="/sales" 
+                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+                [routerLinkActiveOptions]="{exact: true}"
+                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+              >
+                <div class="flex items-center gap-3 px-4">
+                  <mat-icon class="!text-gray-400 !text-[20px]">payments</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Ventas</span>
                 </div>
               </a>
 
@@ -130,53 +155,6 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                   </nav>
                 </mat-expansion-panel>
               </mat-accordion>
-            </nav>
-          </mat-expansion-panel>
-        </mat-accordion>
-
-        <!-- Sales Module Collapsible -->
-        <mat-accordion class="sidebar-accordion" multi>
-          <mat-expansion-panel 
-            class="!shadow-none !bg-transparent !border-none mb-1"
-            [expanded]="isSalesActive()"
-          >
-            <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 !rounded-full group">
-              <mat-panel-title class="flex items-center gap-4">
-                <mat-icon 
-                  class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
-                  [class.!text-indigo-900]="isSalesActive()"
-                >payments</mat-icon>
-                <span 
-                  class="text-sm font-bold tracking-wide text-gray-700"
-                  [class.text-indigo-900]="isSalesActive()"
-                >Ventas</span>
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-
-            <nav class="flex flex-col gap-2 mt-2 pl-4">
-              <a 
-                mat-list-item 
-                routerLink="/sales" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                [routerLinkActiveOptions]="{exact: true}"
-                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 !text-[20px]">analytics</mat-icon>
-                  <span class="text-xs font-bold tracking-wide">Resumen</span>
-                </div>
-              </a>
-              <a 
-                mat-list-item 
-                routerLink="/sales/customers" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 !text-[20px]">people</mat-icon>
-                  <span class="text-xs font-bold tracking-wide">Clientes</span>
-                </div>
-              </a>
             </nav>
           </mat-expansion-panel>
         </mat-accordion>
@@ -333,7 +311,7 @@ export class SidebarComponent {
   private router = inject(Router);
 
   isInventoryActive(): boolean {
-    return this.router.url.includes('/inventory');
+    return this.router.url.includes('/inventory') || this.router.url.includes('/sales');
   }
 
   isSalesActive(): boolean {

@@ -1,24 +1,27 @@
+export type DocumentType = 'CC' | 'NIT' | 'CE' | 'PP';
+export type CustomerStatus = 'ACTIVE' | 'INACTIVE';
+
 export interface Customer {
   id: string;
   name: string;
-  documentType: string;
+  email?: string;
+  documentType: DocumentType;
   documentNumber: string;
-  email: string;
+  status: CustomerStatus;
   phone?: string;
   address?: string;
-  status: 'Active' | 'Inactive';
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateCustomerDto {
   name: string;
-  documentType: string;
+  email?: string;
+  documentType: DocumentType;
   documentNumber: string;
-  email: string;
+  status?: CustomerStatus;
   phone?: string;
   address?: string;
-  status?: 'Active' | 'Inactive';
 }
 
 export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
