@@ -67,7 +67,7 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
           class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
           <mat-icon class="mr-2">add_shopping_cart</mat-icon>
-          Nueva Factura
+          Nueva Venta
         </button>
       </header>
 
@@ -192,7 +192,7 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
                   class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100"
                 >
                   <mat-icon class="mr-2">add</mat-icon>
-                  Generar Primera Factura
+                  Registrar Primera Venta
                 </button>
               </app-empty-state>
             </td>

@@ -128,17 +128,19 @@ import { QueryParams } from '../../../../models/pagination.model';
             </td>
           </ng-container>
 
-          <!-- PMP Column -->
-          <ng-container matColumnDef="averagePurchasePrice">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="averagePurchasePrice">PMP (Costo)</th>
+          <!-- Precios Column -->
+          <ng-container matColumnDef="prices">
+            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Precios (Costo / Venta)</th>
             <td mat-cell *matCellDef="let product" [class]="cellClass">
               <div class="flex flex-col">
-                <span class="font-bold text-gray-900">
-                  {{ product.averagePurchasePrice | currency }}
-                </span>
-                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
-                  Precio Medio Ponderado
-                </span>
+                <div class="flex items-center gap-1">
+                  <span class="text-[10px] text-gray-400 font-bold uppercase">Costo:</span>
+                  <span class="font-bold text-gray-600 italic text-xs">{{ product.averagePurchasePrice | currency }}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="text-[10px] text-indigo-400 font-black uppercase">Venta:</span>
+                  <span class="font-black text-indigo-600">{{ product.sellingPrice | currency }}</span>
+                </div>
               </div>
             </td>
           </ng-container>
@@ -253,7 +255,7 @@ export class InventoryProductsPageComponent implements OnInit {
   sortBy = signal('name');
   order = signal<'ASC' | 'DESC'>('ASC');
 
-  displayedColumns = ['sku', 'name', 'category', 'averagePurchasePrice', 'currentStock', 'actions'];
+  displayedColumns = ['sku', 'name', 'category', 'prices', 'currentStock', 'actions'];
   headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
   cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
 

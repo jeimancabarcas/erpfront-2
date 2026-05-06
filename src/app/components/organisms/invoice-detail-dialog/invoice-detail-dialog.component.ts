@@ -99,17 +99,17 @@ import { Invoice } from '../../../models/invoice.model';
               <table class="w-full text-left border-collapse">
                 <thead>
                   <tr class="bg-gray-50/50 border-b border-gray-100">
-                    <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto</th>
+                    <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Producto</th>
                     <th class="py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Cant.</th>
-                    <th class="py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Precio Unit.</th>
-                    <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Subtotal</th>
+                    <th class="py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Precio Unit.</th>
+                    <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (item of inv.items; track item.productId) {
                     <tr class="border-b border-gray-50 last:border-0">
-                      <td class="py-4 px-6">
-                        <div class="flex flex-col">
+                      <td class="py-4 px-6 text-center">
+                        <div class="flex flex-col items-center">
                           <span class="font-bold text-gray-900">{{ item.product?.name || 'Producto Desconocido' }}</span>
                           <span class="text-[10px] text-gray-400 font-medium">SKU: {{ item.product?.sku }}</span>
                         </div>
@@ -117,10 +117,10 @@ import { Invoice } from '../../../models/invoice.model';
                       <td class="py-4 px-4 text-center">
                         <span class="px-3 py-1 bg-gray-100 rounded-lg text-xs font-black text-gray-600">{{ item.quantity }}</span>
                       </td>
-                      <td class="py-4 px-4 text-right text-xs font-medium text-gray-500">
+                      <td class="py-4 px-4 text-center text-xs font-medium text-gray-500">
                         {{ item.unitPrice | currency }}
                       </td>
-                      <td class="py-4 px-6 text-right font-black text-gray-900">
+                      <td class="py-4 px-6 text-center font-black text-gray-900">
                         {{ item.subtotal | currency }}
                       </td>
                     </tr>

@@ -50,13 +50,13 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
           </ng-container>
 
           <ng-container matColumnDef="price">
-            <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase text-right">Precio Unit.</th>
-            <td mat-cell *matCellDef="let p" class="text-right">{{p.price | currency}}</td>
+            <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase text-center">Precio Unit.</th>
+            <td mat-cell *matCellDef="let p" class="text-center">{{p.price | currency}}</td>
           </ng-container>
 
           <ng-container matColumnDef="subtotal">
-            <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase text-right">Subtotal</th>
-            <td mat-cell *matCellDef="let p" class="text-right font-bold text-gray-900">{{p.quantity * p.price | currency}}</td>
+            <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-bold !uppercase text-center">Subtotal</th>
+            <td mat-cell *matCellDef="let p" class="text-center font-bold text-gray-900">{{p.quantity * p.price | currency}}</td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="['name', 'qty', 'price', 'subtotal']"></tr>

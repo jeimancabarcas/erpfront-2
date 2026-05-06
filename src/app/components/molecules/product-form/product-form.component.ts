@@ -80,6 +80,18 @@ import { Product } from '../../../models/product.model';
               <mat-error>El stock máximo no puede ser negativo</mat-error>
             }
           </mat-form-field>
+
+          @if (isEditMode) {
+            <mat-form-field appearance="outline" class="w-full animate-in fade-in slide-in-from-top duration-300">
+              <mat-label>Precio de Venta</mat-label>
+              <input matInput type="number" [(ngModel)]="product().sellingPrice" name="sellingPrice" required min="0" placeholder="Ej. 15000">
+              <mat-icon matPrefix class="mr-2 text-indigo-600">payments</mat-icon>
+              @if (productForm.controls['sellingPrice']?.errors?.['min']) {
+                <mat-error>El precio de venta no puede ser negativo</mat-error>
+              }
+              <mat-hint class="text-indigo-400 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</mat-hint>
+            </mat-form-field>
+          }
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
@@ -122,7 +134,9 @@ export class ProductFormMolecule implements OnInit {
     categoryId: null,
     currentStock: 0,
     minStock: 0,
-    maxStock: 0
+    maxStock: 0,
+    sellingPrice: 0,
+    averagePurchasePrice: 0
   });
 
   ngOnInit() {
@@ -138,8 +152,12 @@ export class ProductFormMolecule implements OnInit {
   }
 
   saveProduct() {
-    const { id, name, sku, categoryId, currentStock, minStock, maxStock } = this.product();
-    const payload = { name, sku, categoryId, currentStock, minStock, maxStock };
+    const { id, name, sku, categoryId, currentStock, minStock, maxStock, sellingPrice } = this.product();
+    const payload: any = { name, sku, categoryId, currentStock, minStock, maxStock };
+    
+    if (this.isEditMode) {
+      payload.sellingPrice = sellingPrice;
+    }
     
     const request = this.isEditMode 
       ? this.productService.updateProduct(id, payload)

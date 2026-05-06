@@ -18,6 +18,7 @@ import { Product } from '../../../models/product.model';
 import { Customer } from '../../../models/customer.model';
 import { CreateInvoiceDto } from '../../../models/invoice.model';
 import { startWith, map } from 'rxjs';
+import { ProductPriceInfoMolecule } from '../product-price-info/product-price-info.component';
 
 @Component({
   selector: 'app-sale-form',
@@ -36,7 +37,8 @@ import { startWith, map } from 'rxjs';
     MatTableModule,
     MatTooltipModule,
     MatSnackBarModule,
-    CurrencyPipe
+    CurrencyPipe,
+    ProductPriceInfoMolecule
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[900px]">
@@ -128,16 +130,13 @@ import { startWith, map } from 'rxjs';
               </button>
             </div>
 
-            @if (selectedProduct()) {
-              <div class="flex items-center gap-4 animate-in fade-in slide-in-from-left duration-300">
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-100 shadow-sm">
-                  <span class="text-[10px] font-black text-gray-400 uppercase">Precio Sugerido:</span>
-                  <span class="text-xs font-black text-indigo-600">{{ selectedProduct()?.sellingPrice | currency }}</span>
-                </div>
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-gray-100 shadow-sm">
-                  <span class="text-[10px] font-black text-gray-400 uppercase">Stock Actual:</span>
-                  <span class="text-xs font-black" [class.text-red-600]="selectedProduct()!.currentStock < 5">{{ selectedProduct()?.currentStock }}</span>
-                </div>
+            @if (selectedProduct(); as product) {
+              <div class="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-left duration-300">
+                <app-product-price-info 
+                  [sellingPrice]="product.sellingPrice" 
+                  [averagePurchasePrice]="product.averagePurchasePrice"
+                  [currentStock]="product.currentStock"
+                />
               </div>
             }
           </div>
@@ -161,13 +160,19 @@ import { startWith, map } from 'rxjs';
                   <ng-container matColumnDef="price">
                     <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-right">Precio Unit.</th>
                     <td mat-cell *matCellDef="let control" class="px-4 text-right">
-                      <div class="flex items-center justify-end gap-2">
+                      <div class="flex items-center gap-2">
+                        <mat-icon 
+                          class="!text-indigo-400 !text-[18px] !w-[18px] !h-[18px] cursor-help" 
+                          [matTooltip]="'• Precio Config: ' + (control.value.referenceSellingPrice | currency) + '\n• Sugerido (30%): ' + (control.value.referenceAveragePrice * 1.3 | currency) + '\n• Promedio (PMP): ' + (control.value.referenceAveragePrice | currency) + '\n• Stock Total: ' + control.value.referenceStock + ' unidades'"
+                          matTooltipPosition="above"
+                          matTooltipClass="pre-line-tooltip"
+                        >info_outline</mat-icon>
                         <mat-icon class="!text-gray-300 scale-75">edit</mat-icon>
                         <input 
                           type="number" 
                           [value]="control.value.unitPrice" 
                           (change)="updatePrice(control, $event)"
-                          class="w-24 text-right bg-transparent border-b border-dashed border-gray-200 focus:border-indigo-500 outline-none font-bold text-xs"
+                          class="text-right bg-transparent border-b border-dashed border-gray-200 focus:border-indigo-500 outline-none font-bold"
                         >
                       </div>
                     </td>
@@ -175,13 +180,13 @@ import { startWith, map } from 'rxjs';
 
                   <ng-container matColumnDef="qty">
                     <th mat-header-cell *matHeaderCellDef class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-center">Cant.</th>
-                    <td mat-cell *matCellDef="let control; let i = index" class="px-4 text-center">
-                      <div class="flex items-center justify-center gap-3">
-                        <button type="button" mat-icon-button class="!w-8 !h-8 !min-w-[32px] !bg-gray-100 !rounded-lg" (click)="updateQty(i, -1)" [disabled]="control.value.quantity <= 1">
+                    <td mat-cell *matCellDef="let control; let i = index" class="!p-2 text-center">
+                      <div class="flex items-center gap-3">
+                        <button type="button" mat-icon-button class="!bg-gray-100" (click)="updateQty(i, -1)" [disabled]="control.value.quantity <= 1">
                           <mat-icon>remove</mat-icon>
                         </button>
-                        <span class="text-sm font-black w-6 text-gray-900">{{ control.value.quantity }}</span>
-                        <button type="button" mat-icon-button class="!w-8 !h-8 !min-w-[32px] !bg-gray-100 !rounded-lg" (click)="updateQty(i, 1)">
+                        <span class="text-sm font-black text-gray-900">{{ control.value.quantity }}</span>
+                        <button type="button" mat-icon-button class="!bg-gray-100" (click)="updateQty(i, 1)">
                           <mat-icon>add</mat-icon>
                         </button>
                       </div>
@@ -266,6 +271,12 @@ import { startWith, map } from 'rxjs';
       cursor: not-allowed;
     }
     mat-icon { font-size: 24px; }
+    ::ng-deep .pre-line-tooltip {
+      white-space: pre-line !important;
+      line-height: 1.6 !important;
+      padding: 12px !important;
+      font-size: 11px !important;
+    }
   `]
 })
 export class SaleFormMolecule implements OnInit {
@@ -281,7 +292,7 @@ export class SaleFormMolecule implements OnInit {
   allProducts = this.productService.products;
   selectedProduct = signal<Product | null>(null);
   isSubmitting = signal(false);
-  
+
   productSearchControl = new FormControl('');
   quantityControl = new FormControl(1, [Validators.required, Validators.min(1)]);
 
@@ -328,7 +339,7 @@ export class SaleFormMolecule implements OnInit {
   }
 
   private _filterProducts(filterValue: string): Product[] {
-    return this.allProducts().filter(product => 
+    return this.allProducts().filter(product =>
       product.name.toLowerCase().includes(filterValue.toLowerCase()) && product.currentStock > 0
     );
   }
@@ -348,7 +359,7 @@ export class SaleFormMolecule implements OnInit {
 
     if (product && qty > 0) {
       const existingIndex = this.items.controls.findIndex(c => c.value.productId === product.id);
-      
+
       if (existingIndex !== -1) {
         const currentQty = this.items.at(existingIndex).get('quantity')?.value || 0;
         const newQty = currentQty + qty;
@@ -362,7 +373,10 @@ export class SaleFormMolecule implements OnInit {
           productId: [product.id],
           name: [product.name],
           unitPrice: [product.sellingPrice || product.averagePurchasePrice * 1.3],
-          quantity: [qty, [Validators.required, Validators.max(product.currentStock)]]
+          quantity: [qty, [Validators.required, Validators.max(product.currentStock)]],
+          referenceSellingPrice: [product.sellingPrice],
+          referenceAveragePrice: [product.averagePurchasePrice],
+          referenceStock: [product.currentStock]
         }));
       }
 
@@ -378,7 +392,7 @@ export class SaleFormMolecule implements OnInit {
     const productId = this.items.at(index).get('productId')?.value;
     const product = this.allProducts().find(p => p.id === productId);
     const newQty = (control?.value || 0) + delta;
-    
+
     if (newQty > 0 && (!product || newQty <= product.currentStock)) {
       control?.setValue(newQty);
       this.itemsTrigger.update(v => v + 1);
@@ -404,7 +418,7 @@ export class SaleFormMolecule implements OnInit {
     if (this.saleForm.valid && this.items.length > 0) {
       this.isSubmitting.set(true);
       const formValue = this.saleForm.value;
-      
+
       const dto: CreateInvoiceDto = {
         customerId: formValue.customerId!,
         notes: formValue.notes || undefined,
