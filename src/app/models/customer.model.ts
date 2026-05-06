@@ -25,3 +25,10 @@ export interface CreateCustomerDto {
 }
 
 export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
+
+export interface CustomerStats {
+  customer: Customer;
+  totalInvoiced: number;
+  invoiceCount: number;
+  invoices: any[]; // Using any[] to avoid circular dependency if needed, or import Invoice
+}

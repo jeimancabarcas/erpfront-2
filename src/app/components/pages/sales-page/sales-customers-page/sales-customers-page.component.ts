@@ -21,6 +21,7 @@ import { Customer } from '../../../../models/customer.model';
 import { CustomerDialogOrganism } from '../../../../components/organisms/customer-dialog/customer-dialog.component';
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-sales-customers-page',
@@ -41,7 +42,8 @@ import { QueryParams } from '../../../../models/pagination.model';
     MatSelectModule,
     ReactiveFormsModule,
     TableContainerMolecule,
-    EmptyStateAtom
+    EmptyStateAtom,
+    RouterModule
   ],
   template: `
     <app-dashboard-layout>
@@ -159,6 +161,14 @@ import { QueryParams } from '../../../../models/pagination.model';
             <th mat-header-cell *matHeaderCellDef [class]="headerClass"></th>
             <td mat-cell *matCellDef="let customer" [class]="cellClass">
               <div class="flex justify-end gap-2">
+                <button 
+                  mat-icon-button 
+                  [routerLink]="['/sales/customers', customer.id]"
+                  matTooltip="Ver detalles del cliente"
+                  class="!text-indigo-600 hover:!bg-indigo-50 transition-all"
+                >
+                  <mat-icon>visibility</mat-icon>
+                </button>
                 <button 
                   mat-icon-button 
                   (click)="openCustomerDialog(customer)"

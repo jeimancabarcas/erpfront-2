@@ -63,4 +63,12 @@ export class CustomerService {
       })
     );
   }
+
+  getCustomerById(id: string): Observable<Customer> {
+    return this.http.get<Customer>(`${this.apiUrl}/${id}`);
+  }
+
+  getCustomerStats(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}/stats`);
+  }
 }

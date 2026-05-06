@@ -36,7 +36,7 @@ export class InvoiceService {
 
     return this.http.get<any>(this.apiUrl, { params: queryParams }).pipe(
       tap((response: any) => {
-        const data = response.data || [];
+        const data = response.data || response.items || (Array.isArray(response) ? response : []);
         const meta = response.meta || null;
         
         this._invoices.set(data);
