@@ -62,4 +62,12 @@ export class InvoiceService {
       })
     );
   }
+
+  /**
+   * Obtiene estadísticas financieras (KPIs) para el dashboard
+   */
+  getFinancialStats(): Observable<any> {
+    const statsUrl = `${environment.apiUrl}/sales/stats/financial`;
+    return this.http.get<any>(statsUrl);
+  }
 }
