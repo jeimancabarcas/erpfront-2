@@ -70,4 +70,11 @@ export class InvoiceService {
     const statsUrl = `${environment.apiUrl}/sales/stats/financial`;
     return this.http.get<any>(statsUrl);
   }
+
+  /**
+   * Obtiene el PDF de una factura codificado en Base64 y su nombre de archivo
+   */
+  getInvoicePdf(id: string): Observable<{ pdfBase64Encoded: string; fileName: string }> {
+    return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(`${this.apiUrl}/${id}/pdf`);
+  }
 }

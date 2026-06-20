@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -9,7 +9,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { FinanceService } from '../../../services/finance.service';
+import { InvoiceService } from '../../../services/invoice.service';
+import { SalesNoteService } from '../../../services/sales-note.service';
+import { Invoice } from '../../../models/invoice.model';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
 import { startWith, map } from 'rxjs';
 
@@ -25,7 +29,8 @@ import { startWith, map } from 'rxjs';
     MatSelectModule, 
     MatButtonModule, 
     MatIconModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatSnackBarModule
   ],
   template: `
     <div class="relative overflow-hidden rounded-[40px] bg-white flex flex-col max-h-[95vh]">
@@ -78,7 +83,7 @@ import { startWith, map } from 'rxjs';
             </div>
           </div>
 
-          <!-- Invoice Selection (Same format as Customers) -->
+          <!-- Invoice Reference Selection -->
           <div class="space-y-3">
             <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Factura de Referencia</label>
             @if (!selectedInvoice()) {
@@ -91,8 +96,8 @@ import { startWith, map } from 'rxjs';
                     @for (inv of filteredInvoices(); track inv.id) {
                       <mat-option [value]="inv">
                         <div class="flex flex-col py-1">
-                          <span class="font-bold text-sm">{{ inv.id }}</span>
-                          <span class="text-[10px] text-gray-400 tracking-tighter">{{ inv.customerName }} • {{ inv.total | currency:'USD':'symbol':'1.0-0' }}</span>
+                          <span class="font-bold text-sm text-gray-900">{{ inv.id }}</span>
+                          <span class="text-[10px] text-gray-500 tracking-tighter">{{ inv.customerName }} • {{ inv.total | currency:'USD':'symbol':'1.0-0' }}</span>
                         </div>
                       </mat-option>
                     }
@@ -111,7 +116,7 @@ import { startWith, map } from 'rxjs';
                     <div class="flex items-center gap-3">
                       <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{{ selectedInvoice()?.customerName }}</span>
                     </div>
-                    <span class="text-[10px] font-bold text-gray-400">{{ selectedInvoice()?.total | currency:'USD':'symbol':'1.0-0' }}</span>
+                    <span class="text-[10px] font-bold text-gray-500">{{ selectedInvoice()?.total | currency:'USD':'symbol':'1.0-0' }}</span>
                   </div>
                 </div>
                 <button type="button" mat-stroked-button color="primary" (click)="selectedInvoice.set(null)" class="!rounded-full !h-10 !border-indigo-200 hover:!bg-white">
@@ -121,11 +126,27 @@ import { startWith, map } from 'rxjs';
             }
           </div>
 
+          <!-- DIAN Correction Concept -->
+          <div class="space-y-3">
+            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Concepto de Corrección (DIAN)</label>
+            <mat-form-field appearance="outline" class="w-full !m-0">
+              <mat-label>Seleccione el concepto</mat-label>
+              <mat-select formControlName="correctionConceptCode" required>
+                @for (concept of correctionConcepts(); track concept.code) {
+                  <mat-option [value]="concept.code">
+                    {{ concept.label }}
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-icon matPrefix class="mr-2 text-gray-400">info</mat-icon>
+            </mat-form-field>
+          </div>
+
           <!-- Amount Selection -->
           <div class="space-y-3">
             <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Valor del Ajuste</label>
             <mat-form-field appearance="outline" class="w-full !m-0">
-              <mat-label>Ingrese el monto total del ajuste</mat-label>
+              <mat-label>Monto total del ajuste</mat-label>
               <input matInput type="number" formControlName="amount" placeholder="0.00" class="font-black">
               <mat-icon matPrefix class="mr-2 text-gray-400">attach_money</mat-icon>
             </mat-form-field>
@@ -147,9 +168,13 @@ import { startWith, map } from 'rxjs';
       <div class="p-10 pt-6 border-t border-gray-50 bg-white relative z-20">
         <div class="flex flex-col gap-4">
           <button mat-flat-button color="primary" type="button" (click)="onSubmit()"
-            [disabled]="adjustmentForm.invalid || !selectedInvoice()" 
-            class="!rounded-full !h-16 !font-black !bg-gradient-to-r from-amber-500 to-orange-500 shadow-xl shadow-amber-100 hover:scale-[1.02] active:scale-[0.98] transition-all">
-            Transmitir Comprobante Electrónico
+            [disabled]="adjustmentForm.invalid || !selectedInvoice() || isSubmitting()" 
+            class="!rounded-full !h-16 !font-black !bg-gradient-to-r from-amber-500 to-orange-500 shadow-xl shadow-amber-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100">
+            @if (isSubmitting()) {
+              Transmitiendo nota...
+            } @else {
+              Transmitir Comprobante Electrónico
+            }
           </button>
           <button mat-button type="button" (click)="dialogRef.close()" class="!rounded-full !h-12 !font-bold text-gray-400 hover:text-gray-600">
             Cancelar Operación
@@ -168,33 +193,30 @@ import { startWith, map } from 'rxjs';
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
   `]
 })
-export class AdjustmentFormDialogOrganism {
+export class AdjustmentFormDialogOrganism implements OnInit {
   private fb = inject(FormBuilder);
   public dialogRef = inject(MatDialogRef<AdjustmentFormDialogOrganism>);
   public data = inject(MAT_DIALOG_DATA, { optional: true });
   public financeService = inject(FinanceService);
+  private invoiceService = inject(InvoiceService);
+  private salesNoteService = inject(SalesNoteService);
+  private snackBar = inject(MatSnackBar);
 
   selectedInvoice = signal<FinanceInvoice | null>(null);
+  isSubmitting = signal<boolean>(false);
 
   adjustmentForm = this.fb.group({
     type: [this.data?.type || 'Credit', Validators.required],
     invoiceSearch: [''],
     reason: ['', Validators.required],
-    amount: [0, [Validators.required, Validators.min(1)]]
+    amount: [0, [Validators.required, Validators.min(1)]],
+    correctionConceptCode: ['', Validators.required]
   });
 
-  constructor() {
-    if (this.data?.invoice) {
-      // Need to handle this after component initialization or use an effect/hook
-      // Since it's a simple assignment to signal, doing it in constructor is fine
-      // but onInvoiceSelected also patches the form.
-      setTimeout(() => {
-        if (this.data?.invoice) {
-          this.onInvoiceSelected(this.data.invoice);
-        }
-      });
-    }
-  }
+  // Real invoices from the system mapped to FinanceInvoice structure
+  realFinanceInvoices = computed(() => {
+    return this.invoiceService.invoices().map(inv => this.mapBackendInvoiceToFinanceInvoice(inv));
+  });
 
   // Reactive Invoice Filtering
   filteredInvoices = toSignal(
@@ -203,11 +225,51 @@ export class AdjustmentFormDialogOrganism {
       map(value => {
         const val = value as string | FinanceInvoice | null;
         const query = typeof val === 'string' ? val : val?.id;
-        return query ? this._filterInvoices(query) : this.financeService.invoices();
+        return query ? this._filterInvoices(query) : this.realFinanceInvoices();
       })
     ),
-    { initialValue: this.financeService.invoices() }
+    { initialValue: [] as FinanceInvoice[] }
   );
+
+  // Dynamic Correction Concepts list based on Type (Credit or Debit)
+  correctionConcepts = computed(() => {
+    const type = this.adjustmentForm.get('type')?.value;
+    if (type === 'Credit') {
+      return [
+        { code: '1', label: '1 - Devolución parcial de los bienes o no aceptación del servicio' },
+        { code: '2', label: '2 - Anulación de factura electrónica' },
+        { code: '3', label: '3 - Rebaja o descuento parcial o total' },
+        { code: '4', label: '4 - Ajuste de precio' },
+        { code: '5', label: '5 - Otros' }
+      ];
+    } else {
+      return [
+        { code: '1', label: '1 - Intereses' },
+        { code: '2', label: '2 - Gastos por cobrar' },
+        { code: '3', label: '3 - Cambio del valor' },
+        { code: '4', label: '4 - Otros' }
+      ];
+    }
+  });
+
+  constructor() {
+    if (this.data?.invoice) {
+      setTimeout(() => {
+        if (this.data?.invoice) {
+          this.onInvoiceSelected(this.data.invoice);
+        }
+      });
+    }
+  }
+
+  ngOnInit() {
+    this.invoiceService.loadInvoices({ limit: 100 }).subscribe();
+
+    // Reset correctionConceptCode when type changes to avoid cross-type values
+    this.adjustmentForm.get('type')?.valueChanges.subscribe(() => {
+      this.adjustmentForm.get('correctionConceptCode')?.setValue('');
+    });
+  }
 
   onInvoiceSelected(invoice: FinanceInvoice) {
     this.selectedInvoice.set(invoice);
@@ -221,28 +283,85 @@ export class AdjustmentFormDialogOrganism {
 
   private _filterInvoices(query: string): FinanceInvoice[] {
     const filterValue = query.toLowerCase();
-    return this.financeService.invoices().filter(inv =>
+    return this.realFinanceInvoices().filter(inv =>
       inv.id.toLowerCase().includes(filterValue) ||
       inv.customerName.toLowerCase().includes(filterValue)
     );
   }
 
+  private mapBackendInvoiceToFinanceInvoice(inv: Invoice): FinanceInvoice {
+    return {
+      id: inv.invoiceNumber || inv.id,
+      dbId: inv.id,
+      customerName: inv.customer?.name || 'Cliente Desconocido',
+      customerTaxId: inv.customer?.documentNumber || 'N/A',
+      date: inv.date,
+      dueDate: inv.date,
+      subtotal: Number(inv.totalAmount || 0),
+      tax: 0,
+      total: Number(inv.totalAmount || 0),
+      status: inv.status === 'PAID' ? 'Paid' : inv.status === 'CANCELLED' ? 'Cancelled' : 'Draft',
+      items: (inv.items || []).map((item, idx) => ({
+        id: String(idx + 1),
+        description: item.product?.name || 'Producto/Servicio',
+        quantity: Number(item.quantity || 0),
+        unitPrice: Number(item.unitPrice || 0),
+        taxRate: 0.19,
+        total: Number(item.subtotal || 0),
+        codeReference: item.product?.sku || item.productId
+      }))
+    };
+  }
+
   onSubmit() {
     if (this.adjustmentForm.valid && this.selectedInvoice()) {
       const val = this.adjustmentForm.value;
-      const newAdjustment: AdjustmentNote = {
-        id: `${val.type === 'Credit' ? 'NC' : 'ND'}-${Math.floor(Math.random() * 900 + 100)}`,
-        type: val.type as any,
-        invoiceId: this.selectedInvoice()!.id,
-        date: new Date().toISOString().split('T')[0],
-        reason: val.reason!,
-        amount: val.amount!,
-        status: 'Electronic_Sent',
-        electronicId: `cude-${Math.random().toString(36).substring(2, 10)}`
+      const invoice = this.selectedInvoice()!;
+      const invoiceId = invoice.dbId!; // Database UUID
+
+      this.isSubmitting.set(true);
+
+      // Construct DTO
+      const dto: any = {
+        correctionConceptCode: val.correctionConceptCode!,
+        observation: val.reason || 'Sin observación'
       };
 
-      this.financeService.addAdjustment(newAdjustment);
-      this.dialogRef.close(newAdjustment);
+      // If partial credit note, calculate and scale item prices
+      if (val.amount! < invoice.total) {
+        const scale = val.amount! / invoice.total;
+        dto.items = invoice.items.map(item => ({
+          codeReference: item.codeReference || item.id,
+          quantity: item.quantity,
+          price: Number((item.unitPrice * scale).toFixed(2))
+        }));
+      }
+
+      const request$ = val.type === 'Credit'
+        ? this.salesNoteService.createCreditNote(invoiceId, dto)
+        : this.salesNoteService.createDebitNote(invoiceId, dto);
+
+      request$.subscribe({
+        next: (response) => {
+          this.isSubmitting.set(false);
+          this.snackBar.open(
+            `Nota de ${val.type === 'Credit' ? 'Crédito' : 'Débito'} emitida con éxito ante la DIAN!`,
+            'Cerrar',
+            { duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+          );
+          this.dialogRef.close({ success: true });
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          console.error(err);
+          const errorMsg = err.error?.message || err.message || 'Error desconocido al emitir comprobante';
+          this.snackBar.open(
+            `Error: ${errorMsg}`,
+            'Cerrar',
+            { duration: 8000, horizontalPosition: 'right', verticalPosition: 'top', panelClass: ['bg-red-600', 'text-white'] }
+          );
+        }
+      });
     }
   }
 }

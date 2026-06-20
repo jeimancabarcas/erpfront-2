@@ -422,11 +422,20 @@ export class SaleFormMolecule implements OnInit {
       const dto: CreateInvoiceDto = {
         customerId: formValue.customerId!,
         notes: formValue.notes || undefined,
-        items: (formValue.items || []).map((item: any) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice
-        }))
+        items: (formValue.items || []).map((item: any) => {
+          const itemPayload: any = {
+            productId: item.productId,
+            quantity: item.quantity
+          };
+          
+          // Omitir el envío del precio unitario si no ha sido modificado por el usuario,
+          // permitiendo que el backend lo resuelva directamente desde la base de datos.
+          if (Number(item.unitPrice) !== Number(item.referenceSellingPrice)) {
+            itemPayload.unitPrice = Number(item.unitPrice);
+          }
+          
+          return itemPayload;
+        })
       };
 
       this.invoiceService.createInvoice(dto).subscribe({

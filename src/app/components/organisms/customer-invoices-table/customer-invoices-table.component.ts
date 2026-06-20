@@ -11,6 +11,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Invoice } from '../../../models/invoice.model';
 import { MatDialog } from '@angular/material/dialog';
+import { InvoiceService } from '../../../services/invoice.service';
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
 
 @Component({
@@ -96,14 +97,24 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50 text-center">Acciones</th>
               <td mat-cell *matCellDef="let inv" class="px-8 !py-6 text-center">
-                <button 
-                  mat-icon-button 
-                  (click)="viewInvoiceDetail(inv)" 
-                  matTooltip="Ver detalle completo"
-                  class="!text-indigo-600 hover:!bg-indigo-50 transition-all"
-                >
-                  <mat-icon>visibility</mat-icon>
-                </button>
+                <div class="flex justify-center gap-2">
+                  <button 
+                    mat-icon-button 
+                    (click)="downloadInvoicePdf(inv)" 
+                    matTooltip="Ver PDF Oficial"
+                    class="!text-red-600 hover:!bg-red-50 transition-all"
+                  >
+                    <mat-icon>picture_as_pdf</mat-icon>
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    (click)="viewInvoiceDetail(inv)" 
+                    matTooltip="Ver detalle completo"
+                    class="!text-indigo-600 hover:!bg-indigo-50 transition-all"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
 
@@ -138,6 +149,7 @@ export class CustomerInvoicesTableOrganism {
   @Output() pageChanged = new EventEmitter<PageEvent>();
 
   private dialog = inject(MatDialog);
+  private invoiceService = inject(InvoiceService);
   
   invoiceFilter = new FormControl('');
   displayedColumns = ['invoiceNumber', 'date', 'amount', 'actions'];
@@ -157,6 +169,27 @@ export class CustomerInvoicesTableOrganism {
       width: '100%',
       maxWidth: '950px',
       panelClass: 'premium-dialog'
+    });
+  }
+
+  downloadInvoicePdf(invoice: Invoice) {
+    this.invoiceService.getInvoicePdf(invoice.id).subscribe({
+      next: (res) => {
+        try {
+          const byteCharacters = atob(res.pdfBase64Encoded);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        } catch (e) {
+          console.error('Error decoding PDF:', e);
+        }
+      },
+      error: (err) => console.error('Error fetching PDF:', err)
     });
   }
 }

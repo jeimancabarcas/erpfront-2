@@ -66,7 +66,7 @@ import { AdjustmentNote } from '../../../models/finance.model';
                     }">
                 {{ adj.status === 'Electronic_Sent' ? 'Transmitida' : adj.status }}
               </span>
-              <button mat-icon-button class="!text-gray-300 hover:!text-indigo-600 transition-colors">
+              <button mat-icon-button (click)="$event.stopPropagation(); viewNote.emit(adj)" class="!text-gray-300 hover:!text-indigo-600 transition-colors">
                 <mat-icon class="!text-[18px]">open_in_new</mat-icon>
               </button>
             </div>
@@ -74,7 +74,7 @@ import { AdjustmentNote } from '../../../models/finance.model';
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/50 transition-colors cursor-pointer"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="viewNote.emit(row)" class="hover:bg-gray-50/50 transition-colors cursor-pointer"></tr>
       </table>
     </div>
   `,
@@ -89,4 +89,5 @@ import { AdjustmentNote } from '../../../models/finance.model';
 export class AdjustmentTableOrganism {
   adjustments = input.required<AdjustmentNote[]>();
   displayedColumns: string[] = ['id', 'invoice', 'reason', 'amount', 'status'];
+  viewNote = output<AdjustmentNote>();
 }

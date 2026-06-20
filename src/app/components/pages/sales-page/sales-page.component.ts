@@ -165,6 +165,14 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
               <div class="flex justify-end gap-2">
                 <button 
                   mat-icon-button 
+                  (click)="downloadPdf(inv)"
+                  matTooltip="Ver PDF Oficial"
+                  class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50"
+                >
+                  <mat-icon>picture_as_pdf</mat-icon>
+                </button>
+                <button 
+                  mat-icon-button 
                   (click)="viewDetail(inv)"
                   matTooltip="Ver detalle de factura"
                   class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
@@ -324,6 +332,27 @@ export class SalesPageComponent implements OnInit {
       width: '950px',
       maxWidth: '95vw',
       data: { invoiceId: invoice.id }
+    });
+  }
+
+  downloadPdf(invoice: Invoice) {
+    this.invoiceService.getInvoicePdf(invoice.id).subscribe({
+      next: (res) => {
+        try {
+          const byteCharacters = atob(res.pdfBase64Encoded);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        } catch (e) {
+          console.error('Error decoding PDF:', e);
+        }
+      },
+      error: (err) => console.error('Error fetching PDF:', err)
     });
   }
 }

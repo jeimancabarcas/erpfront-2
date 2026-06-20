@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FinanceService } from '../../../../services/finance.service';
 import { AdjustmentTableOrganism } from '../../../organisms/adjustment-table/adjustment-table.component';
 import { AdjustmentFormDialogOrganism } from '../../../organisms/adjustment-form-dialog/adjustment-form-dialog.component';
+import { AdjustmentDetailDialogOrganism } from '../../../organisms/adjustment-detail-dialog/adjustment-detail-dialog.component';
+import { AdjustmentNote } from '../../../../models/finance.model';
 
 @Component({
   selector: 'app-finance-adjustments-view',
@@ -49,16 +51,17 @@ import { AdjustmentFormDialogOrganism } from '../../../organisms/adjustment-form
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Notas Crédito</p>
-          <p class="text-2xl font-black text-amber-600 tabular-nums">$2,450.00</p>
+          <p class="text-2xl font-black text-amber-600 tabular-nums">{{ totalCredit() | currency:'USD':'symbol':'1.0-0' }}</p>
         </div>
         <div class="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Notas Débito</p>
-          <p class="text-2xl font-black text-indigo-600 tabular-nums">$850.00</p>
+          <p class="text-2xl font-black text-indigo-600 tabular-nums">{{ totalDebit() | currency:'USD':'symbol':'1.0-0' }}</p>
         </div>
       </div>
 
       <app-adjustment-table 
         [adjustments]="financeService.adjustments()"
+        (viewNote)="viewAdjustment($event)"
       />
     </app-dashboard-layout>
   `,
@@ -66,15 +69,45 @@ import { AdjustmentFormDialogOrganism } from '../../../organisms/adjustment-form
     :host { display: block; }
   `]
 })
-export class FinanceAdjustmentsViewComponent {
+export class FinanceAdjustmentsViewComponent implements OnInit {
   private dialog = inject(MatDialog);
   public financeService = inject(FinanceService);
 
+  totalCredit = computed(() => {
+    return this.financeService.adjustments()
+      .filter(a => a.type === 'Credit')
+      .reduce((sum, a) => sum + a.amount, 0);
+  });
+
+  totalDebit = computed(() => {
+    return this.financeService.adjustments()
+      .filter(a => a.type === 'Debit')
+      .reduce((sum, a) => sum + a.amount, 0);
+  });
+
+  ngOnInit() {
+    this.financeService.loadAdjustments().subscribe();
+  }
+
   openAdjustment(type: 'Credit' | 'Debit') {
-    this.dialog.open(AdjustmentFormDialogOrganism, {
+    const dialogRef = this.dialog.open(AdjustmentFormDialogOrganism, {
       width: '500px',
       maxWidth: '95vw',
       data: { type }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.success) {
+        this.financeService.loadAdjustments().subscribe();
+      }
+    });
+  }
+
+  viewAdjustment(note: AdjustmentNote) {
+    this.dialog.open(AdjustmentDetailDialogOrganism, {
+      width: '650px',
+      maxWidth: '95vw',
+      data: { note }
     });
   }
 }

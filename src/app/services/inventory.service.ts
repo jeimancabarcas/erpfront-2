@@ -1,4 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { Observable, tap } from 'rxjs';
 
 export interface StockItem {
   id: string;
@@ -27,6 +30,8 @@ export interface Movement {
   providedIn: 'root'
 })
 export class InventoryService {
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/inventory/movements`;
 
   private _stock = signal<StockItem[]>([
     { id: '1', name: 'Laptop Pro 14', sku: 'LAP-001', category: 'Electrónica', quantity: 45, minStock: 10, maxStock: 100, unit: 'unidades', status: 'In Stock' },
@@ -35,15 +40,16 @@ export class InventoryService {
     { id: '4', name: 'Mouse Inalámbrico', sku: 'MOU-004', category: 'Accesorios', quantity: 120, minStock: 20, maxStock: 200, unit: 'unidades', status: 'In Stock' },
   ]);
 
-  private _movements = signal<Movement[]>([
-    { id: 'M-101', date: '2026-04-20', type: 'In', product: 'Laptop Pro 14', quantity: 20, origin: 'Proveedor', destination: 'Almacén Principal' },
-    { id: 'M-102', date: '2026-04-21', type: 'Transfer', product: 'Monitor 27" 4K', quantity: 5, origin: 'Almacén Principal', destination: 'Centro de Distribución' },
-    { id: 'M-103', date: '2026-04-22', type: 'Out', product: 'Mouse Inalámbrico', quantity: 15, origin: 'Centro de Distribución', destination: 'Cliente Final' },
-  ]);
+  private _movements = signal<Movement[]>([]);
 
   public stock = this._stock.asReadonly();
   public movements = this._movements.asReadonly();
 
+  loadMovements(): Observable<Movement[]> {
+    return this.http.get<Movement[]>(this.apiUrl).pipe(
+      tap(data => this._movements.set(data))
+    );
+  }
 
   addProduct(product: StockItem) {
     this._stock.update(items => [...items, product]);

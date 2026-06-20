@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { InventoryService } from '../../../services/inventory.service';
@@ -71,9 +71,13 @@ import { InventoryService } from '../../../services/inventory.service';
     }
   `]
 })
-export class MovementsTableMolecule {
+export class MovementsTableMolecule implements OnInit {
   inventoryService = inject(InventoryService);
   displayedColumns: string[] = ['id', 'product', 'type', 'quantity', 'date'];
+
+  ngOnInit() {
+    this.inventoryService.loadMovements().subscribe();
+  }
 
   getTypeIcon(type: string): string {
     switch (type) {
