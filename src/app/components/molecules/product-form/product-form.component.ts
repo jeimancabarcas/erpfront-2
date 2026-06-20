@@ -92,6 +92,16 @@ import { Product } from '../../../models/product.model';
               <mat-hint class="text-indigo-400 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</mat-hint>
             </mat-form-field>
           }
+
+          @if (isReasonRequired()) {
+            <mat-form-field appearance="outline" class="w-full md:col-span-2 animate-in fade-in slide-in-from-top duration-300">
+              <mat-label>Motivo del Ajuste de Stock</mat-label>
+              <input matInput [(ngModel)]="adjustmentReason" name="adjustmentReason" required placeholder="Ej. Pérdida, Ajuste de auditoría, etc.">
+              @if (!adjustmentReason) {
+                <mat-error>El motivo del ajuste es obligatorio cuando el stock cambia</mat-error>
+              }
+            </mat-form-field>
+          }
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
@@ -128,6 +138,9 @@ export class ProductFormMolecule implements OnInit {
   isEditMode = false;
   categoryList = this.categoryService.categories;
 
+  originalStock: number | null = null;
+  adjustmentReason = '';
+
   product = signal<any>({
     name: '',
     sku: '',
@@ -148,15 +161,28 @@ export class ProductFormMolecule implements OnInit {
     if (this.data && this.data.product) {
       this.isEditMode = true;
       this.product.set({ ...this.data.product });
+      this.originalStock = this.data.product.currentStock;
     }
   }
 
+  isReasonRequired(): boolean {
+    if (!this.isEditMode || this.originalStock === null) return false;
+    return this.product().currentStock !== this.originalStock;
+  }
+
   saveProduct() {
+    if (this.isReasonRequired() && !this.adjustmentReason) {
+      return;
+    }
+
     const { id, name, sku, categoryId, currentStock, minStock, maxStock, sellingPrice } = this.product();
     const payload: any = { name, sku, categoryId, currentStock, minStock, maxStock };
     
     if (this.isEditMode) {
       payload.sellingPrice = sellingPrice;
+      if (this.isReasonRequired()) {
+        payload.adjustmentReason = this.adjustmentReason;
+      }
     }
     
     const request = this.isEditMode 

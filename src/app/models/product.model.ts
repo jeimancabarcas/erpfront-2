@@ -31,4 +31,5 @@ export interface UpdateProductDto {
   minStock?: number;
   maxStock?: number;
   categoryId?: string | null;
+  adjustmentReason?: string;
 }
