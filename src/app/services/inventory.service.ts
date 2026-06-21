@@ -23,6 +23,7 @@ export interface Movement {
   quantity: number;
   origin: string;
   destination: string;
+  operator?: string;
 }
 
 

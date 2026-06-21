@@ -46,6 +46,24 @@ import { InventoryService } from '../../../services/inventory.service';
           <td mat-cell *matCellDef="let movement" class="font-bold">{{movement.quantity}}</td>
         </ng-container>
 
+        <!-- Origin Column -->
+        <ng-container matColumnDef="origin">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Origen</th>
+          <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.origin}}</td>
+        </ng-container>
+
+        <!-- Destination Column -->
+        <ng-container matColumnDef="destination">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Destino</th>
+          <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.destination}}</td>
+        </ng-container>
+
+        <!-- Operator Column -->
+        <ng-container matColumnDef="operator">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Usuario</th>
+          <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.operator}}</td>
+        </ng-container>
+
         <!-- Date Column -->
         <ng-container matColumnDef="date">
           <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Fecha</th>
@@ -73,7 +91,7 @@ import { InventoryService } from '../../../services/inventory.service';
 })
 export class MovementsTableMolecule implements OnInit {
   inventoryService = inject(InventoryService);
-  displayedColumns: string[] = ['id', 'product', 'type', 'quantity', 'date'];
+  displayedColumns: string[] = ['id', 'product', 'type', 'quantity', 'origin', 'destination', 'operator', 'date'];
 
   ngOnInit() {
     this.inventoryService.loadMovements().subscribe();
