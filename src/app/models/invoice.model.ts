@@ -17,6 +17,7 @@ export interface Invoice {
   date: string;
   customerId: string;
   totalAmount: number;
+  netTotal?: number; // Computed by backend: totalAmount - Σcn.amount + Σdn.amount
   status: InvoiceStatus;
   notes?: string;
   items: InvoiceItem[];

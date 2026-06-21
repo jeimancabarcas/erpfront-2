@@ -135,9 +135,9 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
 
           <!-- Monto Column -->
           <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="totalAmount" class="text-right">Monto Total</th>
+            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="totalAmount" class="text-right">Total Neto</th>
             <td mat-cell *matCellDef="let inv" [class]="cellClass" class="text-right">
-              <span class="font-black text-gray-900">{{ inv.totalAmount | currency }}</span>
+              <span class="font-black text-gray-900">{{ (inv.netTotal ?? inv.totalAmount) | currency }}</span>
             </td>
           </ng-container>
 
@@ -163,14 +163,6 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
             <th mat-header-cell *matHeaderCellDef [class]="headerClass"></th>
             <td mat-cell *matCellDef="let inv" [class]="cellClass">
               <div class="flex justify-end gap-2">
-                <button 
-                  mat-icon-button 
-                  (click)="downloadPdf(inv)"
-                  matTooltip="Ver PDF Oficial"
-                  class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50"
-                >
-                  <mat-icon>picture_as_pdf</mat-icon>
-                </button>
                 <button 
                   mat-icon-button 
                   (click)="viewDetail(inv)"
@@ -335,24 +327,5 @@ export class SalesPageComponent implements OnInit {
     });
   }
 
-  downloadPdf(invoice: Invoice) {
-    this.invoiceService.getInvoicePdf(invoice.id).subscribe({
-      next: (res) => {
-        try {
-          const byteCharacters = atob(res.pdfBase64Encoded);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, '_blank');
-        } catch (e) {
-          console.error('Error decoding PDF:', e);
-        }
-      },
-      error: (err) => console.error('Error fetching PDF:', err)
-    });
-  }
 }
+
