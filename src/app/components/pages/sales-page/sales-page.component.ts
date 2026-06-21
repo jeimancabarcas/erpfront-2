@@ -110,9 +110,16 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
           <ng-container matColumnDef="invoiceNumber">
             <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header>No. Factura</th>
             <td mat-cell *matCellDef="let inv" [class]="cellClass">
-              <span class="font-bold text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50">
-                {{ inv.invoiceNumber }}
-              </span>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50">
+                  {{ inv.invoiceNumber }}
+                </span>
+                @if (inv.isElectronic === false) {
+                  <span data-testid="manual-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700">
+                    MANUAL
+                  </span>
+                }
+              </div>
             </td>
           </ng-container>
 

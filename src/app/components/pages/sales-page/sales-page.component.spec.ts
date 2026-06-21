@@ -133,3 +133,74 @@ describe('SalesPageComponent — amount column and actions (TDD)', () => {
     expect(hasPdfButton).toBe(false);
   });
 });
+
+describe('SalesPageComponent — MANUAL badge in invoice list (TDD)', () => {
+  let component: SalesPageComponent;
+  let fixture: ComponentFixture<SalesPageComponent>;
+  let mockInvoiceService: any;
+  let mockCustomerService: any;
+  let mockDialog: any;
+
+  async function buildComponent(invoices: Invoice[]) {
+    mockInvoiceService = {
+      invoices: signal(invoices),
+      meta: signal(null),
+      loadInvoices: vi.fn().mockReturnValue(of({ data: invoices, meta: null })),
+      getInvoicePdf: vi.fn().mockReturnValue(of({ pdfBase64Encoded: '', fileName: 'test.pdf' })),
+    };
+
+    mockCustomerService = {
+      customers: signal([]),
+      loadCustomers: vi.fn().mockReturnValue(of({ data: [], meta: null })),
+    };
+
+    mockDialog = {
+      open: vi.fn().mockReturnValue({ afterClosed: () => of(null) }),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [SalesPageComponent, NoopAnimationsModule],
+      providers: [
+        provideRouter([]),
+        { provide: InvoiceService, useValue: mockInvoiceService },
+        { provide: CustomerService, useValue: mockCustomerService },
+        { provide: MatDialog, useValue: mockDialog },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SalesPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  }
+
+  it('renders MANUAL badge when isElectronic is false', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001', isElectronic: false });
+    await buildComponent([invoice]);
+    fixture.detectChanges();
+
+    const nativeEl: HTMLElement = fixture.nativeElement;
+    const badge = nativeEl.querySelector('[data-testid="manual-badge"]');
+    expect(badge).not.toBeNull();
+    expect(badge?.textContent?.trim()).toBe('MANUAL');
+  });
+
+  it('does NOT render MANUAL badge when isElectronic is true', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'FAC-0001', isElectronic: true });
+    await buildComponent([invoice]);
+    fixture.detectChanges();
+
+    const nativeEl: HTMLElement = fixture.nativeElement;
+    const badge = nativeEl.querySelector('[data-testid="manual-badge"]');
+    expect(badge).toBeNull();
+  });
+
+  it('does NOT render MANUAL badge when isElectronic is undefined', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'FAC-0001', isElectronic: undefined });
+    await buildComponent([invoice]);
+    fixture.detectChanges();
+
+    const nativeEl: HTMLElement = fixture.nativeElement;
+    const badge = nativeEl.querySelector('[data-testid="manual-badge"]');
+    expect(badge).toBeNull();
+  });
+});

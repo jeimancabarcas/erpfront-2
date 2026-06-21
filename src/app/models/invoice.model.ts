@@ -20,6 +20,7 @@ export interface Invoice {
   netTotal?: number; // Computed by backend: totalAmount - Σcn.amount + Σdn.amount
   status: InvoiceStatus;
   notes?: string;
+  isElectronic?: boolean;
   items: InvoiceItem[];
   customer?: Customer; // Incluido en respuestas GET
 }
@@ -27,6 +28,7 @@ export interface Invoice {
 export interface CreateInvoiceDto {
   customerId: string;
   notes?: string;
+  isElectronic?: boolean;
   items: {
     productId: string;
     quantity: number;

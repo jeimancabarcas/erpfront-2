@@ -18,6 +18,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
 import { InvoiceService } from '../../../services/invoice.service';
@@ -45,6 +46,7 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
     MatTableModule,
     MatTooltipModule,
     MatSnackBarModule,
+    MatSlideToggleModule,
     CurrencyPipe,
     ProductPriceInfoMolecule,
   ],
@@ -80,6 +82,27 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
         </header>
 
         <form [formGroup]="saleForm" (ngSubmit)="onSubmit()" class="space-y-8">
+          <!-- Manual invoice toggle -->
+          <div class="flex items-center gap-4 px-1">
+            <mat-slide-toggle
+              [checked]="isManual()"
+              (change)="isManual.set($event.checked)"
+              color="warn"
+            >
+              <span class="text-sm font-semibold text-gray-700">Venta manual</span>
+            </mat-slide-toggle>
+          </div>
+
+          @if (isManual()) {
+            <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+              <mat-icon class="text-amber-500 mt-0.5 text-[18px]">warning_amber</mat-icon>
+              <p class="text-xs text-amber-700 leading-relaxed">
+                Esta venta <strong>no será enviada a la DIAN</strong>. Se asignará un número
+                interno (MAN-XXXXXXXX) y no tendrá validez fiscal electrónica.
+              </p>
+            </div>
+          }
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Customer Selection -->
             <div class="space-y-2">
@@ -486,6 +509,7 @@ export class SaleFormMolecule implements OnInit {
   allProducts = this.productService.products;
   selectedProduct = signal<Product | null>(null);
   isSubmitting = signal(false);
+  isManual = signal(false);
 
   productSearchControl = new FormControl('');
   quantityControl = new FormControl(1, [Validators.required, Validators.min(1)]);
@@ -735,10 +759,12 @@ export class SaleFormMolecule implements OnInit {
 
           return itemPayload;
         }),
+        isElectronic: !this.isManual(),
       };
 
       this.invoiceService.createInvoice(dto).subscribe({
         next: () => {
+          this.isManual.set(false);
           this.snackBar.open('Factura generada exitosamente', 'Aceptar', { duration: 3000 });
           this.dialogRef.close(true);
         },
