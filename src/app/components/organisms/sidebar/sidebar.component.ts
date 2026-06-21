@@ -4,11 +4,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { SidebarService } from '../../../services/sidebar.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [MatListModule, MatIconModule, MatButtonModule, MatExpansionModule, RouterLink, RouterLinkActive],
+  imports: [
+    MatListModule,
+    MatIconModule,
+    MatButtonModule,
+    MatExpansionModule,
+    RouterLink,
+    RouterLinkActive,
+  ],
   template: `
     <div class="h-full bg-white border-r border-gray-100 w-64 flex flex-col py-6 overflow-y-auto">
       <div class="px-6 mb-8 text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -16,56 +24,92 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
       </div>
 
       <nav class="flex-1 px-3 space-y-1">
-        <a 
-          mat-list-item 
-          routerLink="/dashboard" 
-          routerLinkActive="!bg-indigo-100 !text-indigo-900" 
-          [routerLinkActiveOptions]="{exact: true}"
+        <a
+          mat-list-item
+          routerLink="/dashboard"
+          routerLinkActive="!bg-indigo-100 !text-indigo-900"
+          [routerLinkActiveOptions]="{ exact: true }"
           class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group mb-1"
         >
           <div class="flex items-center gap-4 px-4">
-            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]">dashboard</mat-icon>
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
+              >dashboard</mat-icon
+            >
             <span class="text-sm font-bold tracking-wide">Inicio</span>
           </div>
         </a>
-
-        <a 
-          mat-list-item 
-          routerLink="/sales/customers" 
-          routerLinkActive="!bg-indigo-100 !text-indigo-900" 
+        <a
+          mat-list-item
+          routerLink="/sales/customers"
+          routerLinkActive="!bg-indigo-100 !text-indigo-900"
           class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group mb-1"
         >
           <div class="flex items-center gap-4 px-4">
-            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]">people</mat-icon>
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
+              >people</mat-icon
+            >
             <span class="text-sm font-bold tracking-wide">Clientes</span>
+          </div>
+        </a>
+
+        <a
+          mat-list-item
+          routerLink="/sales"
+          routerLinkActive="!bg-indigo-100 !text-indigo-900"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group mb-1"
+        >
+          <div class="flex items-center gap-4 px-4">
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
+              >payments</mat-icon
+            >
+            <span class="text-sm font-bold tracking-wide">Ventas</span>
+          </div>
+        </a>
+
+        <a
+          mat-list-item
+          routerLink="/inventory/purchases"
+          routerLinkActive="!bg-indigo-100 !text-indigo-900"
+          class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group mb-1"
+        >
+          <div class="flex items-center gap-4 px-4">
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
+              >shopping_cart</mat-icon
+            >
+            <span class="text-sm font-bold tracking-wide">Compras</span>
           </div>
         </a>
 
         <!-- Inventory Module Collapsible -->
         <mat-accordion class="sidebar-accordion" multi>
-          <mat-expansion-panel 
+          <mat-expansion-panel
             class="!shadow-none !bg-transparent !border-none mb-1"
-            [expanded]="isInventoryActive()"
+            [expanded]="sidebarService.inventoryExpanded"
+            (opened)="sidebarService.inventoryExpanded = true"
+            (closed)="sidebarService.inventoryExpanded = false"
           >
             <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 !rounded-full group">
               <mat-panel-title class="flex items-center gap-4">
-                <mat-icon 
+                <mat-icon
                   class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
                   [class.!text-indigo-900]="isInventoryActive()"
-                >inventory_2</mat-icon>
-                <span 
+                  >inventory_2</mat-icon
+                >
+                <span
                   class="text-sm font-bold tracking-wide text-gray-700"
                   [class.text-indigo-900]="isInventoryActive()"
-                >Inventario</span>
+                  >Inventario</span
+                >
               </mat-panel-title>
             </mat-expansion-panel-header>
 
             <nav class="flex flex-col gap-2 mt-2 pl-4">
-              <a 
-                mat-list-item 
-                routerLink="/inventory" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                [routerLinkActiveOptions]="{exact: true}"
+              <a
+                mat-list-item
+                routerLink="/inventory"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
+                [routerLinkActiveOptions]="{ exact: true }"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
@@ -74,116 +118,74 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                 </div>
               </a>
 
-              <a 
-                mat-list-item 
-                routerLink="/sales" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                [routerLinkActiveOptions]="{exact: true}"
+              <a
+                mat-list-item
+                routerLink="/inventory/categories"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 !text-[20px]">payments</mat-icon>
-                  <span class="text-xs font-bold tracking-wide">Ventas</span>
+                  <mat-icon class="!text-gray-400 !text-[20px]">category</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Categorías</span>
                 </div>
               </a>
 
-              <a 
-                mat-list-item 
-                routerLink="/inventory/purchases" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+              <a
+                mat-list-item
+                routerLink="/inventory/products"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 !text-[20px]">shopping_cart</mat-icon>
-                  <span class="text-xs font-bold tracking-wide">Compras</span>
+                  <mat-icon class="!text-gray-400 !text-[20px]">inventory_2</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Productos</span>
                 </div>
               </a>
-              
-              <!-- Configuración Sub-menu -->
-              <mat-accordion class="inner-accordion" multi>
-                <mat-expansion-panel 
-                  class="!shadow-none !bg-transparent !border-none"
-                  [expanded]="isInventorySettingsActive()"
-                >
-                  <mat-expansion-panel-header class="!h-12 !px-4 hover:!bg-gray-50 !rounded-full group">
-                    <mat-panel-title class="flex items-center gap-3">
-                      <mat-icon 
-                        class="!text-gray-400 !text-[20px]"
-                        [class.!text-indigo-600]="isInventorySettingsActive()"
-                      >settings</mat-icon>
-                      <span 
-                        class="text-xs font-bold tracking-wide text-gray-600"
-                        [class.text-indigo-900]="isInventorySettingsActive()"
-                      >Configuración</span>
-                    </mat-panel-title>
-                  </mat-expansion-panel-header>
 
-                  <nav class="flex flex-col gap-2 mt-2 pl-6">
-                    <a 
-                      mat-list-item 
-                      routerLink="/inventory/categories" 
-                      routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                      class="!rounded-full !h-10 hover:!bg-gray-50 transition-all flex items-center group"
-                    >
-                      <div class="flex items-center gap-3 px-4">
-                        <mat-icon class="!text-gray-400 !text-[18px]">category</mat-icon>
-                        <span class="text-[11px] font-bold tracking-wide">Categorías</span>
-                      </div>
-                    </a>
-                    <a 
-                      mat-list-item 
-                      routerLink="/inventory/products" 
-                      routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                      class="!rounded-full !h-10 hover:!bg-gray-50 transition-all flex items-center group"
-                    >
-                      <div class="flex items-center gap-3 px-4">
-                        <mat-icon class="!text-gray-400 !text-[18px]">inventory_2</mat-icon>
-                        <span class="text-[11px] font-bold tracking-wide">Productos</span>
-                      </div>
-                    </a>
-                    <a 
-                      mat-list-item 
-                      routerLink="/inventory/suppliers" 
-                      routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                      class="!rounded-full !h-10 hover:!bg-gray-50 transition-all flex items-center group"
-                    >
-                      <div class="flex items-center gap-3 px-4">
-                        <mat-icon class="!text-gray-400 !text-[18px]">business</mat-icon>
-                        <span class="text-[11px] font-bold tracking-wide">Proveedores</span>
-                      </div>
-                    </a>
-                  </nav>
-                </mat-expansion-panel>
-              </mat-accordion>
+              <a
+                mat-list-item
+                routerLink="/inventory/suppliers"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
+                class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
+              >
+                <div class="flex items-center gap-3 px-4">
+                  <mat-icon class="!text-gray-400 !text-[20px]">business</mat-icon>
+                  <span class="text-xs font-bold tracking-wide">Proveedores</span>
+                </div>
+              </a>
             </nav>
           </mat-expansion-panel>
         </mat-accordion>
 
         <!-- Finance Module Collapsible -->
         <mat-accordion class="sidebar-accordion" multi>
-          <mat-expansion-panel 
+          <mat-expansion-panel
             class="!shadow-none !bg-transparent !border-none mb-1"
-            [expanded]="isFinanceActive()"
+            [expanded]="sidebarService.financeExpanded"
+            (opened)="sidebarService.financeExpanded = true"
+            (closed)="sidebarService.financeExpanded = false"
           >
             <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 !rounded-full group">
               <mat-panel-title class="flex items-center gap-4">
-                <mat-icon 
+                <mat-icon
                   class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
                   [class.!text-indigo-900]="isFinanceActive()"
-                >account_balance</mat-icon>
-                <span 
+                  >account_balance</mat-icon
+                >
+                <span
                   class="text-sm font-bold tracking-wide text-gray-700"
                   [class.text-indigo-900]="isFinanceActive()"
-                >Finanzas</span>
+                  >Finanzas</span
+                >
               </mat-panel-title>
             </mat-expansion-panel-header>
 
             <nav class="flex flex-col gap-2 mt-2 pl-4">
-              <a 
-                mat-list-item 
-                routerLink="/finance" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
-                [routerLinkActiveOptions]="{exact: true}"
+              <a
+                mat-list-item
+                routerLink="/finance"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
+                [routerLinkActiveOptions]="{ exact: true }"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
@@ -191,10 +193,10 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                   <span class="text-xs font-bold tracking-wide">Resumen</span>
                 </div>
               </a>
-              <a 
-                mat-list-item 
-                routerLink="/finance/invoicing" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+              <a
+                mat-list-item
+                routerLink="/finance/invoicing"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
@@ -202,10 +204,10 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                   <span class="text-xs font-bold tracking-wide">Facturación</span>
                 </div>
               </a>
-              <a 
-                mat-list-item 
-                routerLink="/finance/adjustments" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+              <a
+                mat-list-item
+                routerLink="/finance/adjustments"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
@@ -217,28 +219,32 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
           </mat-expansion-panel>
 
           <!-- Pediatric Module Collapsible -->
-          <mat-expansion-panel 
+          <mat-expansion-panel
             class="!shadow-none !bg-transparent !border-none mb-1"
-            [expanded]="isPediatricsActive()"
+            [expanded]="sidebarService.pediatricsExpanded"
+            (opened)="sidebarService.pediatricsExpanded = true"
+            (closed)="sidebarService.pediatricsExpanded = false"
           >
             <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 !rounded-full group">
               <mat-panel-title class="flex items-center gap-4">
-                <mat-icon 
+                <mat-icon
                   class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
                   [class.!text-indigo-900]="isPediatricsActive()"
-                >child_care</mat-icon>
-                <span 
+                  >child_care</mat-icon
+                >
+                <span
                   class="text-sm font-bold tracking-wide text-gray-700"
                   [class.text-indigo-900]="isPediatricsActive()"
-                >Pediatría</span>
+                  >Pediatría</span
+                >
               </mat-panel-title>
             </mat-expansion-panel-header>
 
             <nav class="flex flex-col gap-2 mt-2 pl-4">
-              <a 
-                mat-list-item 
-                routerLink="/pediatrics/patients" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+              <a
+                mat-list-item
+                routerLink="/pediatrics/patients"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
@@ -246,10 +252,10 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                   <span class="text-xs font-bold tracking-wide">Pacientes</span>
                 </div>
               </a>
-              <a 
-                mat-list-item 
-                routerLink="/pediatrics/agenda" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+              <a
+                mat-list-item
+                routerLink="/pediatrics/agenda"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
@@ -257,10 +263,10 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
                   <span class="text-xs font-bold tracking-wide">Agenda Médica</span>
                 </div>
               </a>
-              <a 
-                mat-list-item 
-                routerLink="/pediatrics/billing" 
-                routerLinkActive="!bg-indigo-50 !text-indigo-600" 
+              <a
+                mat-list-item
+                routerLink="/pediatrics/billing"
+                routerLinkActive="!bg-indigo-50 !text-indigo-600"
                 class="!rounded-full !h-12 hover:!bg-gray-50 transition-all flex items-center group"
               >
                 <div class="flex items-center gap-3 px-4">
@@ -272,14 +278,16 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
           </mat-expansion-panel>
         </mat-accordion>
 
-        <a 
-          mat-list-item 
-          routerLink="/transport" 
-          routerLinkActive="!bg-indigo-100 !text-indigo-900" 
+        <a
+          mat-list-item
+          routerLink="/transport"
+          routerLinkActive="!bg-indigo-100 !text-indigo-900"
           class="!rounded-full !h-14 hover:!bg-gray-100 transition-all flex items-center group mb-1"
         >
           <div class="flex items-center gap-4 px-4">
-            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]">local_shipping</mat-icon>
+            <mat-icon class="!text-gray-500 group-[.active]:!text-indigo-900 !text-[24px]"
+              >local_shipping</mat-icon
+            >
             <span class="text-sm font-bold tracking-wide">Transporte</span>
           </div>
         </a>
@@ -296,31 +304,40 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
       </div>
     </div>
   `,
-  styles: [`
-    :host { display: block; height: 100%; }
-    ::ng-deep .sidebar-accordion .mat-expansion-panel-body { padding: 0 !important; }
-    ::ng-deep .sidebar-accordion .mat-expansion-indicator::after { color: #94a3b8; }
-    ::ng-deep .sidebar-accordion .mat-expansion-panel-header-title { margin-right: 0; }
-    
-    /* Nested Accordion Adjustments */
-    ::ng-deep .inner-accordion .mat-expansion-panel-header { padding: 0 16px !important; }
-    ::ng-deep .inner-accordion .mat-expansion-panel-body { padding-left: 8px !important; }
-  `]
+  styles: [
+    `
+      :host {
+        display: block;
+        height: 100%;
+      }
+      ::ng-deep .sidebar-accordion .mat-expansion-panel-body {
+        padding: 0 !important;
+      }
+      ::ng-deep .sidebar-accordion .mat-expansion-indicator::after {
+        color: #94a3b8;
+      }
+      ::ng-deep .sidebar-accordion .mat-expansion-panel-header-title {
+        margin-right: 0;
+      }
+    `,
+  ],
 })
 export class SidebarComponent {
   private router = inject(Router);
+  protected sidebarService = inject(SidebarService);
 
   isInventoryActive(): boolean {
-    return this.router.url.includes('/inventory') || this.router.url.includes('/sales');
-  }
-
-  isSalesActive(): boolean {
-    return this.router.url.includes('/sales');
-  }
-
-  isInventorySettingsActive(): boolean {
-    const urls = ['/inventory/categories', '/inventory/products', '/inventory/suppliers'];
-    return urls.some(url => this.router.url.includes(url));
+    const url = this.router.url;
+    const paths = [
+      '/inventory',
+      '/inventory/categories',
+      '/inventory/products',
+      '/inventory/suppliers',
+    ];
+    return (
+      paths.some((path) => url === path || url.startsWith(path + '/')) &&
+      !url.includes('/inventory/purchases')
+    );
   }
 
   isPediatricsActive(): boolean {
