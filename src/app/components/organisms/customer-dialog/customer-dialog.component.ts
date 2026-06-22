@@ -1,9 +1,15 @@
 import { Component, inject, signal, input, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { CustomerService } from '../../../services/customer.service';
 import { Customer, CreateCustomerDto } from '../../../models/customer.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+
+export interface CustomerDialogData {
+  customer?: Customer;
+}
 
 @Component({
   selector: 'app-customer-dialog',
@@ -11,6 +17,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   imports: [
     CommonModule,
     FormsModule,
+    MatIconModule,
     ButtonAtom
   ],
   template: `
@@ -18,7 +25,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
       <header class="flex justify-between items-center mb-8 px-2">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <span class="material-icons !text-3xl">person_add</span>
+            <mat-icon class="!text-3xl">person_add</mat-icon>
           </div>
           <div>
             <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
@@ -29,8 +36,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             </p>
           </div>
         </div>
-        <ui-button variant="icon" (clicked)="onClosed()">
-          <span class="material-icons">close</span>
+        <ui-button variant="icon" (clicked)="onClosed()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
         </ui-button>
       </header>
 
@@ -41,7 +48,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre Completo / Razón Social</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</mat-icon>
                 <input [(ngModel)]="customer().name" name="name" required placeholder="Ej. Juan Pérez o Tech SA"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -50,7 +57,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Correo Electrónico</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">email</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">email</mat-icon>
                 <input type="email" [(ngModel)]="customer().email" name="email" required placeholder="ejemplo@correo.com"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -61,7 +68,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Tipo de Documento</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">badge</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">badge</mat-icon>
                 <select [(ngModel)]="customer().documentType" name="documentType" required
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
                   <option value="CC">Cédula de Ciudadanía</option>
@@ -75,7 +82,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Número de Documento</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</mat-icon>
                 <input [(ngModel)]="customer().documentNumber" name="documentNumber" required placeholder="Ej. 123456789"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -84,7 +91,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">toggle_on</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">toggle_on</mat-icon>
                 <select [(ngModel)]="customer().status" name="status" required
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
                   <option value="ACTIVE">Activo</option>
@@ -98,7 +105,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Teléfono de Contacto</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">phone</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">phone</mat-icon>
                 <input [(ngModel)]="customer().phone" name="phone" placeholder="Ej. +57 300 123 4567"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -107,7 +114,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Dirección</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">location_on</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">location_on</mat-icon>
                 <input [(ngModel)]="customer().address" name="address" placeholder="Ej. Calle 123 #45-67"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -139,8 +146,12 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   `]
 })
 export class CustomerDialogOrganism implements OnInit {
+  /** Input for inline usage via template binding */
   data = input<{ customer?: Customer }>({});
+  /** Output for inline usage */
   closed = output<boolean>();
+  /** MAT_DIALOG_DATA for MatDialog.open path */
+  private dialogData = inject<CustomerDialogData>(MAT_DIALOG_DATA, { optional: true });
 
   private customerService = inject(CustomerService);
 
@@ -158,7 +169,8 @@ export class CustomerDialogOrganism implements OnInit {
   isLoading = signal(false);
 
   ngOnInit() {
-    const incoming = this.data();
+    // Use MAT_DIALOG_DATA if available (MatDialog path), otherwise input() (inline path)
+    const incoming = this.dialogData ?? this.data();
     if (incoming?.customer) {
       this.isEditMode.set(true);
       this.customer.set({ ...incoming.customer });
@@ -173,7 +185,6 @@ export class CustomerDialogOrganism implements OnInit {
     this.isLoading.set(true);
     const fullData = this.customer() as Customer;
     
-    // Extraemos solo los campos editables para el DTO
     const { id, createdAt, updatedAt, ...editableFields } = fullData;
     const dto = editableFields as CreateCustomerDto;
     

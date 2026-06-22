@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 import { Router } from '@angular/router';
 import { TransportService } from '../../../../services/transport.service';
 import { VehicleStatus } from '../../../../models/transport.model';
@@ -175,10 +176,10 @@ export class TransportDashboardViewComponent {
 
   onProgramService(vehicleId: string) {
     this.dialog.open(TransportDispatchDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.lg,
       data: { vehicleId },
-      width: '700px',
-      maxWidth: '95vw',
-      panelClass: 'custom-premium-dialog'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
@@ -194,10 +195,10 @@ export class TransportDashboardViewComponent {
     const route = this.transportService.routes().find(r => r.vehicleId === vehicleId && r.status === 'Planning');
     if (route) {
       this.dialog.open(TransportCancelDialogOrganism, {
+        ...DIALOG_DEFAULTS,
+        width: DIALOG_WIDTHS.md,
         data: { route },
-        width: '600px',
-        maxWidth: '95vw',
-        panelClass: 'custom-premium-dialog'
+        panelClass: DIALOG_PANEL_CLASS
       });
     }
   }

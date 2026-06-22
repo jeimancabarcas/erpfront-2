@@ -1,10 +1,19 @@
 import { Component, inject, signal, input, output, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
 import { Product } from '../../../models/product.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+
+export interface ProductFormDialogData {
+  product?: Product;
+}
+
+export type ProductFormResult = boolean | undefined;
 
 @Component({
   selector: 'app-product-form',
@@ -13,6 +22,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     CommonModule,
     FormsModule,
     CurrencyPipe,
+    MatIconModule,
+    MatButtonModule,
     ButtonAtom
   ],
   template: `
@@ -21,9 +32,9 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}
         </h2>
-        <ui-button variant="icon" (clicked)="onClose()">
-          <span class="material-icons">close</span>
-        </ui-button>
+        <button mat-icon-button (click)="onClose()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
+        </button>
       </header>
 
       <form #productForm="ngForm" class="space-y-6">
@@ -73,7 +84,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top duration-300">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Precio de Venta</label>
               <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">payments</span>
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">payments</mat-icon>
                 <input type="number" [(ngModel)]="product().sellingPrice" name="sellingPrice" required min="0" placeholder="Ej. 15000"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -110,8 +121,13 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   `]
 })
 export class ProductFormMolecule implements OnInit {
+  /** Input for inline usage via template binding */
   data = input<{ product?: Product }>({});
+  /** Output for inline usage */
   closed = output<boolean>();
+  /** MAT_DIALOG_DATA for MatDialog.open path */
+  private dialogData = inject<ProductFormDialogData>(MAT_DIALOG_DATA, { optional: true });
+  private dialogRef = inject(MatDialogRef<ProductFormMolecule, ProductFormResult>, { optional: true });
 
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
@@ -134,12 +150,12 @@ export class ProductFormMolecule implements OnInit {
   });
 
   ngOnInit() {
-    // Cargar categorías si no están cargadas
     if (this.categoryList().length === 0) {
       this.categoryService.loadCategories({ limit: 100 }).subscribe();
     }
 
-    const incoming = this.data();
+    // Use MAT_DIALOG_DATA if available (MatDialog path), otherwise input() (inline path)
+    const incoming = this.dialogData ?? this.data();
     if (incoming.product) {
       this.isEditMode = true;
       this.product.set({ ...incoming.product });
@@ -148,6 +164,9 @@ export class ProductFormMolecule implements OnInit {
   }
 
   onClose() {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    }
     this.closed.emit(false);
   }
 
@@ -176,7 +195,12 @@ export class ProductFormMolecule implements OnInit {
       : this.productService.createProduct(payload);
 
     request.subscribe({
-      next: () => this.closed.emit(true),
+      next: () => {
+        if (this.dialogRef) {
+          this.dialogRef.close(true);
+        }
+        this.closed.emit(true);
+      },
       error: (err) => console.error('Error saving product:', err)
     });
   }

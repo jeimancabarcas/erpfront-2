@@ -1,10 +1,13 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { BillingService } from '../../../services/billing.service';
 import { BillingFiltersMolecule } from '../../molecules/billing-filters/billing-filters.component';
 import { BillingTableOrganism } from '../../organisms/billing-table/billing-table.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { InvoiceFormDialogOrganism } from '../../organisms/invoice-form-dialog/invoice-form-dialog.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-billing-page',
@@ -107,6 +110,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
 })
 export class BillingPageComponent {
   billingService = inject(BillingService);
+  private dialog = inject(MatDialog);
 
   notification = signal<{message: string; type: 'success' | 'error'} | null>(null);
   private notifTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -156,7 +160,17 @@ export class BillingPageComponent {
   });
 
   openNewInvoiceDialog() {
-    // Dialog functionality will be restored when dialog organisms are migrated
+    const ref = this.dialog.open(InvoiceFormDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.billingService.addInvoice(result);
+        this.showNotification('Factura creada exitosamente');
+      }
+    });
   }
 
   handleSingleInvoice(id: string) {

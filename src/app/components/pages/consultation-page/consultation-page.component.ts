@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
@@ -207,14 +208,24 @@ export class ConsultationPageComponent implements OnInit {
 
   // Action Panel Methods
   openAnamnesis() {
-    const dialogRef = this.dialog.open(AnamnesisDialogComponent, { data: { ...this.anamnesis() }, width: '600px', panelClass: 'premium-modal' });
+    const dialogRef = this.dialog.open(AnamnesisDialogComponent, { 
+      ...DIALOG_DEFAULTS,
+      data: { ...this.anamnesis() }, 
+      width: DIALOG_WIDTHS.md, 
+      panelClass: DIALOG_PANEL_CLASS 
+    });
     dialogRef.afterClosed().subscribe(result => {
       if (result) this.anamnesis.set(result);
     });
   }
 
   openPhysicalExam() {
-    const dialogRef = this.dialog.open(PhysicalExamDialogComponent, { data: { ...this.physicalExam() }, width: '700px', panelClass: 'premium-modal' });
+    const dialogRef = this.dialog.open(PhysicalExamDialogComponent, { 
+      ...DIALOG_DEFAULTS,
+      data: { ...this.physicalExam() }, 
+      width: DIALOG_WIDTHS.lg, 
+      panelClass: DIALOG_PANEL_CLASS 
+    });
     dialogRef.afterClosed().subscribe(result => {
       if (result) this.physicalExam.set(result);
     });
@@ -222,27 +233,39 @@ export class ConsultationPageComponent implements OnInit {
 
   openDiagnostics() {
     const dialogRef = this.dialog.open(DiagnosticsDialogComponent, { 
-      data: { main: { ...this.diagnostics() }, secondary: this.secondaryDiagnoses }, 
-      width: '850px', 
-      panelClass: 'premium-modal' 
+      ...DIALOG_DEFAULTS,
+      data: { main: { ...this.diagnostics() }, secondary: this.secondaryDiagnoses() }, 
+      width: DIALOG_WIDTHS.lg, 
+      panelClass: DIALOG_PANEL_CLASS 
     });
-    // Note: DiagnosticsDialogComponent likely handles the signal update directly since we pass the signal 'secondary'
-    // but for 'main' we might need to handle the result
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.main) this.diagnostics.set(result.main);
+      if (result && result.secondary) this.secondaryDiagnoses.set(result.secondary);
     });
   }
 
   openOrders() {
-    this.dialog.open(OrdersDialogComponent, { 
-      data: { prescriptions: this.prescriptions, procedures: this.procedures, techs: this.otherTechnologies }, 
-      width: '950px', 
-      panelClass: 'premium-modal' 
+    const dialogRef = this.dialog.open(OrdersDialogComponent, { 
+      ...DIALOG_DEFAULTS,
+      data: { prescriptions: this.prescriptions(), procedures: this.procedures() }, 
+      width: DIALOG_WIDTHS.xl, 
+      panelClass: DIALOG_PANEL_CLASS 
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.prescriptions.set(result.prescriptions);
+        this.procedures.set(result.procedures);
+      }
     });
   }
 
   openIncapacity() {
-    const dialogRef = this.dialog.open(IncapacityDialogComponent, { data: { ...this.incapacity() }, width: '600px', panelClass: 'premium-modal' });
+    const dialogRef = this.dialog.open(IncapacityDialogComponent, { 
+      ...DIALOG_DEFAULTS,
+      data: { ...this.incapacity() }, 
+      width: DIALOG_WIDTHS.md, 
+      panelClass: DIALOG_PANEL_CLASS 
+    });
     dialogRef.afterClosed().subscribe(result => {
       if (result) this.incapacity.set(result);
     });

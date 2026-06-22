@@ -1,24 +1,35 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
+
+export interface TransportMaintenanceDialogData {
+  vehicleId: string;
+}
+
+export type TransportMaintenanceResult = boolean | undefined;
 
 @Component({
   selector: 'app-transport-maintenance-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule
   ],
   template: `
     <div class="p-0 overflow-hidden">
       <header class="bg-amber-500 p-8 text-white flex justify-between items-center">
         <div>
           <h2 class="text-2xl font-black tracking-tight mb-1">Programar Mantenimiento</h2>
-          <p class="text-amber-50 text-sm font-medium italic">Define el servicio técnico para el vehículo {{ data().vehicleId }}.</p>
+          <p class="text-amber-50 text-sm font-medium italic">Define el servicio técnico para el vehículo {{ data.vehicleId }}.</p>
         </div>
-        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-amber-400 transition-colors">
-          <span class="material-icons">close</span>
+        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
         </button>
       </header>
 
@@ -29,7 +40,7 @@ import { TransportService } from '../../../services/transport.service';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Mantenimiento</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">handyman</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">handyman</mat-icon>
                 <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                   <option value="Preventivo">Preventivo</option>
                   <option value="Correctivo">Correctivo</option>
@@ -47,7 +58,7 @@ import { TransportService } from '../../../services/transport.service';
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción Detallada</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
+                <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">description</mat-icon>
                 <textarea formControlName="description" rows="4" 
                           placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..."
                           class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
@@ -59,7 +70,7 @@ import { TransportService } from '../../../services/transport.service';
               <div class="relative">
                 <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
                 <input type="number" formControlName="cost" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm">
-                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
+                <mat-icon class="absolute right-3 top-3.5 text-gray-400 text-sm">payments</mat-icon>
               </div>
             </div>
           </div>
@@ -80,10 +91,10 @@ import { TransportService } from '../../../services/transport.service';
   `
 })
 export class TransportMaintenanceDialogOrganism {
+  readonly data = inject<TransportMaintenanceDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<TransportMaintenanceDialogOrganism, TransportMaintenanceResult>);
   private fb = inject(FormBuilder);
   private transportService = inject(TransportService);
-  data = input<any>({}); // { vehicleId }
-  closed = output<boolean | undefined>();
 
   maintenanceForm = this.fb.group({
     type: ['Preventivo', Validators.required],
@@ -92,22 +103,22 @@ export class TransportMaintenanceDialogOrganism {
     cost: [null as number | null]
   });
 
-  close(result?: boolean) {
-    this.closed.emit(result);
+  close(result?: TransportMaintenanceResult) {
+    this.dialogRef.close(result);
   }
 
   onSubmit() {
     if (this.maintenanceForm.valid) {
       const val = this.maintenanceForm.value;
       this.transportService.scheduleMaintenance({
-        vehicleId: this.data().vehicleId,
+        vehicleId: this.data.vehicleId,
         type: val.type as any,
         description: val.description!,
         scheduledDate: new Date(val.scheduledDate!).toISOString(),
         status: 'Scheduled',
         cost: val.cost || undefined
       });
-      this.closed.emit(true);
+      this.dialogRef.close(true);
     }
   }
 }

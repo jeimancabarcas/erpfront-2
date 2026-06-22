@@ -1,15 +1,27 @@
-import { Component, inject, input, output, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { OperationType } from '../../../models/transport.model';
+
+export interface TransportOperationDialogData {
+  routeId: string;
+  vehicleId: string;
+}
+
+export type TransportOperationResult = boolean | undefined;
 
 @Component({
   selector: 'app-transport-operation-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule
   ],
   template: `
     <div class="p-0 overflow-hidden">
@@ -18,8 +30,8 @@ import { OperationType } from '../../../models/transport.model';
           <h2 class="text-2xl font-black tracking-tight mb-1">Registrar Operación</h2>
           <p class="text-indigo-100 text-sm font-medium">Define la actividad logística realizada.</p>
         </div>
-        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-indigo-500 transition-colors">
-          <span class="material-icons">close</span>
+        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
         </button>
       </header>
 
@@ -30,7 +42,7 @@ import { OperationType } from '../../../models/transport.model';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Operación</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">settings_suggest</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">settings_suggest</mat-icon>
                 <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                   @for (type of operationTypes; track type) {
                     <option [value]="type">{{ type }}</option>
@@ -47,7 +59,7 @@ import { OperationType } from '../../../models/transport.model';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Operación</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">schedule</mat-icon>
                 <input type="time" formControlName="operationTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
             </div>
@@ -55,7 +67,7 @@ import { OperationType } from '../../../models/transport.model';
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo Responsable</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</mat-icon>
                 <select formControlName="vehicleId" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                   @for (v of transportService.vehicles(); track v.id) {
                     <option [value]="v.id">{{ v.id }} - {{ v.driverName }}</option>
@@ -67,7 +79,7 @@ import { OperationType } from '../../../models/transport.model';
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción / Observaciones</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
+                <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">description</mat-icon>
                 <textarea formControlName="description" rows="3" placeholder="Ej: Cargue de contenedor de 40 pies..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
               </div>
             </div>
@@ -77,16 +89,16 @@ import { OperationType } from '../../../models/transport.model';
               <div class="flex flex-wrap gap-3">
                 @for (file of selectedFiles; track $index) {
                   <div class="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-2xl border border-indigo-100 text-xs font-bold animate-in zoom-in-95">
-                    <span class="material-icons !text-sm !w-4 !h-4">attach_file</span>
+                    <mat-icon class="!text-sm !w-4 !h-4">attach_file</mat-icon>
                     {{ file }}
                     <button type="button" (click)="removeFile($index)" class="hover:text-red-500 transition-colors">
-                      <span class="material-icons !text-sm !w-4 !h-4">close</span>
+                      <mat-icon class="!text-sm !w-4 !h-4">close</mat-icon>
                     </button>
                   </div>
                 }
                 <button type="button" (click)="fileInput.click()" 
                         class="flex items-center gap-2 bg-white text-gray-400 px-4 py-2 rounded-2xl border border-dashed border-gray-200 text-xs font-bold hover:border-indigo-400 hover:text-indigo-600 transition-all">
-                  <span class="material-icons !text-sm !w-4 !h-4">add</span>
+                  <mat-icon class="!text-sm !w-4 !h-4">add</mat-icon>
                   Adjuntar Archivo
                 </button>
                 <input #fileInput type="file" (change)="onFileSelected($event)" multiple class="hidden">
@@ -114,13 +126,12 @@ import { OperationType } from '../../../models/transport.model';
   `]
 })
 export class TransportOperationDialogOrganism implements OnInit {
+  readonly data = inject<TransportOperationDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<TransportOperationDialogOrganism, TransportOperationResult>);
   private fb = inject(FormBuilder);
-  data = input<any>({});
-  closed = output<boolean | undefined>();
   public transportService = inject(TransportService);
 
   operationTypes: OperationType[] = ['Cargue', 'Descargue', 'Consolidacion', 'Desconsolidacion'];
-  showVehicleSelect = false;
   selectedFiles: string[] = [];
 
   operationForm = this.fb.group({
@@ -132,14 +143,13 @@ export class TransportOperationDialogOrganism implements OnInit {
     status: ['InProcess']
   });
 
-  close(result?: boolean) {
-    this.closed.emit(result);
+  close(result?: TransportOperationResult) {
+    this.dialogRef.close(result);
   }
 
   ngOnInit() {
-    // If we have a vehicleId from context, pre-select it
-    if (this.data().vehicleId) {
-      this.operationForm.patchValue({ vehicleId: this.data().vehicleId });
+    if (this.data.vehicleId) {
+      this.operationForm.patchValue({ vehicleId: this.data.vehicleId });
     }
   }
 
@@ -160,12 +170,11 @@ export class TransportOperationDialogOrganism implements OnInit {
     if (this.operationForm.valid) {
       const val = this.operationForm.value;
       
-      // Combine date and time
       const date = new Date(val.timestamp as string);
       const [hours, minutes] = (val.operationTime as string).split(':');
       date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      this.transportService.addOperation(this.data().routeId, {
+      this.transportService.addOperation(this.data.routeId, {
         type: val.type as OperationType,
         vehicleId: val.vehicleId!,
         description: val.description!,
@@ -173,7 +182,7 @@ export class TransportOperationDialogOrganism implements OnInit {
         timestamp: date.toISOString(),
         attachments: this.selectedFiles.length > 0 ? this.selectedFiles : undefined
       });
-      this.closed.emit(true);
+      this.dialogRef.close(true);
     }
   }
 }

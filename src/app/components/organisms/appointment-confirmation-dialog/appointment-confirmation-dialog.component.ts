@@ -1,18 +1,35 @@
-import { Component, inject, signal, computed, input, output } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BillingService } from '../../../services/billing.service';
 import { Appointment } from '../../../services/pediatrics.service';
 import { startWith } from 'rxjs';
+
+export interface AppointmentConfirmationDialogData {
+  appointment: Appointment;
+}
+
+export interface AppointmentConfirmationResult {
+  isParticular: boolean;
+  provider: string;
+  authorizationNumber: string;
+  markAsPaid: boolean;
+  patientAmount: number;
+  totalAmount: number;
+}
 
 @Component({
   selector: 'app-appointment-confirmation-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white">
@@ -21,26 +38,29 @@ import { startWith } from 'rxjs';
       <div class="p-8 relative z-10">
         <header class="flex items-center gap-4 mb-8">
           <div class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
-            <span class="material-icons">how_to_reg</span>
+            <mat-icon>how_to_reg</mat-icon>
           </div>
           <div>
             <h2 class="text-xl font-black text-gray-900 tracking-tight !m-0">Confirmar Llegada</h2>
             <div class="flex items-center gap-2 mt-1">
-              <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">{{ data().appointment.patientName }}</span>
+              <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">{{ data.appointment.patientName }}</span>
               <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
               <div class="flex items-center gap-1">
-                <span class="material-icons !w-3 !h-3 !text-[12px] text-indigo-500">medical_services</span>
-                <span class="text-indigo-600 text-[10px] font-black uppercase tracking-widest">{{ data().appointment.type }}</span>
+                <mat-icon class="!w-3 !h-3 !text-[12px] text-indigo-500">medical_services</mat-icon>
+                <span class="text-indigo-600 text-[10px] font-black uppercase tracking-widest">{{ data.appointment.type }}</span>
               </div>
             </div>
           </div>
+          <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo" class="ml-auto">
+            <mat-icon>close</mat-icon>
+          </button>
         </header>
 
         <form [formGroup]="confirmForm" (ngSubmit)="onConfirm()" class="space-y-6">
           <!-- Type Toggle -->
           <div class="p-4 bg-gray-50 rounded-2xl flex justify-between items-center border border-gray-100">
             <div class="flex items-center gap-3">
-              <span class="material-icons text-gray-400">{{ isParticular() ? 'person' : 'account_balance' }}</span>
+              <mat-icon class="text-gray-400">{{ isParticular() ? 'person' : 'account_balance' }}</mat-icon>
               <div>
                 <p class="text-xs font-black text-gray-900">Tipo de Pago</p>
                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
@@ -77,7 +97,7 @@ import { startWith } from 'rxjs';
             <div class="flex justify-between items-center mb-4">
               <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Resumen de Cobro</span>
               <span class="px-3 py-1 bg-white rounded-full text-[10px] font-black text-indigo-600 shadow-sm border border-indigo-50">
-                {{ data().appointment.type }}
+                {{ data.appointment.type }}
               </span>
             </div>
             
@@ -105,19 +125,19 @@ import { startWith } from 'rxjs';
 
             @if (confirmForm.get('markAsPaid')?.value) {
               <div class="mt-4 pt-4 border-t border-indigo-100/50 flex items-center gap-2 text-green-600 animate-in fade-in duration-300">
-                <span class="material-icons !w-4 !h-4 !text-[16px]">check_circle</span>
+                <mat-icon class="!w-4 !h-4 !text-[16px]">check_circle</mat-icon>
                 <span class="text-[10px] font-black uppercase tracking-wider">El copago se registrará como PAGADO</span>
               </div>
             }
           </div>
 
           <div class="flex gap-3 pt-4 border-t border-gray-50">
-            <button type="button" class="!rounded-full flex-1 !h-12 !font-bold text-gray-500 hover:bg-gray-50 transition-colors" (click)="close()">
+            <button type="button" mat-button (click)="close()" class="!rounded-full flex-1 !h-12 !font-bold">
               Cancelar
             </button>
-            <button type="submit" 
+            <button type="submit" mat-flat-button color="primary"
               [disabled]="confirmForm.invalid"
-              class="!rounded-full flex-[2] !h-12 !font-black !bg-indigo-600 text-white shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-colors disabled:opacity-50">
+              class="!rounded-full flex-[2] !h-12 !font-black !bg-indigo-600 text-white shadow-xl shadow-indigo-100 disabled:opacity-50">
               Confirmar y Registrar
             </button>
           </div>
@@ -130,9 +150,9 @@ import { startWith } from 'rxjs';
   `]
 })
 export class AppointmentConfirmationDialogOrganism {
+  readonly data = inject<AppointmentConfirmationDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<AppointmentConfirmationDialogOrganism, AppointmentConfirmationResult>);
   private fb = inject(FormBuilder);
-  data = input<{ appointment: Appointment }>({} as { appointment: Appointment });
-  closed = output<any>();
   public billingService = inject(BillingService);
 
   confirmForm = this.fb.group({
@@ -148,12 +168,12 @@ export class AppointmentConfirmationDialogOrganism {
   );
 
   totalAmount = computed(() => {
-    return this.data().appointment.type === 'Control' ? 120000 : 180000;
+    return this.data.appointment.type === 'Control' ? 120000 : 180000;
   });
 
   patientAmount = computed(() => {
     if (this.isParticular()) return this.totalAmount();
-    return 35000; // Fixed copay for insurance
+    return 35000;
   });
 
   constructor() {
@@ -169,17 +189,17 @@ export class AppointmentConfirmationDialogOrganism {
     });
   }
 
-  close(result?: any) {
-    this.closed.emit(result);
+  close() {
+    this.dialogRef.close();
   }
 
   onConfirm() {
     if (this.confirmForm.valid) {
-      this.closed.emit({
+      this.dialogRef.close({
         ...this.confirmForm.value,
         patientAmount: this.patientAmount(),
         totalAmount: this.totalAmount()
-      });
+      } as AppointmentConfirmationResult);
     }
   }
 }

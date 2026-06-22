@@ -2,6 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 import { TransportService } from '../../../../services/transport.service';
 import { TransportRoute } from '../../../../models/transport.model';
 import { BreadcrumbItem, BreadcrumbMolecule } from '../../../molecules/breadcrumb/breadcrumb.component';
@@ -616,76 +617,85 @@ export class TransportServiceDetailPageComponent {
 
   openOperationDialog() {
     this.dialog.open(TransportOperationDialogOrganism, {
-      width: '600px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: {
         routeId: this.routeId(),
         vehicleId: this.routeData()?.vehicleId
       },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   openExpenseDialog() {
     this.dialog.open(TransportExpenseDialogOrganism, {
-      width: '600px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { routeId: this.routeId() },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   openChangeVehicleDialog() {
     this.dialog.open(TransportChangeVehicleDialogOrganism, {
-      width: '600px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { routeId: this.routeId() },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   openIncidentDialog() {
     this.dialog.open(TransportIncidentDialogOrganism, {
-      width: '600px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { routeId: this.routeId() },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   finishOperation(operationId: string) {
     this.dialog.open(TransportOperationClosureDialogOrganism, {
-      width: '500px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
       data: { routeId: this.routeId(), operationId, status: 'Completed' },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   cancelOperation(operationId: string) {
     this.dialog.open(TransportOperationClosureDialogOrganism, {
-      width: '500px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
       data: { routeId: this.routeId(), operationId, status: 'Cancelled' },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   openSettleDialog() {
     this.dialog.open(TransportSettleDialogOrganism, {
-      width: '600px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { route: this.routeData() },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   openCancelDialog() {
     this.dialog.open(TransportCancelDialogOrganism, {
-      width: '600px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { route: this.routeData() },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
   openStandbyDialog() {
     this.dialog.open(TransportStandbyDialogOrganism, {
-      width: '600px',
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { route: this.routeData() },
-      panelClass: 'custom-dialog-container'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 

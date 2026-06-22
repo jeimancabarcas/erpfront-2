@@ -1,15 +1,26 @@
-import { Component, inject, input, output, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { FinanceService } from '../../../services/finance.service';
+
+export interface TransportDispatchDialogData {
+  vehicleId: string;
+}
+
+export type TransportDispatchResult = boolean | undefined;
 
 @Component({
   selector: 'app-transport-dispatch-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule
   ],
   template: `
     <div class="p-0 overflow-auto">
@@ -18,8 +29,8 @@ import { FinanceService } from '../../../services/finance.service';
           <h2 class="text-2xl font-black tracking-tight mb-1">Programar Servicio</h2>
           <p class="text-indigo-100 text-sm font-medium">Completa los datos para comprometer el vehículo.</p>
         </div>
-        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-indigo-500 transition-colors">
-          <span class="material-icons">close</span>
+        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
         </button>
       </header>
 
@@ -30,7 +41,7 @@ import { FinanceService } from '../../../services/finance.service';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Cliente / Empresa</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">business</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">business</mat-icon>
                 <select formControlName="customerName" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                   @for (c of financeService.customers(); track c.id) {
                     <option [value]="c.name">{{ c.name }}</option>
@@ -42,7 +53,7 @@ import { FinanceService } from '../../../services/finance.service';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Origen</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">location_on</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">location_on</mat-icon>
                 <input formControlName="origin" placeholder="Ej: Bogotá, DC" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
             </div>
@@ -50,7 +61,7 @@ import { FinanceService } from '../../../services/finance.service';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Destino</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">flag</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">flag</mat-icon>
                 <input formControlName="destination" placeholder="Ej: Medellín, ANT" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
             </div>
@@ -58,8 +69,8 @@ import { FinanceService } from '../../../services/finance.service';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</span>
-                <input [value]="data().vehicleId" readonly class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl font-black text-indigo-600 bg-gray-50 text-sm">
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</mat-icon>
+                <input [value]="data.vehicleId" readonly class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl font-black text-indigo-600 bg-gray-50 text-sm">
               </div>
             </div>
 
@@ -71,7 +82,7 @@ import { FinanceService } from '../../../services/finance.service';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Inicio</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">schedule</mat-icon>
                 <input type="time" formControlName="departureTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
             </div>
@@ -116,9 +127,9 @@ import { FinanceService } from '../../../services/finance.service';
   `]
 })
 export class TransportDispatchDialogOrganism implements OnInit {
+  readonly data = inject<TransportDispatchDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<TransportDispatchDialogOrganism, TransportDispatchResult>);
   private fb = inject(FormBuilder);
-  data = input<any>({});
-  closed = output<boolean | undefined>();
   public transportService = inject(TransportService);
   public financeService = inject(FinanceService);
 
@@ -132,13 +143,13 @@ export class TransportDispatchDialogOrganism implements OnInit {
     servicePrice: [0, [Validators.required, Validators.min(0)]]
   });
 
-  close(result?: boolean) {
-    this.closed.emit(result);
+  close(result?: TransportDispatchResult) {
+    this.dialogRef.close(result);
   }
 
   ngOnInit() {
-    if (this.data().vehicleId) {
-      this.dispatchForm.patchValue({ vehicleId: this.data().vehicleId });
+    if (this.data.vehicleId) {
+      this.dispatchForm.patchValue({ vehicleId: this.data.vehicleId });
     }
   }
 
@@ -168,7 +179,7 @@ export class TransportDispatchDialogOrganism implements OnInit {
         detailedExpenses: [],
         incidents: []
       });
-      this.closed.emit(true);
+      this.dialogRef.close(true);
     }
   }
 }

@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 import { Router } from '@angular/router';
 import { TransportService } from '../../../../services/transport.service';
 import { TransportCancelDialogOrganism } from '../../../../components/organisms/transport-cancel-dialog/transport-cancel-dialog.component';
@@ -209,10 +210,10 @@ export class TransportTrackingViewComponent {
 
   onCancelService(route: TransportRoute) {
     this.dialog.open(TransportCancelDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { route },
-      width: '600px',
-      maxWidth: '95vw',
-      panelClass: 'custom-premium-dialog'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 }

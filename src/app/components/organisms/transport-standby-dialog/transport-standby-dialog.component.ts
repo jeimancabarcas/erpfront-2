@@ -1,15 +1,26 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
+
+export interface TransportStandbyDialogData {
+  route: TransportRoute;
+}
+
+export type TransportStandbyResult = boolean | undefined;
 
 @Component({
   selector: 'app-transport-standby-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule
   ],
   template: `
     <div class="p-0 overflow-hidden">
@@ -18,8 +29,8 @@ import { TransportRoute } from '../../../models/transport.model';
           <h2 class="text-2xl font-black tracking-tight mb-1">Registrar Standby</h2>
           <p class="text-indigo-100 text-sm font-medium">Añada tiempo muerto o esperas adicionales al servicio.</p>
         </div>
-        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-indigo-500 transition-colors">
-          <span class="material-icons">close</span>
+        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
         </button>
       </header>
 
@@ -29,7 +40,7 @@ import { TransportRoute } from '../../../models/transport.model';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Horas de Espera</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">schedule</mat-icon>
                 <input type="number" formControlName="hours" placeholder="0" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
               @if (standbyForm.get('hours')?.hasError('required') && standbyForm.get('hours')?.touched) {
@@ -42,7 +53,7 @@ import { TransportRoute } from '../../../models/transport.model';
               <div class="relative">
                 <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
                 <input type="number" formControlName="amount" placeholder="0" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
+                <mat-icon class="absolute right-3 top-3.5 text-gray-400 text-sm">payments</mat-icon>
               </div>
               @if (standbyForm.get('amount')?.hasError('required') && standbyForm.get('amount')?.touched) {
                 <p class="text-red-500 text-xs mt-1 font-medium">Requerido</p>
@@ -53,7 +64,7 @@ import { TransportRoute } from '../../../models/transport.model';
           <div>
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Observaciones / Justificación</label>
             <div class="relative">
-              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">notes</span>
+              <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">notes</mat-icon>
               <textarea formControlName="notes" placeholder="Describa el motivo de la espera..." rows="4" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
             </div>
             @if (standbyForm.get('notes')?.hasError('required') && standbyForm.get('notes')?.touched) {
@@ -80,9 +91,9 @@ import { TransportRoute } from '../../../models/transport.model';
   `]
 })
 export class TransportStandbyDialogOrganism {
+  readonly data = inject<TransportStandbyDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<TransportStandbyDialogOrganism, TransportStandbyResult>);
   private fb = inject(FormBuilder);
-  data = input<{ route: TransportRoute }>({} as { route: TransportRoute });
-  closed = output<boolean | undefined>();
   private transportService = inject(TransportService);
 
   standbyForm = this.fb.group({
@@ -91,20 +102,20 @@ export class TransportStandbyDialogOrganism {
     notes: ['', [Validators.required, Validators.minLength(5)]]
   });
 
-  close(result?: boolean) {
-    this.closed.emit(result);
+  close(result?: TransportStandbyResult) {
+    this.dialogRef.close(result);
   }
 
   onSubmit() {
     if (this.standbyForm.valid) {
       const val = this.standbyForm.value;
       this.transportService.addStandby(
-        this.data().route.id, 
+        this.data.route.id, 
         val.hours!, 
         val.amount!, 
         val.notes!
       );
-      this.closed.emit(true);
+      this.dialogRef.close(true);
     }
   }
 }

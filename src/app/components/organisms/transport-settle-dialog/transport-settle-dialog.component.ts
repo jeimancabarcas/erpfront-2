@@ -1,15 +1,26 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
+
+export interface TransportSettleDialogData {
+  route: TransportRoute;
+}
+
+export type TransportSettleResult = boolean | undefined;
 
 @Component({
   selector: 'app-transport-settle-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule
   ],
   template: `
     <div class="p-0 overflow-hidden">
@@ -18,8 +29,8 @@ import { TransportRoute } from '../../../models/transport.model';
           <h2 class="text-2xl font-black tracking-tight mb-1">Liquidar Servicio</h2>
           <p class="text-emerald-100 text-sm font-medium">Esta acción marcará el servicio como liquidado y liberará el vehículo.</p>
         </div>
-        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-emerald-500 transition-colors">
-          <span class="material-icons">close</span>
+        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
         </button>
       </header>
 
@@ -30,11 +41,11 @@ import { TransportRoute } from '../../../models/transport.model';
           <div class="grid grid-cols-2 gap-4">
             <div>
               <p class="text-[10px] text-gray-400 font-bold uppercase">Total Facturable</p>
-              <p class="text-lg font-black text-gray-900">{{ (data().route.servicePrice + data().route.standbyTotal) | currency:'USD':'symbol':'1.0-0' }}</p>
+              <p class="text-lg font-black text-gray-900">{{ (data.route.servicePrice + data.route.standbyTotal) | currency:'USD':'symbol':'1.0-0' }}</p>
             </div>
             <div>
               <p class="text-[10px] text-gray-400 font-bold uppercase">Utilidad Bruta</p>
-              <p class="text-lg font-black text-emerald-600">{{ (data().route.servicePrice + data().route.standbyTotal - totalExpenses) | currency:'USD':'symbol':'1.0-0' }}</p>
+              <p class="text-lg font-black text-emerald-600">{{ (data.route.servicePrice + data.route.standbyTotal - totalExpenses) | currency:'USD':'symbol':'1.0-0' }}</p>
             </div>
           </div>
         </div>
@@ -43,7 +54,7 @@ import { TransportRoute } from '../../../models/transport.model';
           <div>
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Observaciones de Liquidación</label>
             <div class="relative">
-              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">rate_review</span>
+              <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">rate_review</mat-icon>
               <textarea formControlName="notes" placeholder="Agregue comentarios sobre el cierre del servicio..." rows="4" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
             </div>
           </div>
@@ -67,9 +78,9 @@ import { TransportRoute } from '../../../models/transport.model';
   `]
 })
 export class TransportSettleDialogOrganism {
+  readonly data = inject<TransportSettleDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<TransportSettleDialogOrganism, TransportSettleResult>);
   private fb = inject(FormBuilder);
-  data = input<{ route: TransportRoute }>({} as { route: TransportRoute });
-  closed = output<boolean | undefined>();
   private transportService = inject(TransportService);
 
   settleForm = this.fb.group({
@@ -77,17 +88,17 @@ export class TransportSettleDialogOrganism {
   });
 
   get totalExpenses(): number {
-    return this.data().route.detailedExpenses?.reduce((acc, exp) => acc + exp.amount, 0) || 0;
+    return this.data.route.detailedExpenses?.reduce((acc, exp) => acc + exp.amount, 0) || 0;
   }
 
-  close(result?: boolean) {
-    this.closed.emit(result);
+  close(result?: TransportSettleResult) {
+    this.dialogRef.close(result);
   }
 
   onSubmit() {
     if (this.settleForm.valid) {
-      this.transportService.settleRoute(this.data().route.id, this.settleForm.value.notes || undefined);
-      this.closed.emit(true);
+      this.transportService.settleRoute(this.data.route.id, this.settleForm.value.notes || undefined);
+      this.dialogRef.close(true);
     }
   }
 }

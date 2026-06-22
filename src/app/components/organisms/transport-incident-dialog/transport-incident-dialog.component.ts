@@ -1,14 +1,25 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
+
+export interface TransportIncidentDialogData {
+  routeId: string;
+}
+
+export type TransportIncidentResult = boolean | undefined;
 
 @Component({
   selector: 'app-transport-incident-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule
   ],
   template: `
     <div class="p-6">
@@ -17,8 +28,8 @@ import { TransportService } from '../../../services/transport.service';
           <h2 class="text-2xl font-black text-gray-900">Reportar Novedad</h2>
           <p class="text-gray-400 text-sm font-medium italic">Registro de incidencias o eventos relevantes en ruta.</p>
         </div>
-        <button (click)="close()" class="text-gray-400 hover:text-gray-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-          <span class="material-icons">close</span>
+        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
+          <mat-icon>close</mat-icon>
         </button>
       </header>
 
@@ -27,7 +38,7 @@ import { TransportService } from '../../../services/transport.service';
           <div>
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Novedad</label>
             <div class="relative">
-              <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">category</span>
+              <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">category</mat-icon>
               <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                 <option value="Retraso">Retraso</option>
                 <option value="Accidente">Accidente</option>
@@ -49,7 +60,7 @@ import { TransportService } from '../../../services/transport.service';
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora</label>
               <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
+                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">schedule</mat-icon>
                 <input type="time" formControlName="incidentTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
             </div>
@@ -58,7 +69,7 @@ import { TransportService } from '../../../services/transport.service';
           <div class="md:col-span-2">
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción de la Novedad</label>
             <div class="relative">
-              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
+              <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">description</mat-icon>
               <textarea formControlName="description" rows="4" placeholder="Describa lo sucedido detalladamente..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
             </div>
             @if (incidentForm.get('description')?.hasError('required') && incidentForm.get('description')?.touched) {
@@ -85,10 +96,10 @@ import { TransportService } from '../../../services/transport.service';
   `
 })
 export class TransportIncidentDialogOrganism {
+  readonly data = inject<TransportIncidentDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<TransportIncidentDialogOrganism, TransportIncidentResult>);
   private fb = inject(FormBuilder);
   private transportService = inject(TransportService);
-  data = input<any>({});
-  closed = output<boolean | undefined>();
 
   incidentForm = this.fb.group({
     type: ['', Validators.required],
@@ -97,26 +108,25 @@ export class TransportIncidentDialogOrganism {
     incidentTime: [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), Validators.required]
   });
 
-  close(result?: boolean) {
-    this.closed.emit(result);
+  close(result?: TransportIncidentResult) {
+    this.dialogRef.close(result);
   }
 
   onSubmit() {
     if (this.incidentForm.valid) {
       const val = this.incidentForm.value;
       
-      // Combine date and time
       const date = new Date(val.timestamp as string);
       const [hours, minutes] = (val.incidentTime as string).split(':');
       date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      this.transportService.addIncident(this.data().routeId, {
+      this.transportService.addIncident(this.data.routeId, {
         type: val.type as any,
         description: val.description!,
         reportedBy: 'Operaciones',
         timestamp: date.toISOString()
       } as any);
-      this.closed.emit(true);
+      this.dialogRef.close(true);
     }
   }
 }

@@ -1,11 +1,16 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { PediatricsService, Appointment } from '../../../services/pediatrics.service';
 import { BillingService } from '../../../services/billing.service';
 import { AppointmentFiltersMolecule } from '../../molecules/appointment-filters/appointment-filters.component';
 import { AppointmentTableOrganism } from '../../organisms/appointment-table/appointment-table.component';
+import { AppointmentFormOrganism } from '../../organisms/appointment-form/appointment-form.component';
+import { AppointmentConfirmationDialogOrganism } from '../../organisms/appointment-confirmation-dialog/appointment-confirmation-dialog.component';
+import { AppointmentCancellationDialogOrganism } from '../../organisms/appointment-cancellation-dialog/appointment-cancellation-dialog.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-agenda-page',
@@ -59,6 +64,7 @@ import { AppointmentTableOrganism } from '../../organisms/appointment-table/appo
 export class AgendaPageComponent {
   pediatricsService = inject(PediatricsService);
   billingService = inject(BillingService);
+  private dialog = inject(MatDialog);
 
   notification = signal<{message: string; type: 'success' | 'error'} | null>(null);
   private notifTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -106,20 +112,47 @@ export class AgendaPageComponent {
   }
 
   handleCancellationRequest(appointment: Appointment) {
-    // Dialog functionality will be restored when dialog organisms are migrated
-    this.pediatricsService.updateAppointmentStatus(appointment.id, 'Cancelled');
-    this.billingService.cancelInvoiceByAppointmentId(appointment.id);
-    this.showNotification('Cita anulada y registros financieros reversados');
+    const ref = this.dialog.open(AppointmentCancellationDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
+      data: { appointment },
+      panelClass: DIALOG_PANEL_CLASS
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.pediatricsService.updateAppointmentStatus(appointment.id, 'Cancelled');
+        this.billingService.cancelInvoiceByAppointmentId(appointment.id);
+        this.showNotification('Cita anulada y registros financieros reversados');
+      }
+    });
   }
 
   handleConfirmRequest(appointment: Appointment) {
-    // Dialog functionality will be restored when dialog organisms are migrated
-    this.pediatricsService.updateAppointmentStatus(appointment.id, 'Confirmed');
-    this.showNotification('Cita confirmada');
+    const ref = this.dialog.open(AppointmentConfirmationDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      data: { appointment },
+      panelClass: DIALOG_PANEL_CLASS
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.pediatricsService.updateAppointmentStatus(appointment.id, 'Confirmed');
+        this.showNotification('Cita confirmada exitosamente');
+      }
+    });
   }
 
   openAppointmentForm() {
-    // Dialog functionality will be restored when dialog organisms are migrated
+    const ref = this.dialog.open(AppointmentFormOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.showNotification('Cita creada exitosamente');
+      }
+    });
   }
 
   clearFilters() {

@@ -2,6 +2,7 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 import { TransportService } from '../../../../services/transport.service';
 import { Vehicle, VehicleMaintenance } from '../../../../models/transport.model';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
@@ -282,9 +283,10 @@ export class TransportVehicleDetailPageComponent {
 
   openMaintenanceDialog() {
     this.dialog.open(TransportMaintenanceDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
       data: { vehicleId: this.vehicleId() },
-      width: '600px',
-      panelClass: 'custom-premium-dialog'
+      panelClass: DIALOG_PANEL_CLASS
     });
   }
 
