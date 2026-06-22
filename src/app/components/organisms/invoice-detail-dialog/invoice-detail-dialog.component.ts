@@ -9,6 +9,7 @@ import { Invoice } from '../../../models/invoice.model';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { SalesNoteFormDialogOrganism } from '../sales-note-form-dialog/sales-note-form-dialog.component';
 import { CreditNote, DebitNote } from '../../../models/sales-note.model';
+import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 
 @Component({
   selector: 'app-invoice-detail-dialog',
@@ -235,24 +236,26 @@ import { CreditNote, DebitNote } from '../../../models/sales-note.model';
               </button>
             }
 
-            <button 
-              mat-flat-button 
-              (click)="viewPdf(inv)"
-              [disabled]="pdfLoading()"
-              class="!rounded-full !px-8 md:!px-10 !h-12 !bg-red-600 !text-white !font-black shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-            >
-              @if (pdfLoading()) {
-                <span class="flex items-center justify-center gap-2">
-                  <span class="w-5 h-5 border-2 border-red-100 border-t-red-600 rounded-full animate-spin"></span>
-                  <span>Cargando PDF...</span>
-                </span>
-              } @else {
-                <span class="flex items-center justify-center gap-2">
-                  <mat-icon>picture_as_pdf</mat-icon>
-                  <span>Ver PDF DIAN</span>
-                </span>
-              }
-            </button>
+            @if (inv.isElectronic || notes().creditNotes.length > 0 || notes().debitNotes.length > 0) {
+              <button 
+                mat-flat-button 
+                (click)="viewPdf(inv)"
+                [disabled]="pdfLoading()"
+                class="!rounded-full !px-8 md:!px-10 !h-12 !bg-red-600 !text-white !font-black shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                @if (pdfLoading()) {
+                  <span class="flex items-center justify-center gap-2">
+                    <span class="w-5 h-5 border-2 border-red-100 border-t-red-600 rounded-full animate-spin"></span>
+                    <span>Cargando PDF...</span>
+                  </span>
+                } @else {
+                  <span class="flex items-center justify-center gap-2">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    <span>{{ inv.isElectronic ? 'Ver PDF DIAN' : 'Ver PDF Historial' }}</span>
+                  </span>
+                }
+              </button>
+            }
 
             <button mat-flat-button color="primary" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all">
               <mat-icon class="mr-2">print</mat-icon>
@@ -345,20 +348,7 @@ export class InvoiceDetailDialogOrganism implements OnInit {
     this.invoiceService.getInvoicePdf(invoice.id).subscribe({
       next: (res) => {
         this.pdfLoading.set(false);
-        try {
-          const byteCharacters = atob(res.pdfBase64Encoded);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, '_blank');
-        } catch (e) {
-          console.error('Error decoding PDF:', e);
-          alert('Error al procesar el PDF de la factura.');
-        }
+        downloadBase64Pdf(res.pdfBase64Encoded, res.fileName);
       },
       error: (err) => {
         this.pdfLoading.set(false);
