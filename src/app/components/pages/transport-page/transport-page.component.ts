@@ -27,7 +27,6 @@ import { TransportSettlementViewComponent } from './transport-settlement-view/tr
         <div class="flex gap-3">
           <ui-button 
             variant="primary"
-            class="rounded-full h-12 px-8 font-black shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
           >
             <span class="material-icons mr-2">local_shipping</span>
             Nuevo Vehículo

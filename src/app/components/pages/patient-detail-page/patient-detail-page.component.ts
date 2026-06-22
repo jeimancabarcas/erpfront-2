@@ -52,7 +52,6 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
           <ui-button 
             variant="primary"
             (clicked)="goToNewConsultation()"
-            class="rounded-full h-14 px-10 font-black text-lg shadow-xl shadow-indigo-100"
           >
             <span class="material-icons mr-2 w-6 h-6 text-[24px]">add_circle</span>
             Nueva Consulta
@@ -65,7 +64,6 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
         <ui-button
           [variant]="activeTab() === 0 ? 'primary' : 'ghost'"
           (clicked)="activeTab.set(0)"
-          class="h-14 px-6 rounded-[28px]"
         >
           <span class="material-icons mr-2">analytics</span>
           Resumen
@@ -73,7 +71,6 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
         <ui-button
           [variant]="activeTab() === 1 ? 'primary' : 'ghost'"
           (clicked)="activeTab.set(1)"
-          class="h-14 px-6 rounded-[28px]"
         >
           <span class="material-icons mr-2">baby_changing_station</span>
           Antecedentes Neonatales
@@ -81,7 +78,6 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
         <ui-button
           [variant]="activeTab() === 2 ? 'primary' : 'ghost'"
           (clicked)="activeTab.set(2)"
-          class="h-14 px-6 rounded-[28px]"
         >
           <span class="material-icons mr-2">history_edu</span>
           Historial Clínico

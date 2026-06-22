@@ -112,7 +112,6 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         <ui-button
           variant="primary"
           (clicked)="onClose()"
-          class="!h-12 !px-8 !rounded-full !font-bold !bg-gray-900 !text-white"
         >
           Entendido
         </ui-button>

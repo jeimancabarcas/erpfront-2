@@ -113,22 +113,18 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
 
             <!-- Actions -->
             <div class="p-8 md:p-10 bg-gray-50/50 flex flex-col justify-center items-center gap-4 min-w-[240px]">
-              <ui-button variant="primary" (clicked)="onViewDetail(route.id)"
-                      class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all w-full">
+              <ui-button variant="primary" (clicked)="onViewDetail(route.id)">
                 Ver Detalles
               </ui-button>
               @if (route.status === 'Active') {
-                <ui-button variant="outline"
-                        class="!rounded-full !h-12 !px-8 !font-bold !border-gray-200 hover:!bg-white transition-all w-full">
+                <ui-button variant="outline">
                   Reportar Hito
                 </ui-button>
               } @else if (route.status === 'Planning') {
-                <ui-button variant="primary" (clicked)="onStartRoute(route.vehicleId)"
-                        class="!rounded-full !h-12 !px-8 !font-bold !bg-amber-500 !text-white hover:scale-105 transition-all w-full shadow-lg shadow-amber-100">
+                <ui-button variant="primary" (clicked)="onStartRoute(route.vehicleId)">
                   Iniciar Ruta
                 </ui-button>
-                <ui-button variant="outline" (clicked)="onCancelService(route)"
-                        class="!rounded-full !h-10 !px-8 !font-bold !border-red-100 !text-red-400 hover:!bg-red-50 transition-all w-full !text-xs">
+                <ui-button variant="outline" (clicked)="onCancelService(route)">
                   Cancelar Servicio
                 </ui-button>
               } @else if (route.status === 'Cancelled') {

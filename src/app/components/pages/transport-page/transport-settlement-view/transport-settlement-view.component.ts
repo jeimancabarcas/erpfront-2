@@ -55,8 +55,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                   </td>
                   <td class="p-8 text-right">
                     <ui-button variant="primary" 
-                            (clicked)="onSettle(route)"
-                            class="!rounded-full !h-10 !px-6 !font-black !bg-emerald-600 shadow-xl shadow-emerald-100 hover:scale-105 transition-all">
+                            (clicked)="onSettle(route)">
                       Liquidar
                     </ui-button>
                   </td>
