@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { CategoryService, InventoryCategory } from '../../../services/category.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 
@@ -11,7 +12,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   imports: [
     CommonModule,
     FormsModule,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     <div class="p-8">
@@ -26,16 +28,15 @@ import { ButtonAtom } from '../../atoms/button/button.component';
 
       <form #categoryForm="ngForm" class="space-y-6">
         <div class="space-y-6">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre de la Categoría</label>
-            <input
-              [(ngModel)]="category().name"
-              name="name"
-              required
-              placeholder="Ej. Medicamentos"
-              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
-            />
-          </div>
+          <ui-text-input
+            label="Nombre de la Categoría"
+            icon="category"
+            [value]="category().name ?? ''"
+            (valueChange)="category().name = $event"
+            name="name"
+            [required]="true"
+            placeholder="Ej. Medicamentos"
+          />
 
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Descripción (Opcional)</label>

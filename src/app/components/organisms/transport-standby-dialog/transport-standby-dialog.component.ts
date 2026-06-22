@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
@@ -21,6 +22,7 @@ export type TransportStandbyResult = boolean | undefined;
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
+    TextInputComponent,
     ButtonAtom
   ],
   template: `
@@ -49,28 +51,8 @@ export type TransportStandbyResult = boolean | undefined;
       <div class="p-10 bg-white">
         <form [formGroup]="standbyForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-2 gap-6">
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Horas de Espera</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
-                <input type="number" formControlName="hours" placeholder="0" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-              </div>
-              @if (standbyForm.get('hours')?.hasError('required') && standbyForm.get('hours')?.touched) {
-                <p class="text-red-500 text-xs mt-1 font-medium">Requerido</p>
-              }
-            </div>
-
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Valor Adicional</label>
-              <div class="relative">
-                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
-                <input type="number" formControlName="amount" placeholder="0" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
-              </div>
-              @if (standbyForm.get('amount')?.hasError('required') && standbyForm.get('amount')?.touched) {
-                <p class="text-red-500 text-xs mt-1 font-medium">Requerido</p>
-              }
-            </div>
+            <ui-text-input label="Horas de Espera" type="number" icon="schedule" placeholder="0" [formControl]="standbyForm.controls.hours" />
+            <ui-text-input label="Valor Adicional" type="number" icon="attach_money" placeholder="0" [formControl]="standbyForm.controls.amount" />
           </div>
 
           <div>

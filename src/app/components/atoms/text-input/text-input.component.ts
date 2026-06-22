@@ -1,4 +1,4 @@
-import { Component, model, input, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, model, input, computed, signal, ChangeDetectionStrategy, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
@@ -90,7 +90,7 @@ export class TextInputComponent implements ControlValueAccessor {
   private onTouched: () => void = () => {};
 
   writeValue(val: string): void {
-    this.value.set(val ?? '');
+    untracked(() => this.value.set(val ?? ''));
   }
 
   registerOnChange(fn: (val: string) => void): void {

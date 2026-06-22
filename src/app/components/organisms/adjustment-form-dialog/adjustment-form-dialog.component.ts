@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { FinanceService } from '../../../services/finance.service';
 import { InvoiceService } from '../../../services/invoice.service';
 import { SalesNoteService } from '../../../services/sales-note.service';
@@ -35,7 +36,8 @@ export interface AdjustmentFormData {
     MatButtonModule, 
     MatAutocompleteModule,
     MatSnackBarModule,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     @if (loading()) {
@@ -163,12 +165,7 @@ export interface AdjustmentFormData {
 
           <!-- Amount Selection -->
           <div class="space-y-3">
-            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Valor del Ajuste</label>
-            <mat-form-field appearance="outline" class="w-full !m-0">
-              <mat-label>Monto total del ajuste</mat-label>
-              <input matInput type="number" formControlName="amount" placeholder="0.00" class="font-black">
-              <span class="material-icons" matPrefix class="mr-2 text-gray-400">attach_money</span>
-            </mat-form-field>
+            <ui-text-input label="Valor del Ajuste" type="number" icon="attach_money" placeholder="0.00" [formControl]="adjustmentForm.controls.amount" />
           </div>
 
           <!-- Technical Reason -->

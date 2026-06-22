@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { Invoice } from '../../../models/invoice.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SalesNoteService } from '../../../services/sales-note.service';
@@ -36,7 +37,8 @@ export interface SalesNoteDialogData {
     MatDividerModule,
     MatSlideToggleModule,
     CurrencyPipe,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[850px] shadow-2xl">
@@ -151,27 +153,26 @@ export interface SalesNoteDialogData {
             @if (showAdvanced()) {
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                 <!-- Bill Number Override -->
-                <div class="space-y-2">
-                  <label class="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">Factura de Referencia en Factus</label>
-                  <mat-form-field appearance="outline" class="w-full !m-0">
-                    <input matInput formControlName="billNumber" placeholder="Ej: SETP990003670" />
-                    <mat-icon matPrefix class="mr-2 text-slate-400">receipt</mat-icon>
-                    <mat-hint class="!text-[9px] !leading-normal !text-slate-400">
-                      Por defecto usa la factura local. Útil en Sandbox si la factura original no existe en la plataforma de Factus.
-                    </mat-hint>
-                  </mat-form-field>
+                <div class="flex flex-col gap-1.5">
+                  <ui-text-input
+                    label="Factura de Referencia en Factus"
+                    icon="receipt"
+                    placeholder="Ej: SETP990003670"
+                    [formControl]="noteForm.controls.billNumber"
+                    helperText="Por defecto usa la factura local. Útil en Sandbox si la factura original no existe en la plataforma de Factus."
+                  />
                 </div>
 
                 <!-- Numbering Range ID Override -->
-                <div class="space-y-2">
-                  <label class="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">ID Rango de Numeración</label>
-                  <mat-form-field appearance="outline" class="w-full !m-0">
-                    <input matInput type="number" formControlName="numberingRangeId" placeholder="Autodetectar..." />
-                    <mat-icon matPrefix class="mr-2 text-slate-400">pin</mat-icon>
-                    <mat-hint class="!text-[9px] !leading-normal !text-slate-400">
-                      Opcional. Si se deja en blanco se resolverá dinámicamente llamando a la API de Factus (Notas Crédito: 390, Notas Débito: 391).
-                    </mat-hint>
-                  </mat-form-field>
+                <div class="flex flex-col gap-1.5">
+                  <ui-text-input
+                    label="ID Rango de Numeración"
+                    type="number"
+                    icon="pin"
+                    placeholder="Autodetectar..."
+                    [formControl]="noteForm.controls.numberingRangeId"
+                    helperText="Opcional. Si se deja en blanco se resolverá dinámicamente llamando a la API de Factus (Notas Crédito: 390, Notas Débito: 391)."
+                  />
                 </div>
               </div>
             }

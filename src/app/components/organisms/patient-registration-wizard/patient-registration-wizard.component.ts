@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 
 @Component({
@@ -24,7 +25,8 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
     MatSelectModule,
     MatDatepickerModule,
     MatIconModule,
-    MatDialogModule
+    MatDialogModule,
+    TextInputComponent
   ],
   template: `
     <div class="p-2 max-w-4xl mx-auto">
@@ -48,18 +50,9 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
           <form [formGroup]="personalForm" class="py-6">
             <ng-template matStepLabel>Datos Personales</ng-template>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Nombres</mat-label>
-                <input matInput formControlName="firstNames" placeholder="Ej. Juan Andrés" required>
-                <mat-icon matPrefix class="mr-2 text-gray-400">person</mat-icon>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Apellidos</mat-label>
-                <input matInput formControlName="lastNames" placeholder="Ej. Pérez Gómez" required>
-                <mat-icon matPrefix class="mr-2 text-gray-400">person</mat-icon>
-              </mat-form-field>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <ui-text-input label="Nombres" icon="person" placeholder="Ej. Juan Andrés" [required]="true" [formControl]="personalForm.controls.firstNames" />
+              <ui-text-input label="Apellidos" icon="person" placeholder="Ej. Pérez Gómez" [required]="true" [formControl]="personalForm.controls.lastNames" />
 
               <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Fecha de Nacimiento</mat-label>
@@ -87,11 +80,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
                 </mat-select>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Identificación</mat-label>
-                <input matInput formControlName="idNumber" placeholder="Número de documento" required>
-                <mat-icon matPrefix class="mr-2 text-gray-400">badge</mat-icon>
-              </mat-form-field>
+              <ui-text-input label="Identificación" icon="badge" placeholder="Número de documento" [required]="true" [formControl]="personalForm.controls.idNumber" />
             </div>
 
             <div class="flex justify-end mt-8">
@@ -108,22 +97,10 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
           <form [formGroup]="locationForm" class="py-6">
             <ng-template matStepLabel>Ubicación</ng-template>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              <mat-form-field appearance="outline" class="w-full md:col-span-2">
-                <mat-label>Dirección</mat-label>
-                <input matInput formControlName="address" placeholder="Ej. Calle 123 # 45-67" required>
-                <mat-icon matPrefix class="mr-2 text-gray-400">home</mat-icon>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Ciudad</mat-label>
-                <input matInput formControlName="city" placeholder="Ej. Bogotá" required>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>País</mat-label>
-                <input matInput formControlName="country" placeholder="Ej. Colombia" required>
-              </mat-form-field>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <ui-text-input label="Dirección" icon="home" placeholder="Ej. Calle 123 # 45-67" [required]="true" [formControl]="locationForm.controls.address" class="md:col-span-2" />
+              <ui-text-input label="Ciudad" placeholder="Ej. Bogotá" [required]="true" [formControl]="locationForm.controls.city" />
+              <ui-text-input label="País" placeholder="Ej. Colombia" [required]="true" [formControl]="locationForm.controls.country" />
 
               <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Zona</mat-label>
@@ -133,10 +110,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
                 </mat-select>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Código Postal</mat-label>
-                <input matInput formControlName="postalCode" placeholder="Opcional">
-              </mat-form-field>
+              <ui-text-input label="Código Postal" placeholder="Opcional" [formControl]="locationForm.controls.postalCode" />
             </div>
 
             <div class="flex justify-between mt-8">
@@ -156,12 +130,8 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
           <form [formGroup]="healthForm" class="py-6">
             <ng-template matStepLabel>Salud</ng-template>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>EPS</mat-label>
-                <input matInput formControlName="eps" placeholder="Ej. Sanitas" required>
-                <mat-icon matPrefix class="mr-2 text-gray-400">health_and_safety</mat-icon>
-              </mat-form-field>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <ui-text-input label="EPS" icon="health_and_safety" placeholder="Ej. Sanitas" [required]="true" [formControl]="healthForm.controls.eps" />
 
               <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Régimen de Salud</mat-label>
@@ -172,11 +142,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
                 </mat-select>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="w-full md:col-span-2">
-                <mat-label>Clínica o Lugar donde nació</mat-label>
-                <input matInput formControlName="birthPlace" placeholder="Ej. Clínica del Country" required>
-                <mat-icon matPrefix class="mr-2 text-gray-400">local_hospital</mat-icon>
-              </mat-form-field>
+              <ui-text-input label="Clínica o Lugar donde nació" icon="local_hospital" placeholder="Ej. Clínica del Country" [required]="true" [formControl]="healthForm.controls.birthPlace" class="md:col-span-2" />
 
               <mat-form-field appearance="outline" class="w-full md:col-span-2">
                 <mat-label>Observaciones</mat-label>
@@ -208,23 +174,11 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
                   <mat-icon class="mr-2 !w-5 !h-5 !text-lg">person</mat-icon>
                   Información del Padre
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Nombre del Padre</mat-label>
-                    <input matInput formControlName="fatherName">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Celular</mat-label>
-                    <input matInput formControlName="fatherPhone">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Email</mat-label>
-                    <input matInput type="email" formControlName="fatherEmail">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Ocupación</mat-label>
-                    <input matInput formControlName="fatherOccupation">
-                  </mat-form-field>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
+                  <ui-text-input label="Nombre del Padre" icon="person" [formControl]="familyForm.controls.fatherName" />
+                  <ui-text-input label="Celular" icon="phone" [formControl]="familyForm.controls.fatherPhone" />
+                  <ui-text-input label="Email" type="email" icon="email" [formControl]="familyForm.controls.fatherEmail" />
+                  <ui-text-input label="Ocupación" [formControl]="familyForm.controls.fatherOccupation" />
                 </div>
               </div>
 
@@ -234,30 +188,15 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
                   <mat-icon class="mr-2 !w-5 !h-5 !text-lg">person</mat-icon>
                   Información de la Madre
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Nombre de la Madre</mat-label>
-                    <input matInput formControlName="motherName">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Celular</mat-label>
-                    <input matInput formControlName="motherPhone">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Email</mat-label>
-                    <input matInput type="email" formControlName="motherEmail">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Ocupación</mat-label>
-                    <input matInput formControlName="motherOccupation">
-                  </mat-form-field>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
+                  <ui-text-input label="Nombre de la Madre" icon="person" [formControl]="familyForm.controls.motherName" />
+                  <ui-text-input label="Celular" icon="phone" [formControl]="familyForm.controls.motherPhone" />
+                  <ui-text-input label="Email" type="email" icon="email" [formControl]="familyForm.controls.motherEmail" />
+                  <ui-text-input label="Ocupación" [formControl]="familyForm.controls.motherOccupation" />
                 </div>
               </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Hermanos</mat-label>
-                <input matInput formControlName="siblings" placeholder="Nombres de los hermanos (opcional)">
-              </mat-form-field>
+              <ui-text-input label="Hermanos" placeholder="Nombres de los hermanos (opcional)" [formControl]="familyForm.controls.siblings" />
             </div>
 
             <div class="flex justify-between mt-8">
@@ -277,20 +216,9 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
           <form [formGroup]="birthForm" class="py-6">
             <ng-template matStepLabel>Nacimiento</ng-template>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Peso al Nacer (g)</mat-label>
-                <input matInput type="number" formControlName="birthWeight" placeholder="Ej. 3200">
-                <span matSuffix class="pr-2">g</span>
-                <mat-icon matPrefix class="mr-2 text-gray-400">monitor_weight</mat-icon>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Talla al Nacer (cm)</mat-label>
-                <input matInput type="number" formControlName="birthHeight" placeholder="Ej. 50">
-                <span matSuffix class="pr-2">cm</span>
-                <mat-icon matPrefix class="mr-2 text-gray-400">straighten</mat-icon>
-              </mat-form-field>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <ui-text-input label="Peso al Nacer (g)" type="number" icon="monitor_weight" placeholder="Ej. 3200" [formControl]="birthForm.controls.birthWeight" />
+              <ui-text-input label="Talla al Nacer (cm)" type="number" icon="straighten" placeholder="Ej. 50" [formControl]="birthForm.controls.birthHeight" />
             </div>
 
             <div class="bg-blue-50 border border-blue-100 p-6 rounded-2xl mt-8 flex gap-4">

@@ -4,13 +4,13 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 import { BillingService } from '../../../services/billing.service';
 import { Invoice } from '../../../models/billing.model';
@@ -27,7 +27,6 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
-    MatInputModule,
     MatSelectModule,
     MatButtonModule,
     MatAutocompleteModule,
@@ -35,7 +34,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     MatSlideToggleModule,
     MatChipsModule,
     PatientSearchMolecule,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh]">
@@ -112,40 +112,36 @@ import { ButtonAtom } from '../../atoms/button/button.component';
               </div>
 
               <!-- Authorization Number -->
-              <div class="space-y-2">
-                <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Nº de Autorización</label>
-                <mat-form-field appearance="outline" class="w-full !m-0">
-                  <mat-label>Código de autorización</mat-label>
-                  <input matInput formControlName="authorizationNumber" placeholder="Ej: AUT-12345">
-                  <mat-icon matPrefix class="mr-2 text-gray-400">verified</mat-icon>
-                </mat-form-field>
-              </div>
+              <ui-text-input
+                label="Nº de Autorización"
+                icon="verified"
+                placeholder="Ej: AUT-12345"
+                [formControl]="invoiceForm.controls.authorizationNumber"
+              />
             </div>
           }
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Total Amount -->
-            <div class="space-y-2" [class.md:col-span-2]="isParticular()">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">
-                {{ isParticular() ? 'Valor Total a Pagar' : 'Valor Total' }}
-              </label>
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <input matInput type="number" formControlName="totalAmount" placeholder="0.00" class="!font-black text-lg">
-                <mat-icon matPrefix class="mr-2 text-gray-400">attach_money</mat-icon>
-              </mat-form-field>
+            <div [class.md:col-span-2]="isParticular()">
+              <ui-text-input
+                [label]="isParticular() ? 'Valor Total a Pagar' : 'Valor Total'"
+                type="number"
+                icon="attach_money"
+                placeholder="0.00"
+                [formControl]="invoiceForm.controls.totalAmount"
+              />
             </div>
 
             @if (!isParticular()) {
               <!-- Patient Amount (Copay) -->
-              <div class="space-y-2">
-                <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">
-                  Valor Copago
-                </label>
-                <mat-form-field appearance="outline" class="w-full !m-0">
-                  <input matInput type="number" formControlName="patientAmount" placeholder="0.00" class="!font-black text-lg text-green-600">
-                  <mat-icon matPrefix class="mr-2 text-gray-400">attach_money</mat-icon>
-                </mat-form-field>
-              </div>
+              <ui-text-input
+                label="Valor Copago"
+                type="number"
+                icon="attach_money"
+                placeholder="0.00"
+                [formControl]="invoiceForm.controls.patientAmount"
+              />
             }
           </div>
 

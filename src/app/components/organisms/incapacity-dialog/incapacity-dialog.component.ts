@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface IncapacityDialogData {
@@ -26,6 +27,7 @@ export interface IncapacityDialogResult {
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
+    TextInputComponent,
     ButtonAtom
   ],
   template: `
@@ -53,13 +55,13 @@ export interface IncapacityDialogResult {
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="days">Días de Incapacidad</label>
-            <div class="relative">
-              <input type="number" formControlName="days" id="days" placeholder="Ej: 3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm pr-10">
-              <span class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm">calendar_today</span>
-            </div>
-          </div>
+          <ui-text-input
+            label="Días de Incapacidad"
+            type="number"
+            icon="calendar_today"
+            placeholder="Ej: 3"
+            [formControl]="form.controls.days"
+          />
           
           <div>
             <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="type">Tipo de Incapacidad</label>

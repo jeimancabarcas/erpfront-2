@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormArray, FormGroup, FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface PrescriptionData {
@@ -36,6 +37,7 @@ export interface OrdersDialogResult {
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
+    TextInputComponent,
     ButtonAtom
   ],
   template: `
@@ -83,14 +85,13 @@ export interface OrdersDialogResult {
                 </button>
                 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <input formControlName="code" placeholder="Cód." class="md:col-span-3 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                  <ui-text-input placeholder="Cód." [formControl]="$any(getPrescriptionGroup($index)).controls.code" class="md:col-span-3" />
                   <div class="md:col-span-9 w-full relative">
-                    <input formControlName="name" placeholder="Ej: Acetaminofén 500mg" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm pr-10">
-                    <span class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-indigo-300 text-sm">search</span>
+                    <ui-text-input placeholder="Ej: Acetaminofén 500mg" icon="search" [formControl]="$any(getPrescriptionGroup($index)).controls.name" />
                   </div>
                   
-                  <input formControlName="dose" placeholder="Ej: 5ml" class="md:col-span-4 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                  <input formControlName="frequency" placeholder="Ej: Cada 8 horas" class="md:col-span-4 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                  <ui-text-input placeholder="Ej: 5ml" [formControl]="$any(getPrescriptionGroup($index)).controls.dose" class="md:col-span-4" />
+                  <ui-text-input placeholder="Ej: Cada 8 horas" [formControl]="$any(getPrescriptionGroup($index)).controls.frequency" class="md:col-span-4" />
                   <select formControlName="route" class="md:col-span-4 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                     <option value="Oral">Oral</option>
                     <option value="Intramuscular">Intramuscular</option>
@@ -130,8 +131,8 @@ export interface OrdersDialogResult {
           <div class="space-y-4">
             @for (proc of procedures.controls; track $index) {
               <div class="p-6 bg-gray-50/50 rounded-[24px] border border-gray-100 flex items-start gap-4 animate-in slide-in-from-bottom-2 duration-300 group" [formGroup]="getProcedureGroup($index)">
-                <input formControlName="code" placeholder="Código" class="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                <input formControlName="name" placeholder="Nombre del Procedimiento" class="flex-grow px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                <ui-text-input placeholder="Código" [formControl]="$any(getProcedureGroup($index)).controls.code" class="!w-32" />
+                <ui-text-input placeholder="Nombre del Procedimiento" [formControl]="$any(getProcedureGroup($index)).controls.name" class="flex-grow" />
                 <button type="button" (click)="removeProc($index)" class="!bg-red-50 !text-red-400 !rounded-2xl w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100">
                   <span class="material-icons text-sm">delete</span>
                 </button>

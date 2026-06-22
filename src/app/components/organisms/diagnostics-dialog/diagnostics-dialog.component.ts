@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, FormArray, FormGroup, FormControl, Va
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface DiagnosticItem {
@@ -28,6 +29,7 @@ export interface DiagnosticsDialogResult {
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
+    TextInputComponent,
     ButtonAtom
   ],
   template: `
@@ -58,10 +60,10 @@ export interface DiagnosticsDialogResult {
           <label class="text-[10px] text-indigo-400 font-black uppercase tracking-widest block mb-4">Diagnóstico Principal</label>
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div class="md:col-span-3 w-full">
-              <input formControlName="principalCode" placeholder="Ej: J00X" class="w-full px-4 py-3 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
+              <ui-text-input placeholder="Ej: J00X" [formControl]="form.controls.principalCode" />
             </div>
             <div class="md:col-span-9 w-full">
-              <input formControlName="principalDescription" placeholder="Descripción detallada del diagnóstico principal" class="w-full px-4 py-3 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
+              <ui-text-input placeholder="Descripción detallada del diagnóstico principal" [formControl]="form.controls.principalDescription" />
             </div>
           </div>
         </div>
@@ -78,8 +80,8 @@ export interface DiagnosticsDialogResult {
           <div class="space-y-4">
             @for (diag of secondaryDiagnoses.controls; track $index) {
               <div class="flex items-center gap-4 animate-in slide-in-from-right-2 duration-300 group" [formGroup]="getSecondaryGroup($index)">
-                <input formControlName="code" placeholder="Código" class="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                <input formControlName="description" placeholder="Descripción del diagnóstico secundario" class="flex-grow px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                <ui-text-input placeholder="Código" [formControl]="$any(getSecondaryGroup($index)).controls.code" class="!w-32" />
+                <ui-text-input placeholder="Descripción del diagnóstico secundario" [formControl]="$any(getSecondaryGroup($index)).controls.description" class="flex-grow" />
                 <button type="button" (click)="removeSecondary($index)" class="!bg-red-50 !text-red-400 !rounded-2xl w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100">
                   <span class="material-icons text-sm">close</span>
                 </button>

@@ -8,6 +8,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SupplierService } from '../../../services/supplier.service';
 import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
@@ -38,6 +39,7 @@ interface PurchaseOrderItemForm {
     ReactiveFormsModule,
     CurrencyPipe,
     ButtonAtom,
+    TextInputComponent,
   ],
   template: `
     <div class="flex flex-col h-full max-h-[90vh] p-8">
@@ -148,19 +150,11 @@ interface PurchaseOrderItemForm {
 
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                           <div class="md:col-span-3">
-                            <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-                              <mat-label>Cantidad</mat-label>
-                              <input matInput type="number" formControlName="quantity" min="1">
-                              <span matPrefix class="material-icons text-gray-400 mr-2">numbers</span>
-                            </mat-form-field>
+                            <ui-text-input label="Cantidad" type="number" icon="numbers" [formControl]="$any(itemGroup).controls.quantity" />
                           </div>
 
                           <div class="md:col-span-4">
-                            <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-                              <mat-label>Precio Unitario</mat-label>
-                              <input matInput type="number" formControlName="unitPrice" min="0">
-                              <span matPrefix class="material-icons text-gray-400 mr-2">payments</span>
-                            </mat-form-field>
+                            <ui-text-input label="Precio Unitario" type="number" icon="payments" [formControl]="$any(itemGroup).controls.unitPrice" />
                           </div>
 
                           <div class="md:col-span-5 flex flex-col items-end">

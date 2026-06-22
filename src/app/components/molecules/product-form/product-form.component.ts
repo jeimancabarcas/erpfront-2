@@ -38,7 +38,7 @@ export type ProductFormResult = boolean | undefined;
         <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
       </div>
     } @else {
-    <div class="p-2">
+    <div class="p-8">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}
@@ -52,7 +52,7 @@ export type ProductFormResult = boolean | undefined;
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ui-text-input label="Nombre del Producto" icon="inventory_2" [(value)]="product().name" name="name" [required]="true" placeholder="Ej. MacBook Pro 16" />
 
-          <ui-text-input label="SKU" icon="barcode" [(value)]="product().sku" name="sku" [required]="true" placeholder="Ej. LAP-123" />
+          <ui-text-input label="SKU" icon="qr_code_2" [(value)]="product().sku" name="sku" [required]="true" placeholder="Ej. LAP-123" />
 
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Categoría</label>
@@ -73,7 +73,7 @@ export type ProductFormResult = boolean | undefined;
 
           @if (isEditMode) {
             <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top duration-300">
-              <ui-text-input type="number" label="Precio de Venta" icon="sell" [(value)]="product().sellingPrice" name="sellingPrice" [required]="true" placeholder="Ej. 15000" />
+              <ui-text-input type="number" label="Precio de Venta" icon="payments" [(value)]="product().sellingPrice" name="sellingPrice" [required]="true" placeholder="Ej. 15000" />
               <span class="text-xs text-indigo-400 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</span>
             </div>
           }

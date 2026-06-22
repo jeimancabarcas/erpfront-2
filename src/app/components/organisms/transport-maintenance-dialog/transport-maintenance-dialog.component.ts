@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 
@@ -20,6 +21,7 @@ export type TransportMaintenanceResult = boolean | undefined;
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
+    TextInputComponent,
     ButtonAtom
   ],
   template: `
@@ -77,14 +79,7 @@ export type TransportMaintenanceResult = boolean | undefined;
               </div>
             </div>
 
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Costo Estimado (Opcional)</label>
-              <div class="relative">
-                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
-                <input type="number" formControlName="cost" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm">
-                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
-              </div>
-            </div>
+            <ui-text-input label="Costo Estimado (Opcional)" type="number" icon="attach_money" [formControl]="maintenanceForm.controls.cost" />
           </div>
 
           <div class="flex gap-4 pt-4">
