@@ -1,10 +1,11 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'ui-button',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatTooltipModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './button.component.scss',
   template: `
@@ -14,7 +15,9 @@ import { CommonModule } from '@angular/common';
       [disabled]="disabled() || loading()"
       [attr.aria-disabled]="disabled() || loading()"
       [attr.aria-busy]="loading() || null"
-      [attr.aria-label]="ariaLabel() || null"
+      [attr.aria-label]="ariaLabel() || tooltip() || null"
+      [matTooltip]="tooltip() || ''"
+      [matTooltipDisabled]="!tooltip()"
       (click)="onClick($event)"
     >
       @if (loading()) {
@@ -32,6 +35,7 @@ export class ButtonAtom {
   loading = input(false);
   type = input<'button' | 'submit'>('button');
   ariaLabel = input<string>('');
+  tooltip = input<string>('');
 
   clicked = output<void>();
 

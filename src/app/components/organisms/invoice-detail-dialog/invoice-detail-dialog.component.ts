@@ -1,5 +1,6 @@
 import { Component, inject, signal, input, output, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { InvoiceService } from '../../../services/invoice.service';
 import { Invoice } from '../../../models/invoice.model';
 import { SalesNoteService } from '../../../services/sales-note.service';
@@ -23,6 +24,17 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
         <div class="p-20 flex flex-col items-center justify-center space-y-4">
           <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
           <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Cargando Factura...</p>
+        </div>
+      } @else if (error()) {
+        <div class="p-20 flex flex-col items-center justify-center space-y-4">
+          <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center">
+            <span class="material-icons !text-[32px]">error_outline</span>
+          </div>
+          <p class="text-gray-900 font-black text-lg">No se pudo cargar la factura</p>
+          <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">El registro no existe o el servidor no está disponible</p>
+          <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">
+            Cerrar
+          </button>
         </div>
       } @else if (invoice(); as inv) {
         <div class="p-8 relative z-10 overflow-y-auto custom-scrollbar">
@@ -276,27 +288,36 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 export class InvoiceDetailDialogOrganism implements OnInit {
   data = input<any>({});
   closed = output<void>();
+  private dialogRef = inject(MatDialogRef<InvoiceDetailDialogOrganism>, { optional: true });
+  private dialogData = inject(MAT_DIALOG_DATA, { optional: true });
   private invoiceService = inject(InvoiceService);
   private salesNoteService = inject(SalesNoteService);
 
   invoice = signal<Invoice | null>(null);
   loading = signal(true);
+  error = signal(false);
   notes = signal<{ creditNotes: CreditNote[], debitNotes: DebitNote[] }>({ creditNotes: [], debitNotes: [] });
   pdfLoading = signal(false);
   dianPdfLoading = signal(false);
 
   ngOnInit() {
-    if (this.data()?.invoiceId) {
-      this.invoiceService.getInvoiceById(this.data().invoiceId).subscribe({
+    // Merge both data sources: inline [data] binding + MatDialog MAT_DIALOG_DATA
+    const merged = { ...(this.dialogData || {}), ...this.data() };
+    if (merged?.invoiceId) {
+      this.invoiceService.getInvoiceById(merged.invoiceId).subscribe({
         next: (inv) => {
           this.invoice.set(inv);
           this.loading.set(false);
           this.loadNotes(inv.id);
         },
-        error: () => this.close()
+        error: () => {
+          this.loading.set(false);
+          this.error.set(true);
+          setTimeout(() => this.close(), 3000);
+        }
       });
-    } else if (this.data()?.invoice) {
-      const inv = this.data().invoice;
+    } else if (merged?.invoice) {
+      const inv = merged.invoice;
       this.invoice.set(inv);
       this.loading.set(false);
       this.loadNotes(inv.id);
@@ -304,6 +325,9 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   }
 
   close() {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    }
     this.closed.emit();
   }
 

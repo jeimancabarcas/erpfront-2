@@ -14,6 +14,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { InvoiceService } from '../../../services/invoice.service';
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-customer-invoices-table-organism',
@@ -29,7 +30,8 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
     MatTooltipModule,
     ReactiveFormsModule,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    ButtonAtom
   ],
   template: `
     <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
@@ -99,22 +101,22 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
               <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50 text-center">Acciones</th>
               <td mat-cell *matCellDef="let inv" class="px-8 !py-6 text-center">
                 <div class="flex justify-center gap-2">
-                  <button 
-                    mat-icon-button 
-                    (click)="downloadInvoicePdf(inv)" 
-                    [matTooltip]="inv.isElectronic ? 'Descargar PDF DIAN' : 'Ver PDF Historial'"
-                    class="!text-red-600 hover:!bg-red-50 transition-all"
+                  <ui-button 
+                    variant="icon"
+                    size="sm"
+                    [tooltip]="inv.isElectronic ? 'Descargar PDF DIAN' : 'Ver PDF Historial'"
+                    (clicked)="downloadInvoicePdf(inv)"
                   >
-                    <mat-icon>picture_as_pdf</mat-icon>
-                  </button>
-                  <button 
-                    mat-icon-button 
-                    (click)="viewInvoiceDetail(inv)" 
-                    matTooltip="Ver detalle completo"
-                    class="!text-indigo-600 hover:!bg-indigo-50 transition-all"
+                    <mat-icon class="!text-red-600">picture_as_pdf</mat-icon>
+                  </ui-button>
+                  <ui-button 
+                    variant="icon"
+                    size="sm"
+                    tooltip="Ver detalle completo"
+                    (clicked)="viewInvoiceDetail(inv)"
                   >
-                    <mat-icon>visibility</mat-icon>
-                  </button>
+                    <mat-icon class="!text-indigo-600">visibility</mat-icon>
+                  </ui-button>
                 </div>
               </td>
             </ng-container>
