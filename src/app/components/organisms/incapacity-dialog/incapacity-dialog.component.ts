@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface IncapacityDialogData {
   days: number | null;
@@ -24,7 +25,8 @@ export interface IncapacityDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -44,6 +46,9 @@ export interface IncapacityDialogResult {
           <span class="material-icons">event_busy</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Incapacidad Médica</h2>
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">

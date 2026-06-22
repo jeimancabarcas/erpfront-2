@@ -11,6 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Invoice } from '../../../models/invoice.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { CreateSalesNoteDto } from '../../../models/sales-note.model';
 
@@ -34,7 +35,8 @@ export interface SalesNoteDialogData {
     MatCheckboxModule,
     MatDividerModule,
     MatSlideToggleModule,
-    CurrencyPipe
+    CurrencyPipe,
+    ButtonAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[850px] shadow-2xl">
@@ -52,9 +54,9 @@ export interface SalesNoteDialogData {
               <p class="text-gray-400 text-[10px] font-semibold uppercase tracking-widest mt-1">Factura {{ data.invoice.invoiceNumber }}</p>
             </div>
           </div>
-          <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-            <mat-icon>close</mat-icon>
-          </button>
+          <ui-button variant="icon" (clicked)="dialogRef.close()" ariaLabel="Cerrar diálogo" class="!text-gray-400">
+            <span class="material-icons">close</span>
+          </ui-button>
         </header>
 
         @if (errorMsg()) {

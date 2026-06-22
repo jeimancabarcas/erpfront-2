@@ -6,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface TransportStandbyDialogData {
   route: TransportRoute;
@@ -19,7 +20,8 @@ export type TransportStandbyResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -39,9 +41,9 @@ export type TransportStandbyResult = boolean | undefined;
           <h2 class="text-2xl font-black tracking-tight mb-1">Registrar Standby</h2>
           <p class="text-indigo-100 text-sm font-medium">Añada tiempo muerto o esperas adicionales al servicio.</p>
         </div>
-        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
-        </button>
+        </ui-button>
       </header>
 
       <div class="p-10 bg-white">

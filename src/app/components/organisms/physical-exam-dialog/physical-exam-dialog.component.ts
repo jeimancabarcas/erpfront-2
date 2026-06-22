@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface PhysicalExamDialogData {
   weight: number | null;
@@ -25,7 +26,8 @@ export interface PhysicalExamDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -45,6 +47,9 @@ export interface PhysicalExamDialogResult {
           <span class="material-icons">monitor_heart</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Examen Físico</h2>
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">

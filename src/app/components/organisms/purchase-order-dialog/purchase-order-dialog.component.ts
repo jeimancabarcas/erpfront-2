@@ -12,6 +12,7 @@ import { SupplierService } from '../../../services/supplier.service';
 import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { PurchaseOrder, CreatePurchaseOrderDto, PurchaseOrderStatus } from '../../../models/purchase-order.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface PurchaseOrderDialogData {
   order?: PurchaseOrder;
@@ -36,6 +37,7 @@ interface PurchaseOrderItemForm {
     MatNativeDateModule,
     ReactiveFormsModule,
     CurrencyPipe,
+    ButtonAtom,
   ],
   template: `
     <div class="flex flex-col h-full max-h-[90vh] p-8">
@@ -53,9 +55,9 @@ interface PurchaseOrderItemForm {
             </p>
           </div>
         </div>
-        <button (click)="close(null)" aria-label="Cerrar diálogo" class="!text-gray-400 hover:!text-gray-600 transition-colors">
+        <ui-button variant="icon" (clicked)="close(null)" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
-        </button>
+        </ui-button>
       </header>
 
       @if (isReadonly()) {

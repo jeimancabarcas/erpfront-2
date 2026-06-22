@@ -31,7 +31,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             </p>
           </div>
         </div>
-        <ui-button variant="icon" (clicked)="onClose()">
+        <ui-button variant="icon" (clicked)="onClose()" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
         </ui-button>
       </header>

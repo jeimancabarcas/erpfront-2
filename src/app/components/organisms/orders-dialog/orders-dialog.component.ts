@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormArray, FormGroup, FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface PrescriptionData {
   code: string;
@@ -34,7 +35,8 @@ export interface OrdersDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -54,6 +56,9 @@ export interface OrdersDialogResult {
           <span class="material-icons">assignment</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Órdenes Médicas</h2>
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">

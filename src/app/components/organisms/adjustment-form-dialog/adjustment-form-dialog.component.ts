@@ -15,6 +15,7 @@ import { SalesNoteService } from '../../../services/sales-note.service';
 import { Invoice } from '../../../models/invoice.model';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
 import { startWith, map } from 'rxjs';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface AdjustmentFormData {
   type?: 'Credit' | 'Debit';
@@ -33,7 +34,8 @@ export interface AdjustmentFormData {
     MatSelectModule, 
     MatButtonModule, 
     MatAutocompleteModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -62,6 +64,9 @@ export interface AdjustmentFormData {
             Emisión de Documento Electrónico
           </p>
         </div>
+        <ui-button variant="icon" (clicked)="dialogRef.close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
       <!-- Scrollable Content -->

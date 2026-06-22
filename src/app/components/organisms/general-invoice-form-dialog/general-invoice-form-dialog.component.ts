@@ -33,6 +33,9 @@ export interface GeneralInvoiceFormResult {
           <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Nueva Factura de Venta</h2>
           <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Servicios y Productos Generales</p>
         </div>
+        <ui-button variant="icon" (clicked)="dialogRef.close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
       <!-- Scrollable Content -->
@@ -217,7 +220,7 @@ export class GeneralInvoiceFormDialogOrganism {
   error = signal<string | null>(null);
   private fb = inject(FormBuilder);
   public financeService = inject(FinanceService);
-  private dialogRef = inject(MatDialogRef<GeneralInvoiceFormDialogOrganism, GeneralInvoiceFormResult>);
+  public dialogRef = inject(MatDialogRef<GeneralInvoiceFormDialogOrganism, GeneralInvoiceFormResult>);
 
   selectedCustomer = signal<FinanceCustomer | null>(null);
 

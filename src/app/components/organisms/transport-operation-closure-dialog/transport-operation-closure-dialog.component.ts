@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface TransportOperationClosureDialogData {
   routeId: string;
@@ -20,7 +21,8 @@ export type TransportOperationClosureResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -44,9 +46,9 @@ export type TransportOperationClosureResult = boolean | undefined;
             {{ data.status === 'Completed' ? 'Por favor ingresa una observación opcional sobre el cierre.' : 'Es obligatorio indicar el motivo de la cancelación.' }}
           </p>
         </div>
-        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
-        </button>
+        </ui-button>
       </header>
 
       <form [formGroup]="closureForm" (ngSubmit)="onSubmit()" class="space-y-6">

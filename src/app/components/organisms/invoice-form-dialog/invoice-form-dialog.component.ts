@@ -16,6 +16,7 @@ import { BillingService } from '../../../services/billing.service';
 import { Invoice } from '../../../models/billing.model';
 import { startWith } from 'rxjs';
 import { PatientSearchMolecule } from '../../molecules/patient-search/patient-search.component';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-invoice-form-dialog',
@@ -33,7 +34,8 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
     MatIconModule,
     MatSlideToggleModule,
     MatChipsModule,
-    PatientSearchMolecule
+    PatientSearchMolecule,
+    ButtonAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh]">
@@ -49,6 +51,9 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
             <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">Nueva Factura Manual</h2>
             <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Gestión Financiera</p>
           </div>
+          <ui-button variant="icon" (clicked)="dialogRef.close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+            <span class="material-icons">close</span>
+          </ui-button>
         </header>
 
         <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()" class="space-y-8">

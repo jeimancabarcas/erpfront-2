@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface TransportExpenseDialogData {
   routeId: string;
@@ -18,7 +19,8 @@ export type TransportExpenseResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -38,9 +40,9 @@ export type TransportExpenseResult = boolean | undefined;
           <h2 class="text-2xl font-black tracking-tight mb-1">Registrar Gasto</h2>
           <p class="text-emerald-100 text-sm font-medium">Reporta un costo operativo de la ruta.</p>
         </div>
-        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
-        </button>
+        </ui-button>
       </header>
 
       <div class="p-10 bg-white">

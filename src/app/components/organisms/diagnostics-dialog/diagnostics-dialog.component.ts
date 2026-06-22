@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, FormArray, FormGroup, FormControl, Va
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface DiagnosticItem {
   code: string;
@@ -26,7 +27,8 @@ export interface DiagnosticsDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -46,6 +48,9 @@ export interface DiagnosticsDialogResult {
           <span class="material-icons">fact_check</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Diagnósticos (CIE-10/11)</h2>
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">

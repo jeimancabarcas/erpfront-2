@@ -4,6 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FinanceService } from '../../../services/finance.service';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface AdjustmentDetailData {
   note: AdjustmentNote;
@@ -15,7 +16,8 @@ export interface AdjustmentDetailData {
   imports: [
     CommonModule,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -63,9 +65,9 @@ export interface AdjustmentDetailData {
               </p>
             </div>
           </div>
-          <button (click)="close()" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors" aria-label="Cerrar">
+          <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
             <span class="material-icons">close</span>
-          </button>
+          </ui-button>
         </header>
 
         <!-- Technical UUID / CUDE -->

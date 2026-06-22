@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ButtonAtom } from '../../atoms/button/button.component';
 import { BillingService } from '../../../services/billing.service';
 import { Appointment } from '../../../services/pediatrics.service';
 import { startWith } from 'rxjs';
@@ -29,7 +30,8 @@ export interface AppointmentConfirmationResult {
     CommonModule,
     ReactiveFormsModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white">
@@ -51,9 +53,9 @@ export interface AppointmentConfirmationResult {
               </div>
             </div>
           </div>
-          <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo" class="ml-auto">
-            <mat-icon>close</mat-icon>
-          </button>
+          <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+            <span class="material-icons">close</span>
+          </ui-button>
         </header>
 
         <form [formGroup]="confirmForm" (ngSubmit)="onConfirm()" class="space-y-6">

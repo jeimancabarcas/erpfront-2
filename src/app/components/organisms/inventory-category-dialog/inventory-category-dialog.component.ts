@@ -19,7 +19,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Categoría' : 'Nueva Categoría' }}
         </h2>
-        <ui-button variant="icon" (clicked)="onClose()">
+        <ui-button variant="icon" (clicked)="onClose()" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
         </ui-button>
       </header>
