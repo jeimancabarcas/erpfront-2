@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialogRef } from '@angular/material/dialog';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { FinanceService } from '../../../services/finance.service';
 import { FinanceInvoice, InvoiceItem, FinanceCustomer, FinanceProduct } from '../../../models/finance.model';
 import { startWith, map } from 'rxjs';
@@ -18,7 +19,8 @@ export interface GeneralInvoiceFormResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white max-w-3xl flex flex-col max-h-[95vh]">
@@ -33,6 +35,9 @@ export interface GeneralInvoiceFormResult {
           <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Nueva Factura de Venta</h2>
           <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">Servicios y Productos Generales</p>
         </div>
+        <ui-button variant="icon" (clicked)="dialogRef.close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
       <!-- Scrollable Content -->
@@ -42,15 +47,13 @@ export interface GeneralInvoiceFormResult {
           <div class="space-y-4">
             @if (!selectedCustomer()) {
               <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100 animate-in fade-in slide-in-from-top duration-300">
-                <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 mb-2 block">Seleccionar Cliente</label>
-                <div class="relative">
-                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">search</span>
-                  <input
-                    [formControl]="invoiceForm.controls.customerSearch"
-                    placeholder="Buscar por nombre o identificación..."
-                    class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
-                  />
-                  @if (showCustomerDropdown()) {
+                <ui-text-input
+                  label="Seleccionar Cliente"
+                  icon="search"
+                  placeholder="Buscar por nombre o identificación..."
+                  [formControl]="invoiceForm.controls.customerSearch"
+                />
+                @if (showCustomerDropdown()) {
                     <div class="absolute left-0 right-0 top-16 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto">
                       @for (customer of filteredCustomers(); track customer.id) {
                         <button
@@ -64,7 +67,6 @@ export interface GeneralInvoiceFormResult {
                       }
                     </div>
                   }
-                </div>
               </div>
             } @else {
               <!-- Selected Customer Premium Card -->
@@ -105,14 +107,13 @@ export interface GeneralInvoiceFormResult {
                   <!-- Line 1: Main Product / Service Search -->
                   <div class="flex gap-3 items-start">
                     <div class="flex-1 relative">
-                      <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">inventory_2</span>
-                      <input
-                          [formControl]="$any(item).controls.description"
+                      <ui-text-input
+                        icon="inventory_2"
                         placeholder="Descripción del Producto o Servicio"
+                        [formControl]="$any(item).controls.description"
                         (focus)="openProductDropdown($index)"
                         (blur)="closeProductDropdown($index)"
                         (input)="filterProducts($index, $event)"
-                        class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
                       />
                       @if (activeProductDropdown() === $index) {
                         <div class="absolute left-0 right-0 top-16 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto">
@@ -137,26 +138,18 @@ export interface GeneralInvoiceFormResult {
 
                   <!-- Line 2: Numerical Inputs Grid -->
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="flex flex-col gap-1.5">
-                      <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Cantidad</label>
-                      <input
-                        type="number"
-                        [formControl]="$any(item).controls.quantity"
-                        class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
-                      />
-                    </div>
+                    <ui-text-input
+                      label="Cantidad"
+                      type="number"
+                      [formControl]="$any(item).controls.quantity"
+                    />
 
-                    <div class="flex flex-col gap-1.5">
-                      <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Precio Unitario</label>
-                      <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                        <input
-                          type="number"
-                          [formControl]="$any(item).controls.unitPrice"
-                          class="w-full h-14 pl-8 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
-                        />
-                      </div>
-                    </div>
+                    <ui-text-input
+                      label="Precio Unitario"
+                      type="number"
+                      icon="attach_money"
+                      [formControl]="$any(item).controls.unitPrice"
+                    />
 
                     <div class="flex flex-col justify-center items-end bg-indigo-50/30 rounded-2xl px-5 py-2 border border-dashed border-indigo-100/50">
                       <span class="text-[9px] text-indigo-400 font-black uppercase tracking-[0.15em]">Subtotal Ítem</span>
@@ -217,7 +210,7 @@ export class GeneralInvoiceFormDialogOrganism {
   error = signal<string | null>(null);
   private fb = inject(FormBuilder);
   public financeService = inject(FinanceService);
-  private dialogRef = inject(MatDialogRef<GeneralInvoiceFormDialogOrganism, GeneralInvoiceFormResult>);
+  public dialogRef = inject(MatDialogRef<GeneralInvoiceFormDialogOrganism, GeneralInvoiceFormResult>);
 
   selectedCustomer = signal<FinanceCustomer | null>(null);
 

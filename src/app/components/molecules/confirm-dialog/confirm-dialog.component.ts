@@ -30,8 +30,11 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             [attr.aria-labelledby]="'dialog-title'"
             [attr.aria-describedby]="'dialog-message'"
           >
-            <div header>
+            <div header class="flex items-center justify-between">
               <h2 id="dialog-title" class="dialog-title">{{ title() }}</h2>
+              <ui-button variant="icon" (clicked)="onCancel()" ariaLabel="Cerrar diálogo">
+                <span class="material-icons">close</span>
+              </ui-button>
             </div>
             <p id="dialog-message" class="dialog-message">{{ message() }}</p>
             <div footer class="dialog-actions">

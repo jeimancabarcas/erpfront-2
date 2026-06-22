@@ -4,6 +4,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface PhysicalExamDialogData {
   weight: number | null;
@@ -25,7 +27,9 @@ export interface PhysicalExamDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    TextInputComponent,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -45,33 +49,33 @@ export interface PhysicalExamDialogResult {
           <span class="material-icons">monitor_heart</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Examen Físico</h2>
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo" class="ml-auto">
+          <span class="material-icons">close</span>
+        </ui-button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="weight">Peso (kg)</label>
-            <div class="relative">
-              <input type="number" step="0.1" formControlName="weight" id="weight" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm pr-10">
-              <span class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm">monitor_weight</span>
-            </div>
-          </div>
+          <ui-text-input
+            label="Peso (kg)"
+            type="number"
+            icon="monitor_weight"
+            [formControl]="form.controls.weight"
+          />
           
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="height">Talla (cm)</label>
-            <div class="relative">
-              <input type="number" formControlName="height" id="height" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm pr-10">
-              <span class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm">straighten</span>
-            </div>
-          </div>
+          <ui-text-input
+            label="Talla (cm)"
+            type="number"
+            icon="straighten"
+            [formControl]="form.controls.height"
+          />
           
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="temperature">Temp (°C)</label>
-            <div class="relative">
-              <input type="number" step="0.1" formControlName="temperature" id="temperature" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm pr-10">
-              <span class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm">thermostat</span>
-            </div>
-          </div>
+          <ui-text-input
+            label="Temp (°C)"
+            type="number"
+            icon="thermostat"
+            [formControl]="form.controls.temperature"
+          />
         </div>
 
         <div>

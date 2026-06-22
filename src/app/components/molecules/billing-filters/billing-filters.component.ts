@@ -2,10 +2,9 @@ import { Component, model, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { BillingProvider } from '../../../models/billing.model';
 
 @Component({
@@ -15,18 +14,19 @@ import { BillingProvider } from '../../../models/billing.model';
     CommonModule,
     FormsModule,
     MatFormFieldModule,
-    MatInputModule,
     MatSelectModule,
-    MatDatepickerModule,
-    MatIconModule
+    MatIconModule,
+    TextInputComponent
   ],
   template: `
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm mb-10">
-      <mat-form-field appearance="outline" class="w-full !m-0">
-        <mat-label>Buscar Paciente</mat-label>
-        <input matInput placeholder="Nombre..." [(ngModel)]="searchQuery">
-        <mat-icon matPrefix class="mr-2 text-gray-400">person_search</mat-icon>
-      </mat-form-field>
+      <ui-text-input
+        label="Buscar Paciente"
+        icon="person_search"
+        placeholder="Nombre..."
+        [value]="searchQuery()"
+        (valueChange)="searchQuery.set($event)"
+      />
 
       <mat-form-field appearance="outline" class="w-full !m-0">
         <mat-label>Prestador / Aseguradora</mat-label>

@@ -4,6 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Appointment } from '../../../services/pediatrics.service';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface AppointmentCancellationDialogData {
   appointment: Appointment;
@@ -17,7 +18,8 @@ export type AppointmentCancellationResult = boolean | undefined;
   imports: [
     CommonModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    ButtonAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white max-w-sm">
@@ -34,9 +36,9 @@ export type AppointmentCancellationResult = boolean | undefined;
             <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">¿Anular Cita Confirmada?</h2>
             <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Acción Irreversible</p>
           </div>
-          <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo" class="absolute top-4 right-4">
-            <mat-icon>close</mat-icon>
-          </button>
+          <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo" class="absolute top-4 right-4">
+            <span class="material-icons">close</span>
+          </ui-button>
         </header>
 
         <div class="space-y-4 mb-8">

@@ -4,8 +4,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { TransportService } from '../../../services/transport.service';
 import { FinanceService } from '../../../services/finance.service';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface TransportDispatchDialogData {
   vehicleId: string;
@@ -19,7 +21,9 @@ export type TransportDispatchResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    TextInputComponent,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -38,9 +42,9 @@ export type TransportDispatchResult = boolean | undefined;
             <h2 class="text-2xl font-black tracking-tight mb-1">Programar Servicio</h2>
             <p class="text-indigo-100 text-sm font-medium">Completa los datos para comprometer el vehículo.</p>
           </div>
-          <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+          <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
             <span class="material-icons">close</span>
-          </button>
+          </ui-button>
         </header>
 
         <div class="p-10 bg-white max-h-[70vh] overflow-y-auto custom-scrollbar">
@@ -59,21 +63,8 @@ export type TransportDispatchResult = boolean | undefined;
                 </div>
               </div>
 
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Origen</label>
-                <div class="relative">
-                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">location_on</span>
-                  <input formControlName="origin" placeholder="Ej: Bogotá, DC" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                </div>
-              </div>
-
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Destino</label>
-                <div class="relative">
-                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">flag</span>
-                  <input formControlName="destination" placeholder="Ej: Medellín, ANT" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                </div>
-              </div>
+              <ui-text-input label="Origen" icon="location_on" placeholder="Ej: Bogotá, DC" [formControl]="dispatchForm.controls.origin" />
+              <ui-text-input label="Destino" icon="flag" placeholder="Ej: Medellín, ANT" [formControl]="dispatchForm.controls.destination" />
 
               <div>
                 <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo</label>
@@ -96,13 +87,7 @@ export type TransportDispatchResult = boolean | undefined;
                 </div>
               </div>
 
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Precio del Servicio</label>
-                <div class="relative">
-                  <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
-                  <input type="number" formControlName="servicePrice" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-                </div>
-              </div>
+              <ui-text-input label="Precio del Servicio" type="number" icon="attach_money" [formControl]="dispatchForm.controls.servicePrice" />
             </div>
 
             <div class="p-6 bg-indigo-50 rounded-3xl space-y-3">

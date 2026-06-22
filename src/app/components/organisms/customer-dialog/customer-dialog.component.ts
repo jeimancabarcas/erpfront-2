@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { CustomerService } from '../../../services/customer.service';
 import { Customer, CreateCustomerDto } from '../../../models/customer.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 
 export interface CustomerDialogData {
   customer?: Customer;
@@ -16,7 +17,8 @@ export interface CustomerDialogData {
   imports: [
     CommonModule,
     FormsModule,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     @if (loading()) {
@@ -54,23 +56,9 @@ export interface CustomerDialogData {
         <form #customerForm="ngForm" class="space-y-6">
           <!-- Datos Básicos -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre Completo / Razón Social</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</span>
-                <input [(ngModel)]="customer().name" name="name" required placeholder="Ej. Juan Pérez o Tech SA"
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-              </div>
-            </div>
+            <ui-text-input label="Nombre Completo / Razón Social" icon="person" [value]="customer().name ?? ''" (valueChange)="updateCustomer('name', $event)" name="name" [required]="true" placeholder="Ej. Juan Pérez o Tech SA" />
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Correo Electrónico</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">email</span>
-                <input type="email" [(ngModel)]="customer().email" name="email" required placeholder="ejemplo@correo.com"
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-              </div>
-            </div>
+            <ui-text-input type="email" label="Correo Electrónico" icon="email" [value]="customer().email ?? ''" (valueChange)="updateCustomer('email', $event)" name="email" [required]="true" placeholder="ejemplo@correo.com" />
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -88,14 +76,7 @@ export interface CustomerDialogData {
               </div>
             </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Número de Documento</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</span>
-                <input [(ngModel)]="customer().documentNumber" name="documentNumber" required placeholder="Ej. 123456789"
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-              </div>
-            </div>
+            <ui-text-input label="Número de Documento" icon="fingerprint" [value]="customer().documentNumber ?? ''" (valueChange)="updateCustomer('documentNumber', $event)" name="documentNumber" [required]="true" placeholder="Ej. 123456789" />
 
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
@@ -111,23 +92,9 @@ export interface CustomerDialogData {
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Teléfono de Contacto</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">phone</span>
-                <input [(ngModel)]="customer().phone" name="phone" placeholder="Ej. +57 300 123 4567"
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-              </div>
-            </div>
+            <ui-text-input label="Teléfono de Contacto" icon="phone" [value]="customer().phone ?? ''" (valueChange)="updateCustomer('phone', $event)" name="phone" placeholder="Ej. +57 300 123 4567" />
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Dirección</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">location_on</span>
-                <input [(ngModel)]="customer().address" name="address" placeholder="Ej. Calle 123 #45-67"
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-              </div>
-            </div>
+            <ui-text-input label="Dirección" icon="location_on" [value]="customer().address ?? ''" (valueChange)="updateCustomer('address', $event)" name="address" placeholder="Ej. Calle 123 #45-67" />
           </div>
         </form>
       </div>
@@ -186,6 +153,10 @@ export class CustomerDialogOrganism implements OnInit {
 
   onClosed() {
     this.dialogRef.close(false);
+  }
+
+  updateCustomer(field: string, value: string): void {
+    this.customer.update(c => ({ ...c, [field]: value }));
   }
 
   save() {

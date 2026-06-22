@@ -4,7 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { TransportService } from '../../../services/transport.service';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface TransportExpenseDialogData {
   routeId: string;
@@ -18,7 +20,9 @@ export type TransportExpenseResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    TextInputComponent,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -38,9 +42,9 @@ export type TransportExpenseResult = boolean | undefined;
           <h2 class="text-2xl font-black tracking-tight mb-1">Registrar Gasto</h2>
           <p class="text-emerald-100 text-sm font-medium">Reporta un costo operativo de la ruta.</p>
         </div>
-        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
-        </button>
+        </ui-button>
       </header>
 
       <div class="p-10 bg-white">
@@ -59,14 +63,7 @@ export type TransportExpenseResult = boolean | undefined;
               </div>
             </div>
 
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Monto</label>
-              <div class="relative">
-                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
-                <input type="number" formControlName="amount" placeholder="0.00" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm">
-                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
-              </div>
-            </div>
+            <ui-text-input label="Monto" type="number" icon="attach_money" placeholder="0.00" [formControl]="expenseForm.controls.amount" />
 
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción / Observaciones</label>

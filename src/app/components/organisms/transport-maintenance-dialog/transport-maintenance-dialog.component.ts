@@ -4,7 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { TransportService } from '../../../services/transport.service';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface TransportMaintenanceDialogData {
   vehicleId: string;
@@ -18,7 +20,9 @@ export type TransportMaintenanceResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule
+    MatButtonModule,
+    TextInputComponent,
+    ButtonAtom
   ],
   template: `
     @if (loading()) {
@@ -38,9 +42,9 @@ export type TransportMaintenanceResult = boolean | undefined;
           <h2 class="text-2xl font-black tracking-tight mb-1">Programar Mantenimiento</h2>
           <p class="text-amber-50 text-sm font-medium italic">Define el servicio técnico para el vehículo {{ data.vehicleId }}.</p>
         </div>
-        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
-        </button>
+        </ui-button>
       </header>
 
       <div class="p-10 bg-white">
@@ -75,14 +79,7 @@ export type TransportMaintenanceResult = boolean | undefined;
               </div>
             </div>
 
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Costo Estimado (Opcional)</label>
-              <div class="relative">
-                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
-                <input type="number" formControlName="cost" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm">
-                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
-              </div>
-            </div>
+            <ui-text-input label="Costo Estimado (Opcional)" type="number" icon="attach_money" [formControl]="maintenanceForm.controls.cost" />
           </div>
 
           <div class="flex gap-4 pt-4">

@@ -6,6 +6,7 @@ import { Invoice } from '../../../models/invoice.model';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { CreditNote, DebitNote } from '../../../models/sales-note.model';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-invoice-detail-dialog',
@@ -13,7 +14,8 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
   imports: [
     CommonModule,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    ButtonAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[950px] shadow-2xl">
@@ -57,9 +59,9 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                 <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Detalle de Operación</p>
               </div>
             </div>
-            <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+            <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
               <span class="material-icons">close</span>
-            </button>
+            </ui-button>
           </header>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
