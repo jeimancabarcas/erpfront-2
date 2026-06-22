@@ -7,6 +7,7 @@ import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
 import { Product } from '../../../models/product.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 
 export interface ProductFormDialogData {
   product?: Product;
@@ -22,7 +23,8 @@ export type ProductFormResult = boolean | undefined;
     FormsModule,
     CurrencyPipe,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     @if (loading()) {
@@ -48,17 +50,9 @@ export type ProductFormResult = boolean | undefined;
 
       <form #productForm="ngForm" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre del Producto</label>
-            <input [(ngModel)]="product().name" name="name" required placeholder="Ej. MacBook Pro 16"
-              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-          </div>
+          <ui-text-input label="Nombre del Producto" icon="inventory_2" [(value)]="product().name" name="name" [required]="true" placeholder="Ej. MacBook Pro 16" />
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">SKU</label>
-            <input [(ngModel)]="product().sku" name="sku" required placeholder="Ej. LAP-123"
-              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-          </div>
+          <ui-text-input label="SKU" icon="barcode" [(value)]="product().sku" name="sku" [required]="true" placeholder="Ej. LAP-123" />
 
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Categoría</label>
@@ -71,32 +65,15 @@ export type ProductFormResult = boolean | undefined;
             </select>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Stock Actual</label>
-            <input type="number" [(ngModel)]="product().currentStock" name="currentStock" required min="0"
-              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-          </div>
+          <ui-text-input type="number" label="Stock Actual" icon="inventory" [(value)]="product().currentStock" name="currentStock" [required]="true" placeholder="0" />
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Stock Mínimo</label>
-            <input type="number" [(ngModel)]="product().minStock" name="minStock" required min="0"
-              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-          </div>
+          <ui-text-input type="number" label="Stock Mínimo" icon="warning" [(value)]="product().minStock" name="minStock" [required]="true" placeholder="0" />
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Stock Máximo</label>
-            <input type="number" [(ngModel)]="product().maxStock" name="maxStock" required min="0"
-              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-          </div>
+          <ui-text-input type="number" label="Stock Máximo" icon="inventory_2" [(value)]="product().maxStock" name="maxStock" [required]="true" placeholder="0" />
 
           @if (isEditMode) {
             <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top duration-300">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Precio de Venta</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">payments</span>
-                <input type="number" [(ngModel)]="product().sellingPrice" name="sellingPrice" required min="0" placeholder="Ej. 15000"
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-              </div>
+              <ui-text-input type="number" label="Precio de Venta" icon="sell" [(value)]="product().sellingPrice" name="sellingPrice" [required]="true" placeholder="Ej. 15000" />
               <span class="text-xs text-indigo-400 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</span>
             </div>
           }

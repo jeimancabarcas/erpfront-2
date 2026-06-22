@@ -56,9 +56,9 @@ export interface CustomerDialogData {
         <form #customerForm="ngForm" class="space-y-6">
           <!-- Datos Básicos -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ui-text-input label="Nombre Completo / Razón Social" icon="person" [(value)]="customer().name" name="name" required placeholder="Ej. Juan Pérez o Tech SA" />
+            <ui-text-input label="Nombre Completo / Razón Social" icon="person" [value]="customer().name ?? ''" (valueChange)="updateCustomer('name', $event)" name="name" [required]="true" placeholder="Ej. Juan Pérez o Tech SA" />
 
-            <ui-text-input type="email" label="Correo Electrónico" icon="email" [(value)]="customer().email" name="email" required placeholder="ejemplo@correo.com" />
+            <ui-text-input type="email" label="Correo Electrónico" icon="email" [value]="customer().email ?? ''" (valueChange)="updateCustomer('email', $event)" name="email" [required]="true" placeholder="ejemplo@correo.com" />
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -76,7 +76,7 @@ export interface CustomerDialogData {
               </div>
             </div>
 
-            <ui-text-input label="Número de Documento" icon="fingerprint" [(value)]="customer().documentNumber" name="documentNumber" required placeholder="Ej. 123456789" />
+            <ui-text-input label="Número de Documento" icon="fingerprint" [value]="customer().documentNumber ?? ''" (valueChange)="updateCustomer('documentNumber', $event)" name="documentNumber" [required]="true" placeholder="Ej. 123456789" />
 
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
@@ -92,9 +92,9 @@ export interface CustomerDialogData {
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ui-text-input label="Teléfono de Contacto" icon="phone" [(value)]="customer().phone" name="phone" placeholder="Ej. +57 300 123 4567" />
+            <ui-text-input label="Teléfono de Contacto" icon="phone" [value]="customer().phone ?? ''" (valueChange)="updateCustomer('phone', $event)" name="phone" placeholder="Ej. +57 300 123 4567" />
 
-            <ui-text-input label="Dirección" icon="location_on" [(value)]="customer().address" name="address" placeholder="Ej. Calle 123 #45-67" />
+            <ui-text-input label="Dirección" icon="location_on" [value]="customer().address ?? ''" (valueChange)="updateCustomer('address', $event)" name="address" placeholder="Ej. Calle 123 #45-67" />
           </div>
         </form>
       </div>
@@ -153,6 +153,10 @@ export class CustomerDialogOrganism implements OnInit {
 
   onClosed() {
     this.dialogRef.close(false);
+  }
+
+  updateCustomer(field: string, value: string): void {
+    this.customer.update(c => ({ ...c, [field]: value }));
   }
 
   save() {

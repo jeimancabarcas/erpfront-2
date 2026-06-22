@@ -1,41 +1,19 @@
 import { Component, inject, signal } from '@angular/core';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [MatFormFieldModule, MatInputModule, MatButtonModule, FormsModule],
+  imports: [MatButtonModule, TextInputComponent],
   template: `
     <div class="flex flex-col gap-5 w-full">
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Correo Electrónico</mat-label>
-        <input 
-          matInput 
-          type="email" 
-          placeholder="ejemplo@correo.com" 
-          [(ngModel)]="email"
-          name="email"
-          required
-        />
-      </mat-form-field>
+      <ui-text-input type="email" label="Correo Electrónico" icon="email" [value]="email()" (valueChange)="email.set($event)" placeholder="ejemplo@correo.com" />
       
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Contraseña</mat-label>
-        <input 
-          matInput 
-          type="password" 
-          placeholder="••••••••" 
-          [(ngModel)]="password"
-          name="password"
-          required
-        />
-      </mat-form-field>
+      <ui-text-input type="password" label="Contraseña" icon="lock" [value]="password()" (valueChange)="password.set($event)" placeholder="••••••••" />
 
       <div class="pt-2">
         <button 
@@ -58,9 +36,6 @@ import { Router } from '@angular/router';
     :host {
       display: block;
       width: 100%;
-    }
-    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
-      display: none;
     }
   `]
 })
