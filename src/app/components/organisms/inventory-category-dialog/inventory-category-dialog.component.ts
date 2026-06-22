@@ -14,7 +14,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     ButtonAtom
   ],
   template: `
-    <div class="p-2">
+    <div class="p-8">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Categoría' : 'Nueva Categoría' }}

@@ -26,6 +26,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             class="dialog-card"
             role="alertdialog"
             aria-modal="true"
+            padding="2rem"
             [attr.aria-labelledby]="'dialog-title'"
             [attr.aria-describedby]="'dialog-message'"
           >

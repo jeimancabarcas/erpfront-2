@@ -16,9 +16,9 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     ButtonAtom
   ],
   template: `
-    <div class="flex flex-col h-full max-h-[90vh]">
+    <div class="flex flex-col h-full max-h-[90vh] p-8">
       <!-- Header -->
-      <header class="flex justify-between items-center mb-8 px-2">
+      <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
             <span class="material-icons !text-3xl">history</span>
@@ -38,7 +38,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
       </header>
 
       <!-- Info del Producto -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 px-2">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div class="bg-gray-50 p-6 rounded-[28px] border border-gray-100">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Precio Medio Ponderado (PMP)</p>
           <p class="text-3xl font-black text-indigo-600 tracking-tighter">
@@ -53,8 +53,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto px-2 custom-scrollbar">
-        <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-4 px-2">Historial de Ingresos</h3>
+      <div class="flex-1 overflow-y-auto custom-scrollbar">
+        <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-4">Historial de Ingresos</h3>
         
         @if (isLoading()) {
           <div class="flex flex-col items-center justify-center p-20 gap-4">
@@ -109,7 +109,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         }
       </div>
 
-      <div class="flex justify-end pt-6 px-2 border-t border-gray-100 mt-4">
+      <div class="flex justify-end pt-6 border-t border-gray-100 mt-4">
         <ui-button
           variant="primary"
           (clicked)="onClose()"

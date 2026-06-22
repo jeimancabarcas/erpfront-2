@@ -30,8 +30,8 @@ export interface CustomerDialogData {
         <button (click)="onClosed()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
       </div>
     } @else {
-    <div class="flex flex-col h-full max-h-[90vh]">
-      <header class="flex justify-between items-center mb-8 px-2">
+    <div class="flex flex-col h-full max-h-[90vh] p-8">
+      <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
             <span class="material-icons !text-3xl">person_add</span>
@@ -50,7 +50,7 @@ export interface CustomerDialogData {
         </ui-button>
       </header>
 
-      <div class="flex-1 overflow-y-auto px-2 custom-scrollbar">
+      <div class="flex-1 overflow-y-auto custom-scrollbar">
         <form #customerForm="ngForm" class="space-y-6">
           <!-- Datos Básicos -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,7 +132,7 @@ export interface CustomerDialogData {
         </form>
       </div>
 
-      <footer class="flex justify-end gap-3 mt-8 px-2 pt-4 border-t border-gray-100">
+      <footer class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
         <ui-button variant="outline" (clicked)="onClosed()">
           Cancelar
         </ui-button>

@@ -30,7 +30,7 @@ export interface SupplierDialogData {
         <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
       </div>
     } @else {
-    <div class="p-2">
+    <div class="p-8">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Proveedor' : 'Nuevo Proveedor' }}

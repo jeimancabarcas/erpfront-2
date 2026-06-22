@@ -15,9 +15,9 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     ButtonAtom
   ],
   template: `
-    <div class="flex flex-col h-full max-h-[90vh]">
+    <div class="flex flex-col h-full max-h-[90vh] p-8">
       <!-- Header -->
-      <header class="flex justify-between items-center mb-6 px-2">
+      <header class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
             <span class="material-icons !text-3xl">receipt_long</span>
@@ -66,7 +66,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         }
       </div>
 
-      <div class="flex-1 overflow-y-auto px-2 custom-scrollbar">
+      <div class="flex-1 overflow-y-auto custom-scrollbar">
         <!-- Seccion de carga de comprobante (ARRIBA) -->
         @if (showReceiptUpload()) {
           <div class="bg-emerald-50 rounded-3xl p-8 border-2 border-dashed border-emerald-200 mb-8 animate-in zoom-in duration-300">
@@ -147,7 +147,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
 
         <!-- Tabla de Items -->
         <div class="mb-8">
-          <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-4 px-2">Productos Solicitados</h3>
+          <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-4">Productos Solicitados</h3>
           <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
@@ -196,7 +196,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
       </div>
 
       <!-- Botones de Accion segun estado -->
-      <div class="flex justify-end gap-3 pt-6 px-2 border-t border-gray-100 mt-4">
+      <div class="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-4">
         <!-- Boton Cancelar (Solo en Borrador o Enviado) -->
         @if (['DRAFT', 'SENT'].includes(order().status)) {
           <ui-button

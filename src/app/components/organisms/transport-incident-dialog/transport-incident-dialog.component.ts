@@ -32,7 +32,7 @@ export type TransportIncidentResult = boolean | undefined;
         <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
       </div>
     } @else {
-    <div class="p-6">
+    <div class="p-8">
       <header class="flex justify-between items-center mb-8">
         <div>
           <h2 class="text-2xl font-black text-gray-900">Reportar Novedad</h2>

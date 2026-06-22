@@ -38,8 +38,8 @@ interface PurchaseOrderItemForm {
     CurrencyPipe,
   ],
   template: `
-    <div class="flex flex-col h-full max-h-[90vh]">
-      <header class="flex justify-between items-center mb-8 px-2">
+    <div class="flex flex-col h-full max-h-[90vh] p-8">
+      <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
             <span class="material-icons text-3xl">shopping_cart</span>
@@ -77,7 +77,7 @@ interface PurchaseOrderItemForm {
         </div>
       }
 
-      <div class="flex-1 px-2 overflow-y-auto custom-scrollbar">
+      <div class="flex-1 overflow-y-auto custom-scrollbar">
         <fieldset [disabled]="isReadonly()" class="contents">
           <form [formGroup]="form" class="space-y-8 pb-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -193,7 +193,7 @@ interface PurchaseOrderItemForm {
         </fieldset>
       </div>
 
-      <footer class="flex justify-end gap-3 mt-8 px-2 pt-4 border-t border-gray-100">
+      <footer class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
         <button mat-button (click)="close(null)" class="!rounded-full !h-12 !px-6 !font-bold">
           Cancelar
         </button>

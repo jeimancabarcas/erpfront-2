@@ -15,7 +15,7 @@ export interface ConfirmDeleteData {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="p-2 text-center">
+    <div class="p-8 text-center">
       <div class="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
         <span class="material-icons !text-[40px] !w-10 !h-10">delete_forever</span>
       </div>
