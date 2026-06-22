@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, map } from 'rxjs';
 
 export interface StockItem {
   id: string;
@@ -13,6 +13,13 @@ export interface StockItem {
   maxStock: number;
   unit: string;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
+}
+
+export interface ValuationStats {
+  totalValue: number;
+  totalStock: number;
+  productCount: number;
+  averageCostPerUnit: number;
 }
 
 export interface Movement {
@@ -33,6 +40,7 @@ export interface Movement {
 export class InventoryService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/inventory/movements`;
+  private inventoryUrl = `${environment.apiUrl}/inventory`;
 
   private _stock = signal<StockItem[]>([
     { id: '1', name: 'Laptop Pro 14', sku: 'LAP-001', category: 'Electrónica', quantity: 45, minStock: 10, maxStock: 100, unit: 'unidades', status: 'In Stock' },
@@ -50,6 +58,10 @@ export class InventoryService {
     return this.http.get<Movement[]>(this.apiUrl).pipe(
       tap(data => this._movements.set(data))
     );
+  }
+
+  getValuation(): Observable<ValuationStats> {
+    return this.http.get<ValuationStats>(`${this.inventoryUrl}/stats/valuation`);
   }
 
   addProduct(product: StockItem) {
