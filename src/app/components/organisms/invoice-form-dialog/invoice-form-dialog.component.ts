@@ -3,14 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 import { BillingService } from '../../../services/billing.service';
 import { Invoice } from '../../../models/billing.model';
@@ -26,8 +25,6 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     FormsModule,
     ReactiveFormsModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatSelectModule,
     MatButtonModule,
     MatAutocompleteModule,
     MatIconModule,
@@ -35,7 +32,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     MatChipsModule,
     PatientSearchMolecule,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh]">
@@ -73,18 +71,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
               <mat-slide-toggle formControlName="isParticular" color="primary"></mat-slide-toggle>
             </div>
 
-            <!-- Appointment Type Selection -->
-            <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Tipo de Consulta / Cita</label>
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <mat-select formControlName="appointmentType">
-                  <mat-option value="Control">Consulta de Control</mat-option>
-                  <mat-option value="Urgency">Urgencia</mat-option>
-                  <mat-option value="Specialist">Especialista</mat-option>
-                </mat-select>
-                <mat-icon matPrefix class="mr-2 text-gray-400">category</mat-icon>
-              </mat-form-field>
-            </div>
+            <ui-select label="Tipo de Consulta / Cita" [options]="appointmentTypeOptions" [formControl]="invoiceForm.controls.appointmentType" />
           </div>
 
           <!-- Patient Selection -->
@@ -97,19 +84,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
 
           @if (!isParticular()) {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top duration-300">
-              <!-- Provider Selection -->
-              <div class="space-y-2">
-                <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Responsable de Pago</label>
-                <mat-form-field appearance="outline" class="w-full !m-0">
-                  <mat-label>Seleccione Prestador</mat-label>
-                  <mat-select formControlName="provider">
-                    @for (provider of billingService.providers(); track provider.id) {
-                      <mat-option [value]="provider.name">{{provider.name}}</mat-option>
-                    }
-                  </mat-select>
-                  <mat-icon matPrefix class="mr-2 text-gray-400">account_balance</mat-icon>
-                </mat-form-field>
-              </div>
+              <ui-select label="Responsable de Pago" placeholder="Seleccione Prestador" [options]="providerOptions()" [formControl]="invoiceForm.controls.provider" />
 
               <!-- Authorization Number -->
               <ui-text-input
@@ -197,6 +172,16 @@ export class InvoiceFormDialogOrganism {
   private fb = inject(FormBuilder);
   public dialogRef = inject(MatDialogRef<InvoiceFormDialogOrganism>);
   public billingService = inject(BillingService);
+
+  appointmentTypeOptions: SelectOption[] = [
+    { value: 'Control', label: 'Consulta de Control' },
+    { value: 'Urgency', label: 'Urgencia' },
+    { value: 'Specialist', label: 'Especialista' },
+  ];
+
+  providerOptions = computed<SelectOption[]>(() =>
+    this.billingService.providers().map(p => ({ value: p.name, label: p.name }))
+  );
 
   invoiceForm = this.fb.group({
     patient: [null as Patient | null, Validators.required],

@@ -5,11 +5,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { FinanceService } from '../../../services/finance.service';
 import { InvoiceService } from '../../../services/invoice.service';
 import { SalesNoteService } from '../../../services/sales-note.service';
@@ -32,12 +32,12 @@ export interface AdjustmentFormData {
     MatDialogModule, 
     MatFormFieldModule, 
     MatInputModule, 
-    MatSelectModule, 
     MatButtonModule, 
     MatAutocompleteModule,
     MatSnackBarModule,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -148,20 +148,7 @@ export interface AdjustmentFormData {
           </div>
 
           <!-- DIAN Correction Concept -->
-          <div class="space-y-3">
-            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Concepto de Corrección (DIAN)</label>
-            <mat-form-field appearance="outline" class="w-full !m-0">
-              <mat-label>Seleccione el concepto</mat-label>
-              <mat-select formControlName="correctionConceptCode" required>
-                @for (concept of correctionConcepts(); track concept.code) {
-                  <mat-option [value]="concept.code">
-                    {{ concept.label }}
-                  </mat-option>
-                }
-              </mat-select>
-              <span class="material-icons" matPrefix class="mr-2 text-gray-400">info</span>
-            </mat-form-field>
-          </div>
+          <ui-select label="Concepto de Corrección (DIAN)" placeholder="Seleccione el concepto" [options]="correctionConceptOptions()" [formControl]="adjustmentForm.controls.correctionConceptCode" />
 
           <!-- Amount Selection -->
           <div class="space-y-3">
@@ -270,6 +257,10 @@ export class AdjustmentFormDialogOrganism implements OnInit {
       ];
     }
   });
+
+  correctionConceptOptions = computed<SelectOption[]>(() =>
+    this.correctionConcepts().map(c => ({ value: c.code, label: c.label }))
+  );
 
   constructor() {
     if (this.data.invoice) {

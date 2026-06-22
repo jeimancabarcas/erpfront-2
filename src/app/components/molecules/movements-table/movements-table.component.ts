@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { TextInputComponent } from '../../../components/atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../../components/atoms/select/select.component';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { InventoryService } from '../../../services/inventory.service';
 
@@ -20,25 +20,18 @@ import { InventoryService } from '../../../services/inventory.service';
     MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatSelectModule,
     MatFormFieldModule,
     MatButtonModule,
     FormsModule,
     TextInputComponent,
+    SelectAtom,
   ],
   template: `
     <div class="flex flex-col">
       <!-- Filters -->
       <div class="flex flex-col sm:flex-row sm:items-center gap-3 p-6 pb-4 min-w-0">
         <div class="flex flex-wrap items-center gap-3 min-w-0">
-          <mat-form-field appearance="outline" class="!w-[140px]" subscriptSizing="dynamic">
-            <mat-label>Tipo</mat-label>
-            <mat-select [(ngModel)]="filterType" (selectionChange)="applyFilters()">
-              <mat-option value="">Todos</mat-option>
-              <mat-option value="In">Entrada</mat-option>
-              <mat-option value="Out">Salida</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <ui-select placeholder="Tipo" [options]="filterTypeOptions" [value]="filterType()" (valueChange)="filterType.set($event); applyFilters()" class="!w-[140px]" />
 
           <div class="flex items-center gap-2">
             <ui-text-input icon="search" [value]="filterUser()" (valueChange)="onUserInput($event)" placeholder="Filtrar por usuario" class="!w-[200px]" />
@@ -152,6 +145,12 @@ export class MovementsTableMolecule implements OnInit, OnDestroy {
   displayedColumns: string[] = ['id', 'product', 'type', 'quantity', 'origin', 'destination', 'operator', 'date'];
 
   filterType = signal('');
+
+  filterTypeOptions: SelectOption[] = [
+    { value: '', label: 'Todos' },
+    { value: 'In', label: 'Entrada' },
+    { value: 'Out', label: 'Salida' },
+  ];
   filterUser = signal('');
   pageSize = signal(10);
   pageIndex = signal(1);

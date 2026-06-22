@@ -4,13 +4,13 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormArray, F
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { Invoice } from '../../../models/invoice.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SalesNoteService } from '../../../services/sales-note.service';
@@ -30,7 +30,6 @@ export interface SalesNoteDialogData {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
@@ -38,7 +37,8 @@ export interface SalesNoteDialogData {
     MatSlideToggleModule,
     CurrencyPipe,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[850px] shadow-2xl">
@@ -73,39 +73,9 @@ export interface SalesNoteDialogData {
 
         <form [formGroup]="noteForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Note Type (Credit / Debit) -->
-            <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Tipo de Nota</label>
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <mat-select formControlName="noteType">
-                  <mat-option value="credit">Nota de Crédito (Anular / Devolver)</mat-option>
-                  <mat-option value="debit">Nota de Débito (Cobro adicional)</mat-option>
-                </mat-select>
-                <mat-icon matPrefix class="mr-2 text-gray-400">compare_arrows</mat-icon>
-              </mat-form-field>
-            </div>
+            <ui-select label="Tipo de Nota" [options]="noteTypeOptions" [formControl]="noteForm.controls.noteType" />
 
-            <!-- Concept Code Selection -->
-            <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Concepto de Corrección</label>
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <mat-select formControlName="correctionConceptCode">
-                  @if (noteType() === 'credit') {
-                    <mat-option value="1">1 - Hábiles de anulación de factura</mat-option>
-                    <mat-option value="2">2 - Anulación total de factura</mat-option>
-                    <mat-option value="3">3 - Rebaja o descuento parcial</mat-option>
-                    <mat-option value="4">4 - Ajuste de precio</mat-option>
-                    <mat-option value="5">5 - Otros</mat-option>
-                  } @else {
-                    <mat-option value="1">1 - Intereses</mat-option>
-                    <mat-option value="2">2 - Gastos por cobrar</mat-option>
-                    <mat-option value="3">3 - Cambio del valor</mat-option>
-                    <mat-option value="4">4 - Otros</mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix class="mr-2 text-gray-400">category</mat-icon>
-              </mat-form-field>
-            </div>
+            <ui-select label="Concepto de Corrección" [options]="correctionOptions()" [formControl]="noteForm.controls.correctionConceptCode" />
           </div>
 
           <!-- Adjust Mode Toggle -->
@@ -317,6 +287,29 @@ export class SalesNoteFormDialogOrganism implements OnInit {
 
   noteType = signal<'credit' | 'debit'>('credit');
   isPartial = signal<boolean>(false);
+
+  noteTypeOptions: SelectOption[] = [
+    { value: 'credit', label: 'Nota de Crédito (Anular / Devolver)' },
+    { value: 'debit', label: 'Nota de Débito (Cobro adicional)' },
+  ];
+
+  correctionOptions = computed<SelectOption[]>(() => {
+    if (this.noteType() === 'credit') {
+      return [
+        { value: '1', label: '1 - Hábiles de anulación de factura' },
+        { value: '2', label: '2 - Anulación total de factura' },
+        { value: '3', label: '3 - Rebaja o descuento parcial' },
+        { value: '4', label: '4 - Ajuste de precio' },
+        { value: '5', label: '5 - Otros' },
+      ];
+    }
+    return [
+      { value: '1', label: '1 - Intereses' },
+      { value: '2', label: '2 - Gastos por cobrar' },
+      { value: '3', label: '3 - Cambio del valor' },
+      { value: '4', label: '4 - Otros' },
+    ];
+  });
 
   get itemsFormArray(): FormArray {
     return this.noteForm.get('items') as FormArray;

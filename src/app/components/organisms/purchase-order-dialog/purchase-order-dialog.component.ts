@@ -2,13 +2,13 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule, formatDate, CurrencyPipe } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { SupplierService } from '../../../services/supplier.service';
 import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
@@ -32,7 +32,6 @@ interface PurchaseOrderItemForm {
     CommonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,
@@ -40,6 +39,7 @@ interface PurchaseOrderItemForm {
     CurrencyPipe,
     ButtonAtom,
     TextInputComponent,
+    SelectAtom,
   ],
   template: `
     <div class="flex flex-col h-full max-h-[90vh] p-8">
@@ -85,15 +85,7 @@ interface PurchaseOrderItemForm {
         <fieldset [disabled]="isReadonly()" class="contents">
           <form [formGroup]="form" class="space-y-8 pb-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Proveedor</mat-label>
-                <mat-select formControlName="supplierId">
-                  @for (supplier of suppliers(); track supplier.id) {
-                    <mat-option [value]="supplier.id">{{ supplier.name }}</mat-option>
-                  }
-                </mat-select>
-                <span matPrefix class="material-icons text-gray-400 mr-2">business</span>
-              </mat-form-field>
+              <ui-select label="Proveedor" [options]="supplierOptions()" [formControl]="form.controls.supplierId" />
 
               <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Fecha de Pedido</mat-label>
@@ -134,19 +126,7 @@ interface PurchaseOrderItemForm {
                       </button>
 
                       <div class="flex flex-col gap-6">
-                        <div class="w-full">
-                          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-                            <mat-label>Producto</mat-label>
-                            <mat-select formControlName="productId">
-                              @for (prod of products(); track prod.id) {
-                                <mat-option [value]="prod.id" [disabled]="isProductSelected(prod.id, i)">
-                                  {{ prod.name }} ({{ prod.sku }})
-                                </mat-option>
-                              }
-                            </mat-select>
-                            <span matPrefix class="material-icons text-gray-400 mr-2">inventory_2</span>
-                          </mat-form-field>
-                        </div>
+                        <ui-select label="Producto" [options]="productOptions()" [formControl]="$any(itemGroup).controls.productId" class="w-full" />
 
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                           <div class="md:col-span-3">
@@ -233,6 +213,14 @@ export class PurchaseOrderDialogOrganism implements OnInit {
 
   suppliers = this.supplierService.suppliers;
   products = this.productService.products;
+
+  supplierOptions = computed<SelectOption[]>(() =>
+    this.suppliers().map(s => ({ value: s.id, label: s.name }))
+  );
+
+  productOptions = computed<SelectOption[]>(() =>
+    this.products().map(p => ({ value: p.id, label: `${p.name} (${p.sku})` }))
+  );
 
   form = this.fb.group({
     supplierId: ['', Validators.required],

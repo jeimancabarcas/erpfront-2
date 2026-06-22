@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 @Component({
   selector: 'app-appointment-filters',
@@ -17,11 +17,11 @@ import { TextInputComponent } from '../../atoms/text-input/text-input.component'
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatDatepickerModule,
     MatIconModule,
     MatButtonModule,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm">
@@ -34,16 +34,7 @@ import { TextInputComponent } from '../../atoms/text-input/text-input.component'
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="!m-0 w-full">
-        <mat-label>Estado</mat-label>
-        <mat-select [(ngModel)]="statusFilter">
-          <mat-option value="all">Todos los estados</mat-option>
-          <mat-option value="Scheduled">Programado</mat-option>
-          <mat-option value="Confirmed">Confirmado</mat-option>
-          <mat-option value="Cancelled">Cancelado</mat-option>
-          <mat-option value="Completed">Completado</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <ui-select placeholder="Todos los estados" [options]="statusOptions" [(value)]="statusFilter" />
 
       <div class="flex items-center gap-2">
         <button mat-stroked-button class="!rounded-2xl !h-14 w-full !border-gray-100 text-gray-500 font-bold" (click)="clear.emit()">
@@ -61,6 +52,14 @@ export class AppointmentFiltersMolecule {
   searchQuery = model<string>('');
   statusFilter = model<string>('all');
   dateFilter = model<Date | null>(null);
+
+  statusOptions: SelectOption[] = [
+    { value: 'all', label: 'Todos los estados' },
+    { value: 'Scheduled', label: 'Programado' },
+    { value: 'Confirmed', label: 'Confirmado' },
+    { value: 'Cancelled', label: 'Cancelado' },
+    { value: 'Completed', label: 'Completado' },
+  ];
   
   clear = output<void>();
 }

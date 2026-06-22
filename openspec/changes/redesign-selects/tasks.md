@@ -52,16 +52,16 @@ Chain strategy: pending
 
 ## Phase 3: `<mat-select>` → `<ui-select>` (~20 selects)
 
-- [ ] 3.1 `molecules/appointment-filters` — statusFilter
-- [ ] 3.2 `molecules/billing-filters` — providerFilter, statusFilter
-- [ ] 3.3 `molecules/movements-table` — filterType
-- [ ] 3.4 `organisms/adjustment-form-dialog` — correctionConceptCode
-- [ ] 3.5 `organisms/appointment-form` — type
-- [ ] 3.6 `organisms/invoice-form-dialog` — appointmentType, provider
-- [ ] 3.7 `organisms/sales-note-form-dialog` — noteType, correctionConceptCode
-- [ ] 3.8 `organisms/purchase-order-dialog` — supplierId, productId
+- [x] 3.1 `molecules/appointment-filters` — statusFilter
+- [x] 3.2 `molecules/billing-filters` — providerFilter, statusFilter
+- [x] 3.3 `molecules/movements-table` — filterType
+- [x] 3.4 `organisms/adjustment-form-dialog` — correctionConceptCode
+- [x] 3.5 `organisms/appointment-form` — type
+- [x] 3.6 `organisms/invoice-form-dialog` — appointmentType, provider
+- [x] 3.7 `organisms/sales-note-form-dialog` — noteType, correctionConceptCode
+- [x] 3.8 `organisms/purchase-order-dialog` — supplierId, productId
 - [ ] 3.9 Remove `MatSelectModule` imports where unused per component
-- [ ] 3.10 `organisms/general-invoice-form-dialog` — remaining selects
+- [x] 3.10 `organisms/general-invoice-form-dialog` — remaining selects (none needed)
 
 ## Phase 4: PatientRegistrationWizard (High Risk)
 

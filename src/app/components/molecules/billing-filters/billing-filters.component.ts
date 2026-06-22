@@ -1,10 +1,9 @@
-import { Component, model, input } from '@angular/core';
+import { Component, model, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { BillingProvider } from '../../../models/billing.model';
 
 @Component({
@@ -13,10 +12,9 @@ import { BillingProvider } from '../../../models/billing.model';
   imports: [
     CommonModule,
     FormsModule,
-    MatFormFieldModule,
-    MatSelectModule,
     MatIconModule,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm mb-10">
@@ -28,27 +26,9 @@ import { BillingProvider } from '../../../models/billing.model';
         (valueChange)="searchQuery.set($event)"
       />
 
-      <mat-form-field appearance="outline" class="w-full !m-0">
-        <mat-label>Prestador / Aseguradora</mat-label>
-        <mat-select [(ngModel)]="providerFilter">
-          <mat-option value="all">Todos los prestadores</mat-option>
-          @for (p of providers(); track p.id) {
-            <mat-option [value]="p.name">{{p.name}}</mat-option>
-          }
-        </mat-select>
-        <mat-icon matPrefix class="mr-2 text-gray-400">account_balance</mat-icon>
-      </mat-form-field>
+      <ui-select label="Prestador / Aseguradora" placeholder="Todos los prestadores" [options]="providerOptions()" [(value)]="providerFilter" />
 
-      <mat-form-field appearance="outline" class="w-full !m-0">
-        <mat-label>Estado de Factura</mat-label>
-        <mat-select [(ngModel)]="statusFilter">
-          <mat-option value="all">Todos los estados</mat-option>
-          <mat-option value="Pending">Pendiente por Facturar</mat-option>
-          <mat-option value="Invoiced">Facturado (Enviado)</mat-option>
-          <mat-option value="Paid">Pagado</mat-option>
-        </mat-select>
-        <mat-icon matPrefix class="mr-2 text-gray-400">payments</mat-icon>
-      </mat-form-field>
+      <ui-select label="Estado de Factura" placeholder="Todos los estados" [options]="statusOptions" [(value)]="statusFilter" />
     </div>
   `,
   styles: [`
@@ -61,4 +41,17 @@ export class BillingFiltersMolecule {
   searchQuery = model<string>('');
   providerFilter = model<string>('all');
   statusFilter = model<string>('all');
+
+  providerOptions = computed<SelectOption[]>(() => {
+    const opts: SelectOption[] = [{ value: 'all', label: 'Todos los prestadores' }];
+    this.providers().forEach(p => opts.push({ value: p.name, label: p.name }));
+    return opts;
+  });
+
+  statusOptions: SelectOption[] = [
+    { value: 'all', label: 'Todos los estados' },
+    { value: 'Pending', label: 'Pendiente por Facturar' },
+    { value: 'Invoiced', label: 'Facturado (Enviado)' },
+    { value: 'Paid', label: 'Pagado' },
+  ];
 }

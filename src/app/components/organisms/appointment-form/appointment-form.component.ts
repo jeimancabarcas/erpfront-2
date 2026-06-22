@@ -4,11 +4,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTimepickerModule } from '@angular/material/timepicker';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { PediatricsService, Appointment, Patient } from '../../../services/pediatrics.service';
 import { PatientSearchMolecule } from '../../molecules/patient-search/patient-search.component';
 
@@ -21,12 +21,12 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatDatepickerModule,
     MatTimepickerModule,
     MatButtonModule,
     MatIconModule,
-    PatientSearchMolecule
+    PatientSearchMolecule,
+    SelectAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white">
@@ -77,17 +77,7 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
           </div>
 
           <!-- Type -->
-          <div class="space-y-2">
-            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Tipo de Consulta</label>
-            <mat-form-field appearance="outline" class="w-full !m-0">
-              <mat-select formControlName="type" required>
-                <mat-option value="Control">Consulta de Control</mat-option>
-                <mat-option value="Urgency">Urgencia Pediátrica</mat-option>
-                <mat-option value="Specialist">Especialista</mat-option>
-              </mat-select>
-              <mat-icon matPrefix class="mr-2 text-gray-400">category</mat-icon>
-            </mat-form-field>
-          </div>
+          <ui-select label="Tipo de Consulta" [options]="typeOptions" [formControl]="appointmentForm.controls.type" />
 
           <div class="pt-6 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
             <button 
@@ -122,6 +112,12 @@ export class AppointmentFormOrganism {
   private fb = inject(FormBuilder);
   public pediatricsService = inject(PediatricsService);
   public dialogRef = inject(MatDialogRef<AppointmentFormOrganism>);
+
+  typeOptions: SelectOption[] = [
+    { value: 'Control', label: 'Consulta de Control' },
+    { value: 'Urgency', label: 'Urgencia Pediátrica' },
+    { value: 'Specialist', label: 'Especialista' },
+  ];
 
   appointmentForm = this.fb.group({
     patient: [null as Patient | null, Validators.required],
