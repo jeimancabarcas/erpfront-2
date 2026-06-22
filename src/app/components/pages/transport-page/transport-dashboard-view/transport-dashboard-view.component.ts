@@ -1,12 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { TransportService } from '../../../../services/transport.service';
 import { VehicleStatus } from '../../../../models/transport.model';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-tag.component';
 import { TransportDispatchDialogOrganism } from '../../../../components/organisms/transport-dispatch-dialog/transport-dispatch-dialog.component';
 import { TransportCancelDialogOrganism } from '../../../../components/organisms/transport-cancel-dialog/transport-cancel-dialog.component';
@@ -15,11 +13,8 @@ import { TransportCancelDialogOrganism } from '../../../../components/organisms/
   selector: 'app-transport-dashboard-view',
   standalone: true,
   imports: [
-    CommonModule, 
-    MatIconModule, 
-    MatMenuModule, 
-    MatButtonModule, 
-    MatDialogModule,
+    CommonModule,
+    ButtonAtom,
     StatusTagAtom
   ],
   template: `
@@ -42,7 +37,7 @@ import { TransportCancelDialogOrganism } from '../../../../components/organisms/
                  [class.text-orange-600]="stat.color === 'orange'"
                  [class.bg-red-50]="stat.color === 'red'"
                  [class.text-red-600]="stat.color === 'red'">
-              <mat-icon>{{ getStatIcon(stat.label) }}</mat-icon>
+              <span class="material-icons">{{ getStatIcon(stat.label) }}</span>
             </div>
           </div>
         }
@@ -67,73 +62,66 @@ import { TransportCancelDialogOrganism } from '../../../../components/organisms/
                 [color]="getStatusColor(vehicle.status)"
               />
               
-              <button mat-icon-button [matMenuTriggerFor]="menu" class="!text-gray-300 hover:!text-indigo-600 transition-colors">
-                <mat-icon>more_horiz</mat-icon>
-              </button>
+              <div class="relative">
+                <ui-button variant="icon" (clicked)="toggleMenu(vehicle.id)" class="!text-gray-300 hover:!text-indigo-600 transition-colors">
+                  <span class="material-icons">more_horiz</span>
+                </ui-button>
+                @if (openMenuId() === vehicle.id) {
+                  <div class="custom-premium-menu absolute right-0 top-12 z-50 bg-white min-w-[220px] py-2 shadow-xl" (click)="$event.stopPropagation()">
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onViewDetail(vehicle.id); closeMenu()">
+                      <span class="material-icons text-indigo-500 text-xl">visibility</span>
+                      Ver Detalles
+                    </button>
+                    
+                    @if (vehicle.status === 'Available') {
+                      <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onProgramService(vehicle.id); closeMenu()">
+                        <span class="material-icons text-indigo-600 text-xl">event_note</span>
+                        Programar Servicio
+                      </button>
+                    }
 
-              <mat-menu #menu="matMenu" class="custom-premium-menu">
-                <button mat-menu-item (click)="onViewDetail(vehicle.id)">
-                  <mat-icon class="!text-indigo-500">visibility</mat-icon>
-                  <span class="font-bold text-gray-700">Ver Detalles</span>
-                </button>
-                
-                @if (vehicle.status === 'Available') {
-                  <button mat-menu-item (click)="onProgramService(vehicle.id)">
-                    <mat-icon class="!text-indigo-600">event_note</mat-icon>
-                    <span class="font-bold text-gray-700">Programar Servicio</span>
-                  </button>
-                }
+                    <div class="border-t border-gray-50 my-1"></div>
+                    <span class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cambiar Estado</span>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onUpdateStatus(vehicle.id, 'Available'); closeMenu()">
+                      <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      Disponible
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onUpdateStatus(vehicle.id, 'Committed'); closeMenu()">
+                      <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                      Comprometido
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onUpdateStatus(vehicle.id, 'Workshop'); closeMenu()">
+                      <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                      En Taller
+                    </button>
 
-                <button mat-menu-item [matMenuTriggerFor]="statusSubMenu">
-                  <mat-icon class="!text-amber-500">published_with_changes</mat-icon>
-                  <span class="font-bold text-gray-700">Cambiar Estado</span>
-                </button>
+                    @if (vehicle.status === 'Committed') {
+                      <div class="border-t border-gray-50 my-1"></div>
+                      <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onStartRoute(vehicle.id); closeMenu()">
+                        <span class="material-icons text-blue-500 text-xl">play_circle</span>
+                        Iniciar Ruta
+                      </button>
+                      <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onCancelService(vehicle.id); closeMenu()">
+                        <span class="material-icons text-red-500 text-xl">event_busy</span>
+                        Cancelar Servicio
+                      </button>
+                    }
 
-                @if (vehicle.status === 'Committed') {
-                  <button mat-menu-item (click)="onStartRoute(vehicle.id)">
-                    <mat-icon class="!text-blue-500">play_circle</mat-icon>
-                    <span class="font-bold text-gray-700">Iniciar Ruta</span>
-                  </button>
-                  <button mat-menu-item (click)="onCancelService(vehicle.id)">
-                    <mat-icon class="!text-red-500">event_busy</mat-icon>
-                    <span class="font-bold text-gray-700">Cancelar Servicio</span>
-                  </button>
-                }
-
-                @if (vehicle.status === 'InRoute') {
-                  <button mat-menu-item (click)="onSettleVehicle(vehicle.id)">
-                    <mat-icon class="!text-emerald-500">task_alt</mat-icon>
-                    <span class="font-bold text-gray-700">Liquidar Ruta</span>
-                  </button>
-                }
-              </mat-menu>
-
-              <mat-menu #statusSubMenu="matMenu">
-                <button mat-menu-item (click)="onUpdateStatus(vehicle.id, 'Available')">
-                  <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                    <span class="font-bold text-gray-600">Disponible</span>
+                    @if (vehicle.status === 'InRoute') {
+                      <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="onSettleVehicle(vehicle.id); closeMenu()">
+                        <span class="material-icons text-emerald-500 text-xl">task_alt</span>
+                        Liquidar Ruta
+                      </button>
+                    }
                   </div>
-                </button>
-                <button mat-menu-item (click)="onUpdateStatus(vehicle.id, 'Committed')">
-                  <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                    <span class="font-bold text-gray-600">Comprometido</span>
-                  </div>
-                </button>
-                <button mat-menu-item (click)="onUpdateStatus(vehicle.id, 'Workshop')">
-                  <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span class="font-bold text-gray-600">En Taller</span>
-                  </div>
-                </button>
-              </mat-menu>
+                }
+              </div>
             </div>
             
             <!-- Vehicle Info -->
             <div class="space-y-4 relative z-10">
               <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all duration-500">
-                <mat-icon class="!text-[32px] !w-8 !h-8">local_shipping</mat-icon>
+                <span class="material-icons !text-[32px] !w-8 !h-8">local_shipping</span>
               </div>
               <div>
                 <h3 class="text-2xl font-black text-gray-900 leading-none mb-1">{{ vehicle.id }}</h3>
@@ -148,7 +136,7 @@ import { TransportCancelDialogOrganism } from '../../../../components/organisms/
                 <span class="text-sm font-bold text-gray-700">{{ vehicle.driverName }}</span>
               </div>
               <div class="w-8 h-8 rounded-full bg-gray-50 border border-white shadow-sm flex items-center justify-center">
-                <mat-icon class="!text-xs !w-3 !h-3 text-gray-400">person</mat-icon>
+                <span class="material-icons !text-xs !w-3 !h-3 text-gray-400">person</span>
               </div>
             </div>
           </div>
@@ -170,6 +158,16 @@ export class TransportDashboardViewComponent {
   transportService = inject(TransportService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
+
+  openMenuId = signal<string | null>(null);
+
+  toggleMenu(id: string) {
+    this.openMenuId.update(v => v === id ? null : id);
+  }
+
+  closeMenu() {
+    this.openMenuId.set(null);
+  }
 
   onViewDetail(id: string) {
     this.router.navigate(['/transport/vehicle', id]);

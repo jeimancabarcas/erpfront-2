@@ -1,21 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-anamnesis-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule
+    FormsModule
   ],
   template: `
     <div class="p-10 rounded-[32px]">
@@ -27,24 +19,29 @@ import { MatButtonModule } from '@angular/material/button';
       </div>
       
       <div class="space-y-6">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Motivo de Consulta</mat-label>
-          <textarea matInput rows="3" [(ngModel)]="data.reason" placeholder="Describa el motivo principal de la consulta..."></textarea>
-        </mat-form-field>
+        <div class="relative">
+          <label class="text-xs font-medium text-gray-500 mb-1.5 block">Motivo de Consulta</label>
+          <textarea [(ngModel)]="data().reason" rows="3" placeholder="Describa el motivo principal de la consulta..." class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
+        </div>
         
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Enfermedad Actual</mat-label>
-          <textarea matInput rows="6" [(ngModel)]="data.currentIllness" placeholder="Evolución detallada de los síntomas y signos..."></textarea>
-        </mat-form-field>
+        <div class="relative">
+          <label class="text-xs font-medium text-gray-500 mb-1.5 block">Enfermedad Actual</label>
+          <textarea [(ngModel)]="data().currentIllness" rows="6" placeholder="Evolución detallada de los síntomas y signos..." class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
+        </div>
       </div>
       
       <div class="flex justify-end mt-10 gap-3">
-        <button mat-button class="!rounded-full !px-8" [mat-dialog-close]="false">Cancelar</button>
-        <button mat-flat-button color="primary" [mat-dialog-close]="true" class="!rounded-full !px-10 !bg-indigo-600 !font-black">Guardar Sección</button>
+        <button (click)="close(false)" class="!rounded-full !px-8 h-12 font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>
+        <button (click)="close(true)" class="!rounded-full !px-10 h-12 !bg-indigo-600 text-white font-black hover:bg-indigo-700 transition-colors">Guardar Sección</button>
       </div>
     </div>
   `
 })
 export class AnamnesisDialogComponent {
-  data = inject(MAT_DIALOG_DATA);
+  data = input<any>({});
+  closed = output<any>();
+
+  close(result: any) {
+    this.closed.emit(result);
+  }
 }

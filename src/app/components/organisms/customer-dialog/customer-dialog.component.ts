@@ -1,14 +1,9 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, input, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { CustomerService } from '../../../services/customer.service';
 import { Customer, CreateCustomerDto } from '../../../models/customer.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-customer-dialog',
@@ -16,19 +11,14 @@ import { Customer, CreateCustomerDto } from '../../../models/customer.model';
   imports: [
     CommonModule,
     FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule
+    ButtonAtom
   ],
   template: `
     <div class="flex flex-col h-full max-h-[90vh]">
       <header class="flex justify-between items-center mb-8 px-2">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <mat-icon class="!text-3xl">person_add</mat-icon>
+            <span class="material-icons !text-3xl">person_add</span>
           </div>
           <div>
             <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
@@ -39,99 +29,120 @@ import { Customer, CreateCustomerDto } from '../../../models/customer.model';
             </p>
           </div>
         </div>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-          <mat-icon>close</mat-icon>
-        </button>
+        <ui-button variant="icon" (clicked)="onClosed()" class="!text-gray-400">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
-      <mat-dialog-content class="flex-1 !px-2 custom-scrollbar">
+      <div class="flex-1 overflow-y-auto px-2 custom-scrollbar">
         <form #customerForm="ngForm" class="space-y-6">
           <!-- Datos Básicos -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Nombre Completo / Razón Social</mat-label>
-              <input matInput [(ngModel)]="customer().name" name="name" required placeholder="Ej. Juan Pérez o Tech SA">
-              <mat-icon matPrefix class="!text-indigo-600 mr-2">person</mat-icon>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre Completo / Razón Social</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</span>
+                <input [(ngModel)]="customer().name" name="name" required placeholder="Ej. Juan Pérez o Tech SA"
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Correo Electrónico</mat-label>
-              <input matInput type="email" [(ngModel)]="customer().email" name="email" required placeholder="ejemplo@correo.com">
-              <mat-icon matPrefix class="!text-indigo-600 mr-2">email</mat-icon>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Correo Electrónico</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">email</span>
+                <input type="email" [(ngModel)]="customer().email" name="email" required placeholder="ejemplo@correo.com"
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+              </div>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Tipo de Documento</mat-label>
-              <mat-select [(ngModel)]="customer().documentType" name="documentType" required>
-                <mat-option value="CC">Cédula de Ciudadanía</mat-option>
-                <mat-option value="NIT">NIT</mat-option>
-                <mat-option value="CE">Cédula de Extranjería</mat-option>
-                <mat-option value="PP">Pasaporte</mat-option>
-              </mat-select>
-              <mat-icon matPrefix class="!text-indigo-600 mr-2">badge</mat-icon>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Tipo de Documento</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">badge</span>
+                <select [(ngModel)]="customer().documentType" name="documentType" required
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+                  <option value="CC">Cédula de Ciudadanía</option>
+                  <option value="NIT">NIT</option>
+                  <option value="CE">Cédula de Extranjería</option>
+                  <option value="PP">Pasaporte</option>
+                </select>
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Número de Documento</mat-label>
-              <input matInput [(ngModel)]="customer().documentNumber" name="documentNumber" required placeholder="Ej. 123456789">
-              <mat-icon matPrefix class="!text-indigo-600 mr-2">fingerprint</mat-icon>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Número de Documento</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</span>
+                <input [(ngModel)]="customer().documentNumber" name="documentNumber" required placeholder="Ej. 123456789"
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Estado</mat-label>
-              <mat-select [(ngModel)]="customer().status" name="status" required>
-                <mat-option value="ACTIVE">Activo</mat-option>
-                <mat-option value="INACTIVE">Inactivo</mat-option>
-              </mat-select>
-              <mat-icon matPrefix class="!text-indigo-600 mr-2">toggle_on</mat-icon>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">toggle_on</span>
+                <select [(ngModel)]="customer().status" name="status" required
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+                  <option value="ACTIVE">Activo</option>
+                  <option value="INACTIVE">Inactivo</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Teléfono de Contacto</mat-label>
-              <input matInput [(ngModel)]="customer().phone" name="phone" placeholder="Ej. +57 300 123 4567">
-              <mat-icon matPrefix class="!text-indigo-600 mr-2">phone</mat-icon>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Teléfono de Contacto</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">phone</span>
+                <input [(ngModel)]="customer().phone" name="phone" placeholder="Ej. +57 300 123 4567"
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Dirección</mat-label>
-              <input matInput [(ngModel)]="customer().address" name="address" placeholder="Ej. Calle 123 #45-67">
-              <mat-icon matPrefix class="!text-indigo-600 mr-2">location_on</mat-icon>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Dirección</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">location_on</span>
+                <input [(ngModel)]="customer().address" name="address" placeholder="Ej. Calle 123 #45-67"
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+              </div>
+            </div>
           </div>
         </form>
-      </mat-dialog-content>
+      </div>
 
       <footer class="flex justify-end gap-3 mt-8 px-2 pt-4 border-t border-gray-100">
-        <button mat-button (click)="dialogRef.close()" class="!rounded-full !h-12 !px-6 !font-bold">
+        <ui-button variant="outline" (clicked)="onClosed()" class="!rounded-full !h-12 !px-6 !font-bold">
           Cancelar
-        </button>
-        <button 
-          mat-flat-button 
-          color="primary" 
+        </ui-button>
+        <ui-button 
+          variant="primary"
           [disabled]="customerForm.invalid || isLoading()"
-          (click)="save()"
+          (clicked)="save()"
           class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
         >
           {{ isEditMode() ? 'Actualizar Cliente' : 'Crear Cliente' }}
-        </button>
+        </ui-button>
       </footer>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 40px !important;
-      padding: 32px !important;
-    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
   `]
 })
 export class CustomerDialogOrganism implements OnInit {
-  public dialogRef = inject(MatDialogRef<CustomerDialogOrganism>);
-  private data = inject(MAT_DIALOG_DATA, { optional: true });
+  data = input<{ customer?: Customer }>({});
+  closed = output<boolean>();
+
   private customerService = inject(CustomerService);
 
   customer = signal<Partial<Customer>>({
@@ -148,10 +159,15 @@ export class CustomerDialogOrganism implements OnInit {
   isLoading = signal(false);
 
   ngOnInit() {
-    if (this.data?.customer) {
+    const incoming = this.data();
+    if (incoming?.customer) {
       this.isEditMode.set(true);
-      this.customer.set({ ...this.data.customer });
+      this.customer.set({ ...incoming.customer });
     }
+  }
+
+  onClosed() {
+    this.closed.emit(false);
   }
 
   save() {
@@ -169,11 +185,10 @@ export class CustomerDialogOrganism implements OnInit {
     obs.subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.dialogRef.close(true);
+        this.closed.emit(true);
       },
       error: () => {
         this.isLoading.set(false);
-        // Aquí podrías manejar el error con un snackbar o señal
       }
     });
   }

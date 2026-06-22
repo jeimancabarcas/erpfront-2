@@ -1,6 +1,5 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, input, output } from '@angular/core';
 import { CommonModule, formatDate, CurrencyPipe } from '@angular/common';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -20,7 +19,6 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -46,14 +44,14 @@ import { firstValueFrom } from 'rxjs';
             </p>
           </div>
         </div>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-          <mat-icon>close</mat-icon>
+        <button (click)="closed.emit(null)" class="!text-gray-400">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
       @if (isEditMode() && ['COMPLETED', 'CANCELLED'].includes(header().status)) {
         <div class="mx-2 mb-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3 text-amber-700">
-          <mat-icon>warning</mat-icon>
+          <span class="material-icons">warning</span>
           <p class="text-xs font-bold uppercase tracking-wide">Esta orden ya no se puede editar porque está finalizada o anulada.</p>
         </div>
       }
@@ -65,12 +63,12 @@ import { firstValueFrom } from 'rxjs';
             <p class="text-xs font-bold uppercase tracking-wide">{{ errorMessage() }}</p>
           </div>
           <button mat-icon-button (click)="errorMessage.set(null)" class="!text-red-400">
-            <mat-icon>close</mat-icon>
+            <span class="material-icons">close</span>
           </button>
         </div>
       }
 
-      <mat-dialog-content class="flex-1 !px-2 custom-scrollbar">
+      <div class="flex-1 !px-2 custom-scrollbar">
         <fieldset [disabled]="isEditMode() && ['COMPLETED', 'CANCELLED'].includes(header().status)" class="contents">
           <form #orderForm="ngForm" class="space-y-8 pb-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -124,7 +122,7 @@ import { firstValueFrom } from 'rxjs';
                       (click)="removeItem($index)" 
                       class="!absolute -top-2 -right-2 !bg-white !shadow-sm !text-red-300 hover:!text-red-600 !border !border-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <mat-icon>close</mat-icon>
+                      <span class="material-icons">close</span>
                     </button>
 
                     <div class="flex flex-col gap-6">
@@ -190,11 +188,11 @@ import { firstValueFrom } from 'rxjs';
           </div>
         </form>
       </fieldset>
-    </mat-dialog-content>
+    </div>
 
       <!-- Footer -->
       <footer class="flex justify-end gap-3 mt-8 px-2 pt-4 border-t border-gray-100">
-        <button mat-button (click)="dialogRef.close()" class="!rounded-full !h-12 !px-6 !font-bold">
+        <button mat-button (click)="closed.emit(null)" class="!rounded-full !h-12 !px-6 !font-bold">
           Cancelar
         </button>
         
@@ -221,8 +219,8 @@ import { firstValueFrom } from 'rxjs';
   `]
 })
 export class PurchaseOrderDialogOrganism implements OnInit {
-  public dialogRef = inject(MatDialogRef<PurchaseOrderDialogOrganism>);
-  private data = inject(MAT_DIALOG_DATA, { optional: true });
+  closed = output<any>();
+  data = input<any>(null);
   private supplierService = inject(SupplierService);
   private productService = inject(ProductService);
   private purchaseOrderService = inject(PurchaseOrderService);
@@ -256,9 +254,9 @@ export class PurchaseOrderDialogOrganism implements OnInit {
       this.productService.loadProducts({ limit: 100 }).subscribe();
     }
 
-    if (this.data?.order) {
+    if (this.data()?.order) {
       this.isEditMode.set(true);
-      const { items, orderDate, ...rest } = this.data.order;
+      const { items, orderDate, ...rest } = this.data().order;
 
       this.header.set({
         ...rest,
@@ -324,7 +322,7 @@ export class PurchaseOrderDialogOrganism implements OnInit {
       : this.purchaseOrderService.createOrder(payload);
 
     request.subscribe({
-      next: () => this.dialogRef.close(true),
+      next: () => this.closed.emit(true),
       error: (err) => console.error('Error saving order:', err)
     });
   }

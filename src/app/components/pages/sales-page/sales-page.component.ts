@@ -1,27 +1,14 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../molecules/breadcrumb/breadcrumb.component';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { TableContainerMolecule } from '../../molecules/table-container/table-container.component';
-import { EmptyStateAtom } from '../../atoms/empty-state/empty-state.component';
 import { InvoiceService } from '../../../services/invoice.service';
 import { CustomerService } from '../../../services/customer.service';
 import { Invoice, InvoiceStatus } from '../../../models/invoice.model';
 import { QueryParams } from '../../../models/pagination.model';
 import { SaleFormMolecule } from '../../molecules/sale-form/sale-form.component';
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-sales-page',
@@ -30,21 +17,11 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
     CommonModule,
     DashboardLayoutComponent,
     BreadcrumbMolecule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatDialogModule,
-    MatTooltipModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatInputModule,
-    ReactiveFormsModule,
-    TableContainerMolecule,
-    EmptyStateAtom,
+    ButtonAtom,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    SaleFormMolecule,
+    InvoiceDetailDialogOrganism
   ],
   template: `
     <app-dashboard-layout>
@@ -60,170 +37,167 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Historial de Ventas</h1>
           <p class="text-gray-500 font-medium">Gestiona y consulta las facturas generadas por el sistema.</p>
         </div>
-        <button 
-          mat-flat-button 
-          color="primary" 
-          (click)="openSaleForm()"
+        <ui-button 
+          variant="primary"
+          (clicked)="openSaleForm()"
           class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
-          <mat-icon class="mr-2">add_shopping_cart</mat-icon>
+          <span class="material-icons mr-2">add_shopping_cart</span>
           Nueva Venta
-        </button>
+        </ui-button>
       </header>
 
       <!-- Barra de Filtros -->
       <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>No. Factura</mat-label>
-            <input matInput [formControl]="invoiceNumberFilter" placeholder="Ej: FAC-0001">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">search</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">search</span>
+            <input 
+              (input)="onInvoiceNumberFilterChange($event)" 
+              placeholder="Ej: FAC-0001"
+              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            >
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Cliente</mat-label>
-            <mat-select [formControl]="customerFilter">
-              <mat-option [value]="''">Todos los clientes</mat-option>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</span>
+            <select (change)="onCustomerFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+              <option value="">Todos los clientes</option>
               @for (customer of customers(); track customer.id) {
-                <mat-option [value]="customer.id">{{ customer.name }}</mat-option>
+                <option [value]="customer.id">{{ customer.name }}</option>
               }
-            </mat-select>
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">person</mat-icon>
-          </mat-form-field>
+            </select>
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Estado</mat-label>
-            <mat-select [formControl]="statusFilter">
-              <mat-option [value]="''">Todos los estados</mat-option>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">filter_list</span>
+            <select (change)="onStatusFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+              <option value="">Todos los estados</option>
               @for (status of statuses; track status.value) {
-                <mat-option [value]="status.value">{{ status.label }}</mat-option>
+                <option [value]="status.value">{{ status.label }}</option>
               }
-            </mat-select>
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">filter_list</mat-icon>
-          </mat-form-field>
+            </select>
+          </div>
         </div>
       </div>
 
-      <app-table-container [hasData]="true">
-        <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="w-full">
-          <!-- ID Column -->
-          <ng-container matColumnDef="invoiceNumber">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header>No. Factura</th>
-            <td mat-cell *matCellDef="let inv" [class]="cellClass">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50">
-                  {{ inv.invoiceNumber }}
-                </span>
-                @if (inv.isElectronic === false) {
-                  <span data-testid="manual-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700">
-                    MANUAL
+      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">No. Factura</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Cliente</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Fecha</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Total Neto</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Estado</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inv of invoices(); track inv.id) {
+              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50">
+                      {{ inv.invoiceNumber }}
+                    </span>
+                    @if (inv.isElectronic === false) {
+                      <span data-testid="manual-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700">
+                        MANUAL
+                      </span>
+                    }
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="font-bold text-gray-900">{{ inv.customer?.name }}</div>
+                  <div class="text-[10px] text-gray-400 font-medium tracking-wide">{{ inv.customer?.documentNumber }}</div>
+                </td>
+                <td class="px-6 py-5">
+                  <span class="text-gray-500 text-xs font-medium">{{ inv.date | date:'dd MMM, yyyy' }}</span>
+                </td>
+                <td class="px-6 py-5 text-right">
+                  <span class="font-black text-gray-900">{{ (inv.netTotal ?? inv.totalAmount) | currency }}</span>
+                </td>
+                <td class="px-6 py-5">
+                  <span 
+                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                    [ngClass]="{
+                      'bg-emerald-50 text-emerald-600': inv.status === 'PAID',
+                      'bg-amber-50 text-amber-600': inv.status === 'DRAFT',
+                      'bg-gray-100 text-gray-400': inv.status === 'CANCELLED'
+                    }"
+                  >
+                    {{ statusLabels[inv.status] }}
                   </span>
-                }
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Cliente Column -->
-          <ng-container matColumnDef="customer">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Cliente</th>
-            <td mat-cell *matCellDef="let inv" [class]="cellClass">
-              <div class="font-bold text-gray-900">{{ inv.customer?.name }}</div>
-              <div class="text-[10px] text-gray-400 font-medium tracking-wide">{{ inv.customer?.documentNumber }}</div>
-            </td>
-          </ng-container>
-
-          <!-- Fecha Column -->
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="date">Fecha</th>
-            <td mat-cell *matCellDef="let inv" [class]="cellClass">
-              <span class="text-gray-500 text-xs font-medium">{{ inv.date | date:'dd MMM, yyyy' }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Monto Column -->
-          <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="totalAmount" class="text-right">Total Neto</th>
-            <td mat-cell *matCellDef="let inv" [class]="cellClass" class="text-right">
-              <span class="font-black text-gray-900">{{ (inv.netTotal ?? inv.totalAmount) | currency }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Estado Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header>Estado</th>
-            <td mat-cell *matCellDef="let inv" [class]="cellClass">
-              <span 
-                class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                [ngClass]="{
-                  'bg-emerald-50 text-emerald-600': inv.status === 'PAID',
-                  'bg-amber-50 text-amber-600': inv.status === 'DRAFT',
-                  'bg-gray-100 text-gray-400': inv.status === 'CANCELLED'
-                }"
-              >
-                {{ statusLabels[inv.status] }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Acciones Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass"></th>
-            <td mat-cell *matCellDef="let inv" [class]="cellClass">
-              <div class="flex justify-end gap-2">
-                <button 
-                  mat-icon-button 
-                  (click)="viewDetail(inv)"
-                  matTooltip="Ver detalle de factura"
-                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
-                >
-                  <mat-icon>visibility</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/50 transition-colors"></tr>
-
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell p-12 text-center" [attr.colspan]="displayedColumns.length">
-              <app-empty-state 
-                icon="receipt_long"
-                title="No se encontraron facturas"
-                description="No hay registros que coincidan con los filtros seleccionados."
-              >
-                <button 
-                  mat-flat-button 
-                  color="primary" 
-                  (click)="openSaleForm()"
-                  class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100"
-                >
-                  <mat-icon class="mr-2">add</mat-icon>
-                  Registrar Primera Venta
-                </button>
-              </app-empty-state>
-            </td>
-          </tr>
+                </td>
+                <td class="px-6 py-5 text-right">
+                  <ui-button variant="icon" (clicked)="viewDetail(inv)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                    <span class="material-icons">visibility</span>
+                  </ui-button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="p-12 text-center">
+                  <div class="flex flex-col items-center gap-4">
+                    <span class="material-icons text-5xl text-gray-200">receipt_long</span>
+                    <h3 class="text-lg font-bold text-gray-400">No se encontraron facturas</h3>
+                    <p class="text-sm text-gray-300 max-w-xs">No hay registros que coincidan con los filtros seleccionados.</p>
+                    <ui-button variant="primary" (clicked)="openSaleForm()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                      <span class="material-icons mr-2">add</span>
+                      Registrar Primera Venta
+                    </ui-button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
         </table>
-
-        <mat-paginator 
-          [length]="meta()?.total || 0"
-          [pageSize]="pageSize()"
-          [pageIndex]="pageIndex() - 1"
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          (page)="onPageChange($event)"
-          aria-label="Seleccionar página"
-          class="!bg-transparent !border-t !border-gray-50"
-        ></mat-paginator>
-      </app-table-container>
+        
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+          <div class="flex items-center gap-2">
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
+              Anterior
+            </ui-button>
+            <span class="text-xs font-bold text-gray-400">
+              Página {{ pageIndex() }} de {{ totalPages() }}
+            </span>
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
+              Siguiente
+            </ui-button>
+          </div>
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+            <option value="5">5 / pág</option>
+            <option value="10" selected>10 / pág</option>
+            <option value="25">25 / pág</option>
+            <option value="100">100 / pág</option>
+          </select>
+        </div>
+      </div>
     </app-dashboard-layout>
+
+    <!-- Inline Dialogs -->
+    @if (showSaleForm()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showSaleForm.set(false)">
+        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-[900px] max-h-[95vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <app-sale-form (closed)="onSaleFormClosed($event)" />
+        </div>
+      </div>
+    }
+
+    @if (showDetailDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDetailDialog.set(false)">
+        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-[950px] max-h-[95vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <app-invoice-detail-dialog [data]="{ invoiceId: detailInvoiceId() }" (closed)="showDetailDialog.set(false)" />
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class SalesPageComponent implements OnInit {
-  private dialog = inject(MatDialog);
   private invoiceService = inject(InvoiceService);
   private customerService = inject(CustomerService);
 
@@ -231,20 +205,21 @@ export class SalesPageComponent implements OnInit {
   invoices = this.invoiceService.invoices;
   meta = this.invoiceService.meta;
   customers = this.customerService.customers;
-
-  dataSource = new MatTableDataSource<Invoice>([]);
-  displayedColumns = ['invoiceNumber', 'customer', 'date', 'amount', 'status', 'actions'];
   
   // Filtros
-  invoiceNumberFilter = new FormControl('');
-  customerFilter = new FormControl('');
-  statusFilter = new FormControl('');
+  invoiceNumberFilter = signal('');
+  customerFilter = signal('');
+  statusFilter = signal('');
 
   // Paginación y Orden
   pageSize = signal(10);
   pageIndex = signal(1);
   sortBy = signal('createdAt');
   order = signal<'ASC' | 'DESC'>('DESC');
+
+  totalPages = computed(() => Math.max(1, Math.ceil((this.meta()?.total || 0) / this.pageSize())));
+
+  private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
   statuses = [
     { label: 'Pagada', value: 'PAID' },
@@ -258,35 +233,37 @@ export class SalesPageComponent implements OnInit {
     'CANCELLED': 'Anulada'
   };
 
-  headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
-  cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
-
-  constructor() {
-    effect(() => {
-      this.dataSource.data = this.invoices();
-    });
-  }
-
   ngOnInit() {
     this.loadData();
-    this.setupFilters();
 
     if (this.customers().length === 0) {
       this.customerService.loadCustomers({ limit: 100 }).subscribe();
     }
   }
 
-  setupFilters() {
-    const filters = [this.invoiceNumberFilter, this.customerFilter, this.statusFilter];
-    filters.forEach(control => {
-      control.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged()
-      ).subscribe(() => {
-        this.pageIndex.set(1);
-        this.loadData();
-      });
-    });
+  onInvoiceNumberFilterChange(event: Event) {
+    this.invoiceNumberFilter.set((event.target as HTMLInputElement).value);
+    this.debouncedFilter();
+  }
+
+  onCustomerFilterChange(event: Event) {
+    this.customerFilter.set((event.target as HTMLSelectElement).value);
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  onStatusFilterChange(event: Event) {
+    this.statusFilter.set((event.target as HTMLSelectElement).value);
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  private debouncedFilter() {
+    if (this.filterTimeout) clearTimeout(this.filterTimeout);
+    this.filterTimeout = setTimeout(() => {
+      this.pageIndex.set(1);
+      this.loadData();
+    }, 400);
   }
 
   loadData() {
@@ -295,43 +272,49 @@ export class SalesPageComponent implements OnInit {
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       order: this.order(),
-      invoiceNumber: this.invoiceNumberFilter.value || '',
-      customerId: this.customerFilter.value || '',
-      status: this.statusFilter.value || ''
+      invoiceNumber: this.invoiceNumberFilter() || '',
+      customerId: this.customerFilter() || '',
+      status: this.statusFilter() || ''
     };
     this.invoiceService.loadInvoices(params).subscribe();
   }
 
-  onPageChange(event: PageEvent) {
-    this.pageSize.set(event.pageSize);
-    this.pageIndex.set(event.pageIndex + 1);
+  onPageChange(event: any) {
+    if (event.pageSize) this.pageSize.set(event.pageSize);
+    if (event.pageIndex !== undefined) this.pageIndex.set(event.pageIndex + 1);
     this.loadData();
   }
 
-  onSortChange(sort: Sort) {
-    this.sortBy.set(sort.active);
-    this.order.set(sort.direction === 'desc' ? 'DESC' : 'ASC');
+  onPageSizeChange(event: Event) {
+    const size = (event.target as HTMLSelectElement).value;
+    this.pageSize.set(parseInt(size));
+    this.pageIndex.set(1);
     this.loadData();
   }
+
+  onSortChange(sort: { column: string; order: 'ASC' | 'DESC' }) {
+    this.sortBy.set(sort.column);
+    this.order.set(sort.order);
+    this.loadData();
+  }
+
+  // Dialog signals
+  showSaleForm = signal(false);
+  showDetailDialog = signal(false);
+  detailInvoiceId = signal<string | null>(null);
 
   openSaleForm() {
-    const dialogRef = this.dialog.open(SaleFormMolecule, {
-      width: '900px',
-      maxWidth: '95vw',
-      disableClose: true
-    });
+    this.showSaleForm.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.loadData();
-    });
+  onSaleFormClosed(result: boolean) {
+    this.showSaleForm.set(false);
+    if (result) this.loadData();
   }
 
   viewDetail(invoice: Invoice) {
-    this.dialog.open(InvoiceDetailDialogOrganism, {
-      width: '950px',
-      maxWidth: '95vw',
-      data: { invoiceId: invoice.id }
-    });
+    this.detailInvoiceId.set(invoice.id);
+    this.showDetailDialog.set(true);
   }
 
 }

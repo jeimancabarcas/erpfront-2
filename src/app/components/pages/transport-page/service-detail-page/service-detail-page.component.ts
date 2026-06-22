@@ -1,13 +1,12 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { TransportService } from '../../../../services/transport.service';
 import { TransportRoute } from '../../../../models/transport.model';
 import { BreadcrumbItem, BreadcrumbMolecule } from '../../../molecules/breadcrumb/breadcrumb.component';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ButtonAtom } from '../../../atoms/button/button.component';
 import { TransportOperationDialogOrganism } from '../../../organisms/transport-operation-dialog/transport-operation-dialog.component';
 import { TransportExpenseDialogOrganism } from '../../../organisms/transport-expense-dialog/transport-expense-dialog.component';
 import { EmptyStateAtom } from '../../../atoms/empty-state/empty-state.component';
@@ -23,12 +22,10 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    MatButtonModule,
     RouterModule,
     BreadcrumbMolecule,
     DashboardLayoutComponent,
-    MatDialogModule,
+    ButtonAtom,
     EmptyStateAtom
   ],
   template: `
@@ -42,7 +39,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div class="flex items-center gap-6">
             <div class="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center text-indigo-600 border border-gray-50">
-              <mat-icon class="!text-[40px] !w-10 !h-10">local_shipping</mat-icon>
+              <span class="material-icons !text-[40px] !w-10 !h-10">local_shipping</span>
             </div>
             <div>
               <div class="flex items-center gap-3 mb-1">
@@ -72,30 +69,30 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
           
           <div class="flex gap-4">
             @if (routeData()?.status === 'Active' || routeData()?.status === 'Completed') {
-              <button 
-                mat-flat-button 
-                (click)="openSettleDialog()"
+              <ui-button 
+                variant="primary"
+                (clicked)="openSettleDialog()"
                 class="!rounded-full !h-12 !px-8 !font-black !bg-emerald-600 shadow-xl shadow-emerald-100 hover:scale-105 transition-all !text-white"
               >
-                <mat-icon class="mr-2">check_circle</mat-icon>
+                <span class="material-icons mr-2">check_circle</span>
                 Liquidar Servicio
-              </button>
+              </ui-button>
             }
 
             @if (routeData()?.status === 'Active' || routeData()?.status === 'Planning') {
-              <button 
-                mat-stroked-button 
-                (click)="openCancelDialog()"
+              <ui-button 
+                variant="outline"
+                (clicked)="openCancelDialog()"
                 class="!rounded-full !h-12 !px-8 !font-black !border-red-100 !text-red-600 hover:!bg-red-50 transition-all"
               >
-                <mat-icon class="mr-2">cancel</mat-icon>
+                <span class="material-icons mr-2">cancel</span>
                 Cancelar
-              </button>
+              </ui-button>
             }
             
-            <button mat-flat-button color="primary" class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all">
+            <ui-button variant="primary" class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all">
               Imprimir Factura
-            </button>
+            </ui-button>
           </div>
         </header>
 
@@ -110,7 +107,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Vehículo en Operación</p>
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                    <mat-icon>minor_crash</mat-icon>
+                    <span class="material-icons">minor_crash</span>
                   </div>
                   <div>
                     <p class="text-lg font-black text-gray-900">{{ activeOperation()?.vehicleId || 'Pendiente' }}</p>
@@ -129,7 +126,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Conductor Activo</p>
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                    <mat-icon>person</mat-icon>
+                    <span class="material-icons">person</span>
                   </div>
                   <div>
                     <p class="text-lg font-black text-gray-900">{{ vehicle()?.driverName || 'Pendiente' }}</p>
@@ -142,7 +139,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Fecha / Hora Inicio</p>
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                    <mat-icon>calendar_today</mat-icon>
+                    <span class="material-icons">calendar_today</span>
                   </div>
                   <div>
                     <p class="text-lg font-black text-gray-900">
@@ -164,17 +161,16 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <p class="text-gray-400 text-sm font-medium">Registro cronológico de cargues, descargues y maniobras logísticas.</p>
                 </div>
                 <div class="flex items-center gap-4">
-                  <button 
-                    mat-stroked-button 
+                  <ui-button 
                     (click)="openOperationDialog()"
                     [disabled]="hasActiveOperation()"
                     class="!rounded-2xl !h-12 !px-6 !font-bold !border-indigo-100 !text-indigo-600 hover:!bg-indigo-50 transition-all disabled:!opacity-50 disabled:!bg-gray-50 disabled:!text-gray-400 disabled:!border-gray-100"
                   >
-                    <mat-icon class="mr-2">{{ hasActiveOperation() ? 'block' : 'add_circle' }}</mat-icon>
+                    <span class="material-icons mr-2">{{ hasActiveOperation() ? 'block' : 'add_circle' }}</span>
                     {{ hasActiveOperation() ? 'Operación en Curso' : 'Registrar Operación' }}
-                  </button>
+                  </ui-button>
                   <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-400">
-                    <mat-icon>settings_suggest</mat-icon>
+                    <span class="material-icons">settings_suggest</span>
                   </div>
                 </div>
               </div>
@@ -186,7 +182,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   @for (op of sortedOperations(); track op.id) {
                     <div class="flex gap-10 relative z-10 animate-in fade-in slide-in-from-left-4 duration-500">
                       <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform hover:scale-110 bg-indigo-600 text-white">
-                        <mat-icon class="!text-xl">{{ getOperationIcon(op.type) }}</mat-icon>
+                        <span class="material-icons !text-xl">{{ getOperationIcon(op.type) }}</span>
                       </div>
                       <div class="flex-1 p-6 rounded-[32px] border border-gray-50 bg-gray-50/30 transition-all hover:border-indigo-100 hover:bg-white group">
                         <div class="flex justify-between items-start mb-2">
@@ -224,7 +220,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                               <div class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-indigo-50 shadow-sm"
                                    [class.border-blue-200]="op.status === 'InProcess'"
                                    [class.bg-blue-50]="op.status === 'InProcess'">
-                                <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-indigo-400" [class.text-blue-600]="op.status === 'InProcess'">local_shipping</mat-icon>
+                                <span class="material-icons !text-[14px] !w-3.5 !h-3.5 text-indigo-400" [class.text-blue-600]="op.status === 'InProcess'">local_shipping</span>
                                 <span class="text-[10px] font-black text-indigo-600" [class.text-blue-700]="op.status === 'InProcess'">
                                   Vehículo: {{ op.vehicleId }}
                                   @if (op.status === 'InProcess') { (ACTIVO) }
@@ -236,7 +232,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                               <div class="flex flex-wrap gap-2">
                                 @for (file of op.attachments; track file) {
                                   <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-gray-100 text-[10px] font-black text-gray-400 shadow-sm cursor-pointer hover:text-indigo-600 hover:border-indigo-100 transition-colors">
-                                    <mat-icon class="!text-[14px] !w-3.5 !h-3.5">attach_file</mat-icon>
+                                    <span class="material-icons !text-[14px] !w-3.5 !h-3.5">attach_file</span>
                                     {{ file }}
                                   </div>
                                 }
@@ -246,21 +242,21 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
 
                           @if (op.status === 'InProcess') {
                             <div class="flex gap-2">
-                              <button 
-                                (click)="cancelOperation(op.id)"
+                              <ui-button 
+                                variant="ghost"
+                                (clicked)="cancelOperation(op.id)"
                                 class="!rounded-2xl !h-10 !px-4 !text-xs !font-black !text-red-500 hover:!bg-red-50 transition-all"
-                                mat-button
                               >
                                 Cancelar
-                              </button>
-                              <button 
-                                (click)="finishOperation(op.id)"
+                              </ui-button>
+                              <ui-button 
+                                variant="primary"
+                                (clicked)="finishOperation(op.id)"
                                 class="!rounded-2xl !h-10 !px-5 !text-xs !font-black !bg-emerald-600 !text-white shadow-lg shadow-emerald-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                                mat-flat-button
                               >
-                                <mat-icon class="!text-sm !w-4 !h-4">check_circle</mat-icon>
+                                <span class="material-icons !text-sm !w-4 !h-4">check_circle</span>
                                 Finalizar
-                              </button>
+                              </ui-button>
                             </div>
                           }
                         </div>
@@ -284,16 +280,15 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <p class="text-gray-400 text-sm font-medium">Registro detallado de costos operativos reportados.</p>
                 </div>
                 <div class="flex items-center gap-4">
-                  <button 
-                    mat-stroked-button 
+                  <ui-button 
                     (click)="openExpenseDialog()"
                     class="!rounded-2xl !h-12 !px-6 !font-bold !border-emerald-100 !text-emerald-600 hover:!bg-emerald-50 transition-all"
                   >
-                    <mat-icon class="mr-2">add_circle</mat-icon>
+                    <span class="material-icons mr-2">add_circle</span>
                     Registrar Gasto
-                  </button>
+                  </ui-button>
                   <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-                    <mat-icon>receipt_long</mat-icon>
+                    <span class="material-icons">receipt_long</span>
                   </div>
                 </div>
               </div>
@@ -304,7 +299,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                     <div class="p-6 rounded-[32px] bg-gray-50 border border-gray-100 flex justify-between items-center transition-all hover:border-emerald-100">
                       <div class="flex items-center gap-6">
                         <div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600">
-                          <mat-icon>{{ getExpenseIcon(exp.type) }}</mat-icon>
+                          <span class="material-icons">{{ getExpenseIcon(exp.type) }}</span>
                         </div>
                         <div>
                           <div class="flex items-center gap-3 mb-1">
@@ -316,7 +311,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                           <p class="text-sm text-gray-500">{{ exp.description }}</p>
                           <div class="flex items-center gap-4 mt-2">
                              <span class="text-[10px] font-bold text-gray-400 flex items-center gap-1">
-                               <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">schedule</mat-icon>
+                               <span class="material-icons !text-[14px] !w-[14px] !h-[14px]">schedule</span>
                                {{ exp.timestamp | date:'shortTime' }}
                              </span>
                           </div>
@@ -324,7 +319,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                             <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100/50">
                               @for (file of exp.attachments; track file) {
                                 <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-gray-100 text-[10px] font-black text-emerald-600 shadow-sm cursor-pointer hover:bg-emerald-50 transition-colors">
-                                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5">receipt_long</mat-icon>
+                                  <span class="material-icons !text-[14px] !w-3.5 !h-3.5">receipt_long</span>
                                   {{ file }}
                                 </div>
                               }
@@ -351,14 +346,13 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <p class="text-gray-400 text-sm font-medium">Registro de incidencias, cambios de vehículo y eventos relevantes.</p>
                 </div>
                 <div class="flex items-center gap-4">
-                  <button 
-                    mat-stroked-button 
+                  <ui-button 
                     (click)="openIncidentDialog()"
                     class="!rounded-2xl !h-12 !px-6 !font-bold !border-orange-100 !text-orange-600 hover:!bg-orange-50 transition-all"
                   >
-                    <mat-icon class="mr-2">report_problem</mat-icon>
+                    <span class="material-icons mr-2">report_problem</span>
                     Reportar Novedad
-                  </button>
+                  </ui-button>
                 </div>
               </div>
               
@@ -375,7 +369,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                           <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center"
                                [class.text-orange-600]="inc.type !== 'Cambio de Vehículo'"
                                [class.text-indigo-600]="inc.type === 'Cambio de Vehículo'">
-                            <mat-icon>{{ inc.type === 'Cambio de Vehículo' ? 'sync' : 'warning' }}</mat-icon>
+                            <span class="material-icons">{{ inc.type === 'Cambio de Vehículo' ? 'sync' : 'warning' }}</span>
                           </div>
                           <div>
                             <h4 class="font-black text-gray-900">{{ inc.type }}</h4>
@@ -397,7 +391,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                             <p class="text-[9px] font-black text-gray-400 uppercase mb-1">Anterior</p>
                             <p class="text-sm font-black text-gray-600">{{ inc.previousVehicleId }}</p>
                           </div>
-                          <mat-icon class="text-indigo-300">arrow_forward</mat-icon>
+                          <span class="material-icons text-indigo-300">arrow_forward</span>
                           <div class="text-center flex-1">
                             <p class="text-[9px] font-black text-indigo-400 uppercase mb-1">Nuevo</p>
                             <p class="text-sm font-black text-indigo-600">{{ inc.newVehicleId }}</p>
@@ -419,7 +413,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
             <div *ngIf="routeData()?.status === 'Cancelled'" class="p-10 bg-red-50 rounded-[40px] border border-red-100 shadow-sm">
               <div class="flex items-center gap-4 mb-4">
                 <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-600 shadow-sm">
-                  <mat-icon>report_problem</mat-icon>
+                  <span class="material-icons">report_problem</span>
                 </div>
                 <div>
                   <h3 class="text-xl font-black text-red-900">Motivo de Cancelación</h3>
@@ -457,14 +451,13 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <span class="text-lg font-black tabular-nums">- {{ totalExpenses() | currency:'USD':'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="pt-4" *ngIf="routeData()?.status === 'Active' || routeData()?.status === 'Completed'">
-                  <button 
-                    mat-stroked-button 
+                  <ui-button 
                     (click)="openStandbyDialog()"
                     class="!w-full !rounded-2xl !h-12 !font-black !border-indigo-100 !text-indigo-600 hover:!bg-indigo-50 transition-all"
                   >
-                    <mat-icon class="mr-2">hourglass_empty</mat-icon>
+                    <span class="material-icons mr-2">hourglass_empty</span>
                     Agregar Standby
-                  </button>
+                  </ui-button>
                 </div>
                 <div class="pt-6 border-t border-gray-50 flex justify-between items-center">
                   <div class="flex flex-col">
@@ -491,7 +484,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center text-orange-600">
-                      <mat-icon class="!text-sm">toll</mat-icon>
+                      <span class="material-icons !text-sm">toll</span>
                     </div>
                     <span class="text-sm font-bold text-gray-500">Peajes</span>
                   </div>
@@ -500,7 +493,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                      <mat-icon class="!text-sm">local_gas_station</mat-icon>
+                      <span class="material-icons !text-sm">local_gas_station</span>
                     </div>
                     <span class="text-sm font-bold text-gray-500">Combustible</span>
                   </div>
@@ -509,7 +502,7 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
-                      <mat-icon class="!text-sm">restaurant</mat-icon>
+                      <span class="material-icons !text-sm">restaurant</span>
                     </div>
                     <span class="text-sm font-bold text-gray-500">Viáticos</span>
                   </div>
@@ -528,14 +521,14 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
             <div class="p-8 bg-gray-900 rounded-[40px] text-white space-y-6 shadow-xl shadow-gray-200">
               <h3 class="text-lg font-black">Asistencia en Ruta</h3>
               <div class="space-y-4">
-                <button mat-flat-button class="!w-full !rounded-2xl !h-14 !bg-white/10 !text-white !font-bold hover:!bg-white/20 transition-all">
-                  <mat-icon matPrefix class="mr-2">call</mat-icon>
+                <ui-button class="!w-full !rounded-2xl !h-14 !bg-white/10 !text-white !font-bold hover:!bg-white/20 transition-all">
+                  <span class="material-icons mr-2">call</span>
                   Llamar a Conductor
-                </button>
-                <button mat-flat-button class="!w-full !rounded-2xl !h-14 !bg-white/10 !text-white !font-bold hover:!bg-white/20 transition-all">
-                  <mat-icon matPrefix class="mr-2">map</mat-icon>
+                </ui-button>
+                <ui-button class="!w-full !rounded-2xl !h-14 !bg-white/10 !text-white !font-bold hover:!bg-white/20 transition-all">
+                  <span class="material-icons mr-2">map</span>
                   Ver en Mapa Real
-                </button>
+                </ui-button>
               </div>
             </div>
           </div>

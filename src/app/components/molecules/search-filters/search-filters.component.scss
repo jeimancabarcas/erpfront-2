@@ -1,0 +1,68 @@
+:host {
+  display: block;
+}
+
+.search-filters {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-6);
+}
+
+.search-filters__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-4);
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.search-filters__input {
+  min-width: 180px;
+  flex: 1;
+}
+
+.search-filters__select {
+  min-width: 180px;
+  flex: 1;
+}
+
+.search-filters__date {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 180px;
+  flex: 1;
+}
+
+.search-filters__date-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.25;
+}
+
+.search-filters__date-input {
+  padding: var(--spacing-3) 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-default);
+
+  &:focus {
+    border-bottom-color: var(--color-accent);
+  }
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.5;
+  }
+}

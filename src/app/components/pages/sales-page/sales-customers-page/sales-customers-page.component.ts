@@ -1,27 +1,14 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { TableContainerMolecule } from '../../../../components/molecules/table-container/table-container.component';
-import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
 import { CustomerService } from '../../../../services/customer.service';
 import { Customer } from '../../../../models/customer.model';
 import { CustomerDialogOrganism } from '../../../../components/organisms/customer-dialog/customer-dialog.component';
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
 import { RouterModule } from '@angular/router';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 
 @Component({
   selector: 'app-sales-customers-page',
@@ -30,20 +17,10 @@ import { RouterModule } from '@angular/router';
     CommonModule,
     DashboardLayoutComponent,
     BreadcrumbMolecule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatDialogModule,
-    MatTooltipModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    ReactiveFormsModule,
-    TableContainerMolecule,
-    EmptyStateAtom,
-    RouterModule
+    ButtonAtom,
+    RouterModule,
+    CustomerDialogOrganism,
+    ConfirmDeleteDialogOrganism
   ],
   template: `
     <app-dashboard-layout>
@@ -59,190 +36,184 @@ import { RouterModule } from '@angular/router';
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Gestión de Clientes</h1>
           <p class="text-gray-500 font-medium">Administra la base de datos de tus clientes y su información de contacto.</p>
         </div>
-        <button 
-          mat-flat-button 
-          color="primary" 
-          (click)="openCustomerDialog()"
+        <ui-button 
+          variant="primary"
+          (clicked)="openCustomerDialog()"
           class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
-          <mat-icon class="mr-2">person_add</mat-icon>
+          <span class="material-icons mr-2">person_add</span>
           Nuevo Cliente
-        </button>
+        </ui-button>
       </header>
 
       <!-- Barra de Filtros -->
       <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Nombre / Razón Social</mat-label>
-            <input matInput [formControl]="nameFilter" placeholder="Buscar por nombre...">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">search</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">search</span>
+            <input 
+              (input)="onNameFilterChange($event)" 
+              placeholder="Buscar por nombre..."
+              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            >
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Documento</mat-label>
-            <input matInput [formControl]="documentFilter" placeholder="Buscar por documento...">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">badge</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">badge</span>
+            <input 
+              (input)="onDocumentFilterChange($event)" 
+              placeholder="Buscar por documento..."
+              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            >
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Estado</mat-label>
-            <mat-select [formControl]="statusFilter">
-              <mat-option [value]="''">Todos los estados</mat-option>
-              <mat-option value="ACTIVE">Activo</mat-option>
-              <mat-option value="INACTIVE">Inactivo</mat-option>
-            </mat-select>
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">filter_list</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">filter_list</span>
+            <select (change)="onStatusFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+              <option value="">Todos los estados</option>
+              <option value="ACTIVE">Activo</option>
+              <option value="INACTIVE">Inactivo</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <app-table-container [hasData]="true">
-        <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="w-full">
-          <!-- ID Column -->
-          <ng-container matColumnDef="document">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Identificación</th>
-            <td mat-cell *matCellDef="let customer" [class]="cellClass">
-              <div class="flex flex-col">
-                <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{{ customer.documentType }}</span>
-                <span class="font-bold text-gray-900">{{ customer.documentNumber }}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Cliente Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="name">Nombre / Razón Social</th>
-            <td mat-cell *matCellDef="let customer" [class]="cellClass">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-indigo-600 border border-gray-100">
-                  <mat-icon>person</mat-icon>
-                </div>
-                <div>
-                  <div class="font-bold text-gray-900">{{ customer.name }}</div>
-                  <div class="text-xs text-gray-400 font-medium">{{ customer.email }}</div>
-                </div>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Contacto Column -->
-          <ng-container matColumnDef="contact">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Contacto</th>
-            <td mat-cell *matCellDef="let customer" [class]="cellClass">
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-2 text-xs text-gray-600">
-                  <mat-icon class="!text-sm text-gray-400">phone</mat-icon>
-                  {{ customer.phone || 'Sin teléfono' }}
-                </div>
-                <div class="flex items-center gap-2 text-xs text-gray-600">
-                  <mat-icon class="!text-sm text-gray-400">location_on</mat-icon>
-                  <span class="line-clamp-1">{{ customer.address || 'Sin dirección' }}</span>
-                </div>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Estado Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="status">Estado</th>
-            <td mat-cell *matCellDef="let customer" [class]="cellClass">
-              <span 
-                class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                [ngClass]="customer.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'"
-              >
-                {{ customer.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Acciones Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass"></th>
-            <td mat-cell *matCellDef="let customer" [class]="cellClass">
-              <div class="flex justify-end gap-2">
-                <button 
-                  mat-icon-button 
-                  [routerLink]="['/sales/customers', customer.id]"
-                  matTooltip="Ver detalles del cliente"
-                  class="!text-indigo-600 hover:!bg-indigo-50 transition-all"
-                >
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <button 
-                  mat-icon-button 
-                  (click)="openCustomerDialog(customer)"
-                  matTooltip="Editar cliente"
-                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button 
-                  mat-icon-button 
-                  (click)="confirmDelete(customer)"
-                  matTooltip="Eliminar cliente"
-                  class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/50 transition-colors"></tr>
-
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell p-12 text-center" [attr.colspan]="displayedColumns.length">
-              <app-empty-state 
-                icon="people"
-                title="No se encontraron clientes"
-                description="Aún no tienes clientes registrados o los filtros no coinciden con ninguna búsqueda."
-              >
-                <button 
-                  mat-flat-button 
-                  color="primary" 
-                  (click)="openCustomerDialog()"
-                  class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100"
-                >
-                  <mat-icon class="mr-2">person_add</mat-icon>
-                  Registrar Primer Cliente
-                </button>
-              </app-empty-state>
-            </td>
-          </tr>
+      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Identificación</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Nombre / Razón Social</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Contacto</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Estado</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (customer of customers(); track customer.id) {
+              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                <td class="px-6 py-5">
+                  <div class="flex flex-col">
+                    <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{{ customer.documentType }}</span>
+                    <span class="font-bold text-gray-900">{{ customer.documentNumber }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-indigo-600 border border-gray-100">
+                      <span class="material-icons">person</span>
+                    </div>
+                    <div>
+                      <div class="font-bold text-gray-900">{{ customer.name }}</div>
+                      <div class="text-xs text-gray-400 font-medium">{{ customer.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2 text-xs text-gray-600">
+                      <span class="material-icons !text-sm text-gray-400">phone</span>
+                      {{ customer.phone || 'Sin teléfono' }}
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-600">
+                      <span class="material-icons !text-sm text-gray-400">location_on</span>
+                      <span class="line-clamp-1">{{ customer.address || 'Sin dirección' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                  <span 
+                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                    [ngClass]="customer.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'"
+                  >
+                    {{ customer.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-6 py-5 text-right">
+                  <a [routerLink]="['/sales/customers', customer.id]">
+                    <ui-button variant="icon" class="!text-indigo-600 hover:!bg-indigo-50 transition-all">
+                      <span class="material-icons">visibility</span>
+                    </ui-button>
+                  </a>
+                  <ui-button variant="icon" (clicked)="openCustomerDialog(customer)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                    <span class="material-icons">edit</span>
+                  </ui-button>
+                  <ui-button variant="icon" (clicked)="confirmDelete(customer)" class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50">
+                    <span class="material-icons">delete</span>
+                  </ui-button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="p-12 text-center">
+                  <div class="flex flex-col items-center gap-4">
+                    <span class="material-icons text-5xl text-gray-200">people</span>
+                    <h3 class="text-lg font-bold text-gray-400">No se encontraron clientes</h3>
+                    <p class="text-sm text-gray-300 max-w-xs">Aún no tienes clientes registrados o los filtros no coinciden con ninguna búsqueda.</p>
+                    <ui-button variant="primary" (clicked)="openCustomerDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                      <span class="material-icons mr-2">person_add</span>
+                      Registrar Primer Cliente
+                    </ui-button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
         </table>
-
-        <mat-paginator 
-          [length]="meta()?.total || 0"
-          [pageSize]="pageSize()"
-          [pageIndex]="pageIndex() - 1"
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          (page)="onPageChange($event)"
-          aria-label="Seleccionar página"
-          class="!bg-transparent !border-t !border-gray-50"
-        ></mat-paginator>
-      </app-table-container>
+        
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+          <div class="flex items-center gap-2">
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
+              Anterior
+            </ui-button>
+            <span class="text-xs font-bold text-gray-400">
+              Página {{ pageIndex() }} de {{ totalPages() }}
+            </span>
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
+              Siguiente
+            </ui-button>
+          </div>
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+            <option value="5">5 / pág</option>
+            <option value="10" selected>10 / pág</option>
+            <option value="25">25 / pág</option>
+            <option value="100">100 / pág</option>
+          </select>
+        </div>
+      </div>
     </app-dashboard-layout>
+
+    <!-- Inline Dialogs -->
+    @if (showCustomerDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showCustomerDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[700px] max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <app-customer-dialog [data]="{ customer: customerDialogData() }" (closed)="onCustomerDialogClosed($event)" />
+        </div>
+      </div>
+    }
+
+    @if (showDeleteDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDeleteDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[400px]" (click)="$event.stopPropagation()">
+          <app-confirm-delete-dialog [data]="deleteDialogData()" (closed)="onDeleteDialogClosed($event)" />
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class SalesCustomersPageComponent implements OnInit {
-  private dialog = inject(MatDialog);
   private customerService = inject(CustomerService);
 
   customers = this.customerService.customers;
   meta = this.customerService.meta;
 
-  dataSource = new MatTableDataSource<Customer>([]);
-  displayedColumns = ['document', 'name', 'contact', 'status', 'actions'];
-
   // Filtros
-  nameFilter = new FormControl('');
-  documentFilter = new FormControl('');
-  statusFilter = new FormControl('');
+  nameFilter = signal('');
+  documentFilter = signal('');
+  statusFilter = signal('');
 
   // Paginación y Orden
   pageSize = signal(10);
@@ -250,31 +221,43 @@ export class SalesCustomersPageComponent implements OnInit {
   sortBy = signal('name');
   order = signal<'ASC' | 'DESC'>('ASC');
 
-  headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
-  cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
+  totalPages = computed(() => Math.max(1, Math.ceil((this.meta()?.total || 0) / this.pageSize())));
 
-  constructor() {
-    effect(() => {
-      this.dataSource.data = this.customers();
-    });
-  }
+  private filterTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Dialog signals
+  showCustomerDialog = signal(false);
+  customerDialogData = signal<Customer | undefined>(undefined);
+  showDeleteDialog = signal(false);
+  deleteDialogData = signal<ConfirmDeleteData>({} as ConfirmDeleteData);
+  pendingDeleteCustomerId = signal<string | null>(null);
 
   ngOnInit() {
     this.loadData();
-    this.setupFilters();
   }
 
-  setupFilters() {
-    const filters = [this.nameFilter, this.documentFilter, this.statusFilter];
-    filters.forEach(control => {
-      control.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged()
-      ).subscribe(() => {
-        this.pageIndex.set(1);
-        this.loadData();
-      });
-    });
+  onNameFilterChange(event: Event) {
+    this.nameFilter.set((event.target as HTMLInputElement).value);
+    this.debouncedFilter();
+  }
+
+  onDocumentFilterChange(event: Event) {
+    this.documentFilter.set((event.target as HTMLInputElement).value);
+    this.debouncedFilter();
+  }
+
+  onStatusFilterChange(event: Event) {
+    this.statusFilter.set((event.target as HTMLSelectElement).value);
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  private debouncedFilter() {
+    if (this.filterTimeout) clearTimeout(this.filterTimeout);
+    this.filterTimeout = setTimeout(() => {
+      this.pageIndex.set(1);
+      this.loadData();
+    }, 400);
   }
 
   loadData() {
@@ -283,53 +266,59 @@ export class SalesCustomersPageComponent implements OnInit {
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       order: this.order(),
-      name: this.nameFilter.value || '',
-      documentNumber: this.documentFilter.value || '',
-      status: this.statusFilter.value || ''
+      name: this.nameFilter() || '',
+      documentNumber: this.documentFilter() || '',
+      status: this.statusFilter() || ''
     };
     this.customerService.loadCustomers(params).subscribe();
   }
 
-  onPageChange(event: PageEvent) {
-    this.pageSize.set(event.pageSize);
-    this.pageIndex.set(event.pageIndex + 1);
+  onPageChange(event: any) {
+    if (event.pageSize) this.pageSize.set(event.pageSize);
+    if (event.pageIndex !== undefined) this.pageIndex.set(event.pageIndex + 1);
     this.loadData();
   }
 
-  onSortChange(sort: Sort) {
-    this.sortBy.set(sort.active);
-    this.order.set(sort.direction === 'desc' ? 'DESC' : 'ASC');
+  onPageSizeChange(event: Event) {
+    const size = (event.target as HTMLSelectElement).value;
+    this.pageSize.set(parseInt(size));
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  onSortChange(sort: { column: string; order: 'ASC' | 'DESC' }) {
+    this.sortBy.set(sort.column);
+    this.order.set(sort.order);
     this.loadData();
   }
 
   openCustomerDialog(customer?: Customer) {
-    const dialogRef = this.dialog.open(CustomerDialogOrganism, {
-      width: '700px',
-      maxWidth: '95vw',
-      data: { customer }
-    });
+    this.customerDialogData.set(customer);
+    this.showCustomerDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.loadData();
-    });
+  onCustomerDialogClosed(result: boolean) {
+    this.showCustomerDialog.set(false);
+    if (result) this.loadData();
   }
 
   confirmDelete(customer: Customer) {
-    const dialogRef = this.dialog.open(ConfirmDeleteDialogOrganism, {
-      width: '400px',
-      maxWidth: '95vw',
-      data: { 
-        title: '¿Eliminar cliente?',
-        message: 'Estás a punto de eliminar el cliente',
-        itemName: customer.name,
-        confirmText: 'Sí, eliminar definitivamente'
-      } as ConfirmDeleteData
-    });
+    this.pendingDeleteCustomerId.set(customer.id);
+    this.deleteDialogData.set({ 
+      title: '¿Eliminar cliente?',
+      message: 'Estás a punto de eliminar el cliente',
+      itemName: customer.name,
+      confirmText: 'Sí, eliminar definitivamente'
+    } as ConfirmDeleteData);
+    this.showDeleteDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.customerService.deleteCustomer(customer.id).subscribe(() => this.loadData());
-      }
-    });
+  onDeleteDialogClosed(result: boolean) {
+    this.showDeleteDialog.set(false);
+    const id = this.pendingDeleteCustomerId();
+    this.pendingDeleteCustomerId.set(null);
+    if (result && id) {
+      this.customerService.deleteCustomer(id).subscribe(() => this.loadData());
+    }
   }
 }

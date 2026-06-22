@@ -11,7 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   standalone: true,
   imports: [MatSidenavModule, NavbarComponent, SidebarComponent],
   template: `
-    <div class="h-screen flex flex-col bg-gray-50 overflow-hidden">
+    <div class="h-screen flex flex-col bg-gray-50 dark:bg-gray-950 overflow-hidden">
       <app-navbar (toggleSidebar)="sideNav.toggle()" [showMenuButton]="isMobile()" />
 
       <mat-sidenav-container class="flex-1 !bg-transparent" autosize>
@@ -19,7 +19,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
           #sideNav
           [mode]="isMobile() ? 'over' : 'side'" 
           [opened]="!isMobile()"
-          class="!border-none !bg-white !w-64 shadow-xl lg:shadow-none"
+          class="!border-none !bg-white dark:!bg-gray-900 !w-64 shadow-xl lg:shadow-none"
         >
           <app-sidebar />
         </mat-sidenav>

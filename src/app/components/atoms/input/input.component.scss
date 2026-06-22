@@ -1,0 +1,125 @@
+:host {
+  display: block;
+  font-family: var(--font-sans);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.input__field {
+  width: 100%;
+  padding: var(--spacing-3) 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-default);
+  resize: vertical;
+  min-height: 1.5em;
+
+  &:focus {
+    border-bottom-color: var(--color-accent);
+  }
+
+  &::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/* Floating label */
+.input__label {
+  position: absolute;
+  top: var(--spacing-3);
+  left: 0;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+  transition: all var(--duration-fast) var(--ease-default);
+  transform-origin: left center;
+
+  &.is-float {
+    top: -0.5rem;
+    font-size: var(--text-xs);
+    color: var(--color-accent);
+  }
+}
+
+/* Error state */
+.is-error .input__field {
+  border-bottom-color: var(--color-error);
+
+  &:focus {
+    border-bottom-color: var(--color-error);
+  }
+}
+
+.is-error .input__label.is-float {
+  color: var(--color-error);
+}
+
+/* Clear button */
+.input__clear {
+  position: absolute;
+  right: 0;
+  top: var(--spacing-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--text-lg);
+  line-height: 1;
+  padding: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--duration-fast) var(--ease-default);
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+/* Textarea variant — clear button alignment */
+.is-textarea .input__clear {
+  top: var(--spacing-3);
+}
+
+/* Error & helper text */
+.input__error {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  line-height: 1.25;
+}
+
+.input__helper {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.25;
+}
+
+/* Disabled */
+.is-disabled .input__field {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input__field,
+  .input__label,
+  .input__clear {
+    transition: none;
+  }
+}

@@ -2,10 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTabsModule } from '@angular/material/tabs';
+import { ButtonAtom } from '../../atoms/button/button.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 import { BreadcrumbMolecule, BreadcrumbItem } from '../../molecules/breadcrumb/breadcrumb.component';
 import { PatientSummaryOrganism } from '../../organisms/patient-summary/patient-summary.component';
@@ -18,10 +15,7 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
   imports: [
     CommonModule, 
     DashboardLayoutComponent, 
-    MatIconModule, 
-    MatButtonModule, 
-    MatDividerModule,
-    MatTabsModule,
+    ButtonAtom,
     BreadcrumbMolecule,
     PatientSummaryOrganism,
     PatientNeonatalHistoryOrganism,
@@ -38,7 +32,7 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div class="flex items-center gap-6">
             <div class="w-20 h-20 bg-indigo-600 rounded-[32px] flex items-center justify-center text-white shadow-xl shadow-indigo-100">
-              <mat-icon class="!w-10 !h-10 !text-[40px]">person</mat-icon>
+              <span class="material-icons w-10 h-10 text-[40px]">person</span>
             </div>
             <div>
               <h1 class="text-4xl font-black text-gray-900 tracking-tight mb-1">
@@ -55,83 +49,61 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
             </div>
           </div>
 
-          <button 
-            mat-flat-button 
-            color="primary" 
-            class="!rounded-full !h-14 !px-10 !font-black !text-lg !shadow-xl !shadow-indigo-100"
-            (click)="goToNewConsultation()"
+          <ui-button 
+            variant="primary"
+            (clicked)="goToNewConsultation()"
+            class="rounded-full h-14 px-10 font-black text-lg shadow-xl shadow-indigo-100"
           >
-            <mat-icon class="mr-2 !w-6 !h-6 !text-[24px]">add_circle</mat-icon>
+            <span class="material-icons mr-2 w-6 h-6 text-[24px]">add_circle</span>
             Nueva Consulta
-          </button>
+          </ui-button>
         </div>
       </header>
 
-      <!-- Material Tabs for Sections -->
-      <mat-tab-group class="custom-tab-group" dynamicHeight>
-        <!-- Resumen Section -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon class="mr-2">analytics</mat-icon>
-            Resumen
-          </ng-template>
+      <!-- Custom Tab Navigation -->
+      <div class="flex gap-2 p-1 bg-white border border-gray-100 rounded-[32px] w-fit mb-8">
+        <ui-button
+          [variant]="activeTab() === 0 ? 'primary' : 'ghost'"
+          (clicked)="activeTab.set(0)"
+          class="h-14 px-6 rounded-[28px]"
+        >
+          <span class="material-icons mr-2">analytics</span>
+          Resumen
+        </ui-button>
+        <ui-button
+          [variant]="activeTab() === 1 ? 'primary' : 'ghost'"
+          (clicked)="activeTab.set(1)"
+          class="h-14 px-6 rounded-[28px]"
+        >
+          <span class="material-icons mr-2">baby_changing_station</span>
+          Antecedentes Neonatales
+        </ui-button>
+        <ui-button
+          [variant]="activeTab() === 2 ? 'primary' : 'ghost'"
+          (clicked)="activeTab.set(2)"
+          class="h-14 px-6 rounded-[28px]"
+        >
+          <span class="material-icons mr-2">history_edu</span>
+          Historial Clínico
+        </ui-button>
+      </div>
+
+      <!-- Tab Content -->
+      @switch (activeTab()) {
+        @case (0) {
           <app-patient-summary [patient]="patient()" />
-        </mat-tab>
-
-        <!-- Antecedentes Neonatales Section -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon class="mr-2">baby_changing_station</mat-icon>
-            Antecedentes Neonatales
-          </ng-template>
+        }
+        @case (1) {
           <app-patient-neonatal-history [patient]="patient()" />
-        </mat-tab>
-
-        <!-- Historial Clínico Section -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon class="mr-2">history_edu</mat-icon>
-            Historial Clínico
-          </ng-template>
+        }
+        @case (2) {
           <app-patient-clinical-history [patient]="patient()" />
-        </mat-tab>
-      </mat-tab-group>
+        }
+      }
     </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .custom-tab-group .mat-mdc-tab-body-wrapper {
-      padding-top: 0;
-    }
-    ::ng-deep .custom-tab-group .mat-mdc-tab-header {
-      border-bottom: none;
-    }
-    ::ng-deep .custom-tab-group .mat-mdc-tab-labels {
-      gap: 8px;
-    }
-    ::ng-deep .custom-tab-group .mat-mdc-tab {
-      height: 56px;
-      border-radius: 28px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      padding: 0 24px;
-    }
-    ::ng-deep .custom-tab-group .mat-mdc-tab.mdc-tab--active {
-      background-color: #4f46e5;
-    }
-    ::ng-deep .custom-tab-group .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
-      color: white !important;
-    }
-    ::ng-deep .custom-tab-group .mat-mdc-tab-label-container {
-      padding: 4px;
-      background: white;
-      border-radius: 32px;
-      width: fit-content;
-      border: 1px solid #f3f4f6;
-    }
-    ::ng-deep .custom-tab-group .mat-mdc-tab .mdc-tab-indicator__content--underline {
-      display: none;
-    }
   `]
 })
 export class PatientDetailPageComponent implements OnInit {
@@ -139,6 +111,7 @@ export class PatientDetailPageComponent implements OnInit {
   private router = inject(Router);
   private pediatricsService = inject(PediatricsService);
   
+  activeTab = signal(0);
   patient = signal<Patient | undefined>(undefined);
 
   breadcrumbItems: BreadcrumbItem[] = [

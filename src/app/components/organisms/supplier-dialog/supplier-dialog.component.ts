@@ -1,25 +1,17 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, input, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { SupplierService } from '../../../services/supplier.service';
 import { Supplier } from '../../../models/supplier.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-supplier-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    FormsModule
+    FormsModule,
+    ButtonAtom
   ],
   template: `
     <div class="p-2">
@@ -27,72 +19,83 @@ import { Supplier } from '../../../models/supplier.model';
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
         </h2>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-          <mat-icon>close</mat-icon>
-        </button>
+        <ui-button variant="icon" (clicked)="onClose()" class="!text-gray-400">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
       <form #supplierForm="ngForm" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>NIT / Identificación</mat-label>
-            <input matInput [(ngModel)]="form().nit" name="nit" required placeholder="Ej. 900.123.456-1">
-            <mat-icon matPrefix class="!text-gray-400 mr-2">fingerprint</mat-icon>
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">NIT / Identificación</label>
+            <div class="relative">
+              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">fingerprint</span>
+              <input [(ngModel)]="form().nit" name="nit" required placeholder="Ej. 900.123.456-1"
+                class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+            </div>
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Nombre del Proveedor</mat-label>
-            <input matInput [(ngModel)]="form().name" name="name" required placeholder="Ej. Distribuidora Global S.A.S">
-            <mat-icon matPrefix class="!text-gray-400 mr-2">business</mat-icon>
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre del Proveedor</label>
+            <div class="relative">
+              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">business</span>
+              <input [(ngModel)]="form().name" name="name" required placeholder="Ej. Distribuidora Global S.A.S"
+                class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+            </div>
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Dirección</mat-label>
-            <input matInput [(ngModel)]="form().address" name="address" required placeholder="Ej. Calle 123 # 45-67">
-            <mat-icon matPrefix class="!text-gray-400 mr-2">location_on</mat-icon>
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Dirección</label>
+            <div class="relative">
+              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">location_on</span>
+              <input [(ngModel)]="form().address" name="address" required placeholder="Ej. Calle 123 # 45-67"
+                class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+            </div>
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Teléfono</mat-label>
-            <input matInput [(ngModel)]="form().phone" name="phone" required placeholder="Ej. +57 300 123 4567">
-            <mat-icon matPrefix class="!text-gray-400 mr-2">phone</mat-icon>
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Teléfono</label>
+            <div class="relative">
+              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">phone</span>
+              <input [(ngModel)]="form().phone" name="phone" required placeholder="Ej. +57 300 123 4567"
+                class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+            </div>
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Correo Electrónico</mat-label>
-            <input matInput type="email" [(ngModel)]="form().email" name="email" required placeholder="Ej. contacto@proveedor.com" email>
-            <mat-icon matPrefix class="!text-gray-400 mr-2">email</mat-icon>
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Correo Electrónico</label>
+            <div class="relative">
+              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">email</span>
+              <input type="email" [(ngModel)]="form().email" name="email" required placeholder="Ej. contacto@proveedor.com"
+                class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+            </div>
+          </div>
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
-          <button mat-button (click)="dialogRef.close()" class="!h-12 !px-8 !rounded-full !font-bold text-gray-500">
+          <ui-button variant="outline" (clicked)="onClose()" class="!h-12 !px-8 !rounded-full !font-bold text-gray-500">
             Cancelar
-          </button>
-          <button 
-            mat-flat-button 
-            color="primary" 
+          </ui-button>
+          <ui-button
+            variant="primary"
             [disabled]="!supplierForm.valid"
-            (click)="saveSupplier()"
+            (clicked)="saveSupplier()"
             class="!h-12 !px-8 !rounded-full !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
           >
             {{ isEditMode ? 'Guardar Cambios' : 'Registrar Proveedor' }}
-          </button>
+          </ui-button>
         </div>
       </form>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 40px !important;
-      padding: 32px !important;
-    }
   `]
 })
 export class SupplierDialogOrganism implements OnInit {
-  public dialogRef = inject(MatDialogRef<SupplierDialogOrganism>);
-  private data = inject(MAT_DIALOG_DATA, { optional: true });
+  data = input<{ supplier?: Supplier }>({});
+  closed = output<boolean>();
+
   private supplierService = inject(SupplierService);
 
   isEditMode = false;
@@ -105,10 +108,15 @@ export class SupplierDialogOrganism implements OnInit {
   });
 
   ngOnInit() {
-    if (this.data && this.data.supplier) {
+    const incoming = this.data();
+    if (incoming.supplier) {
       this.isEditMode = true;
-      this.form.set({ ...this.data.supplier });
+      this.form.set({ ...incoming.supplier });
     }
+  }
+
+  onClose() {
+    this.closed.emit(false);
   }
 
   saveSupplier() {
@@ -120,7 +128,7 @@ export class SupplierDialogOrganism implements OnInit {
       : this.supplierService.createSupplier(payload);
 
     request.subscribe({
-      next: () => this.dialogRef.close(true),
+      next: () => this.closed.emit(true),
       error: (err) => console.error('Error saving supplier:', err)
     });
   }

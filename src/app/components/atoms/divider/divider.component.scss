@@ -1,0 +1,44 @@
+:host {
+  display: block;
+  font-family: var(--font-sans);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+
+  &--horizontal {
+    width: 100%;
+    height: var(--divider-thickness, 1px);
+    background: var(--color-border);
+    margin: var(--spacing-4) 0;
+    position: relative;
+    justify-content: center;
+  }
+
+  &--vertical {
+    display: inline-flex;
+    width: var(--divider-thickness, 1px);
+    height: 100%;
+    min-height: 1em;
+    background: var(--color-border);
+    margin: 0 var(--spacing-2);
+    align-self: stretch;
+  }
+
+  &__label {
+    background: inherit;
+    padding: 0 var(--spacing-3);
+    position: absolute;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    white-space: nowrap;
+    background: transparent;
+    /* Create label background by masking the divider line */
+    display: inline-flex;
+    align-items: center;
+  }
+}

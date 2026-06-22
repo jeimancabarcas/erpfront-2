@@ -1,11 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
 
@@ -14,12 +9,7 @@ import { TransportRoute } from '../../../models/transport.model';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
+    ReactiveFormsModule
   ],
   template: `
     <div class="p-0 overflow-hidden">
@@ -28,44 +18,56 @@ import { TransportRoute } from '../../../models/transport.model';
           <h2 class="text-2xl font-black tracking-tight mb-1">Registrar Standby</h2>
           <p class="text-indigo-100 text-sm font-medium">Añada tiempo muerto o esperas adicionales al servicio.</p>
         </div>
-        <button mat-icon-button mat-dialog-close class="text-white/80 hover:text-white">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-indigo-500 transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
       <div class="p-10 bg-white">
         <form [formGroup]="standbyForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-2 gap-6">
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Horas de Espera</mat-label>
-              <input matInput type="number" formControlName="hours" placeholder="0">
-              <mat-icon matPrefix class="mr-2 text-gray-400">schedule</mat-icon>
-              <mat-error *ngIf="standbyForm.get('hours')?.hasError('required')">Requerido</mat-error>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Horas de Espera</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
+                <input type="number" formControlName="hours" placeholder="0" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+              </div>
+              @if (standbyForm.get('hours')?.hasError('required') && standbyForm.get('hours')?.touched) {
+                <p class="text-red-500 text-xs mt-1 font-medium">Requerido</p>
+              }
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Valor Adicional</mat-label>
-              <input matInput type="number" formControlName="amount" placeholder="0">
-              <span matPrefix class="text-gray-400 mr-1">$</span>
-              <mat-icon matSuffix class="text-gray-400">payments</mat-icon>
-              <mat-error *ngIf="standbyForm.get('amount')?.hasError('required')">Requerido</mat-error>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Valor Adicional</label>
+              <div class="relative">
+                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
+                <input type="number" formControlName="amount" placeholder="0" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
+              </div>
+              @if (standbyForm.get('amount')?.hasError('required') && standbyForm.get('amount')?.touched) {
+                <p class="text-red-500 text-xs mt-1 font-medium">Requerido</p>
+              }
+            </div>
           </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Observaciones / Justificación</mat-label>
-            <textarea matInput formControlName="notes" placeholder="Describa el motivo de la espera..." rows="4"></textarea>
-            <mat-icon matPrefix class="mr-2 text-gray-400">notes</mat-icon>
-            <mat-error *ngIf="standbyForm.get('notes')?.hasError('required')">Las observaciones son obligatorias</mat-error>
-          </mat-form-field>
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Observaciones / Justificación</label>
+            <div class="relative">
+              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">notes</span>
+              <textarea formControlName="notes" placeholder="Describa el motivo de la espera..." rows="4" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
+            </div>
+            @if (standbyForm.get('notes')?.hasError('required') && standbyForm.get('notes')?.touched) {
+              <p class="text-red-500 text-xs mt-1 font-medium">Las observaciones son obligatorias</p>
+            }
+          </div>
 
           <div class="flex gap-4 pt-4">
-            <button mat-button mat-dialog-close type="button" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200">
+            <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
               Cerrar
             </button>
-            <button mat-flat-button color="primary" type="submit" 
+            <button type="submit" 
                     [disabled]="standbyForm.invalid"
-                    class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 flex-1 shadow-xl shadow-indigo-100 hover:scale-105 transition-all">
+                    class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 text-white flex-1 shadow-xl shadow-indigo-100 hover:scale-105 transition-all disabled:opacity-50">
               Guardar Standby
             </button>
           </div>
@@ -75,13 +77,12 @@ import { TransportRoute } from '../../../models/transport.model';
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
   `]
 })
 export class TransportStandbyDialogOrganism {
   private fb = inject(FormBuilder);
-  private dialogRef = inject(MatDialogRef<TransportStandbyDialogOrganism>);
-  public data = inject<{ route: TransportRoute }>(MAT_DIALOG_DATA);
+  data = input<{ route: TransportRoute }>({} as { route: TransportRoute });
+  closed = output<boolean | undefined>();
   private transportService = inject(TransportService);
 
   standbyForm = this.fb.group({
@@ -90,16 +91,20 @@ export class TransportStandbyDialogOrganism {
     notes: ['', [Validators.required, Validators.minLength(5)]]
   });
 
+  close(result?: boolean) {
+    this.closed.emit(result);
+  }
+
   onSubmit() {
     if (this.standbyForm.valid) {
       const val = this.standbyForm.value;
       this.transportService.addStandby(
-        this.data.route.id, 
+        this.data().route.id, 
         val.hours!, 
         val.amount!, 
         val.notes!
       );
-      this.dialogRef.close(true);
+      this.closed.emit(true);
     }
   }
 }

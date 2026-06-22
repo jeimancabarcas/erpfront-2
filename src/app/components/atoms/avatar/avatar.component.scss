@@ -1,0 +1,53 @@
+:host {
+  display: inline-block;
+  line-height: 0;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-surface);
+  flex-shrink: 0;
+
+  &--sm {
+    width: 2rem;
+    height: 2rem;
+  }
+  &--md {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  &--lg {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  &__initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--color-accent);
+    color: white;
+    font-family: var(--font-sans);
+    font-weight: var(--font-semibold);
+    font-size: var(--text-xs);
+    line-height: 1;
+    user-select: none;
+  }
+}
+
+.avatar--sm .avatar__initials { font-size: var(--text-xs); }
+.avatar--md .avatar__initials { font-size: var(--text-sm); }
+.avatar--lg .avatar__initials { font-size: var(--text-base); }

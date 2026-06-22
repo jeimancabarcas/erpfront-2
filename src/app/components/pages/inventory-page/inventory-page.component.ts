@@ -1,11 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MovementsTableMolecule } from '../../molecules/movements-table/movements-table.component';
-import { ProductFormMolecule } from '../../molecules/product-form/product-form.component';
 import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventory-stats.component';
 
 @Component({
@@ -13,10 +8,6 @@ import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventor
   standalone: true,
   imports: [
     DashboardLayoutComponent,
-    MatTabsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
     MovementsTableMolecule,
     InventoryStatsOrganism
   ],
@@ -33,7 +24,7 @@ import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventor
         <!-- Financial Summary Section -->
         <section class="animate-in fade-in slide-in-from-bottom duration-700">
           <div class="flex items-center gap-3 mb-6 ml-2">
-            <mat-icon class="text-indigo-600">analytics</mat-icon>
+            <span class="material-icons text-indigo-600">analytics</span>
             <h2 class="text-xs font-black uppercase tracking-widest text-gray-400">Resumen Financiero de Inventario</h2>
           </div>
           <app-inventory-stats-organism />
@@ -43,7 +34,7 @@ import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventor
         <section class="bg-white rounded-[40px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-bottom duration-700 delay-150">
           <header class="p-8 border-b border-gray-50 flex items-center gap-4">
             <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-              <mat-icon>sync_alt</mat-icon>
+              <span class="material-icons">sync_alt</span>
             </div>
             <div>
               <h3 class="text-xl font-black text-gray-900 tracking-tight">Historial de Movimientos</h3>
@@ -61,30 +52,7 @@ import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventor
     :host {
       display: block;
     }
-    ::ng-deep .inventory-tabs .mat-mdc-tab-header {
-      background-color: #ffffff;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    ::ng-deep .inventory-tabs .mat-mdc-tab {
-      height: 64px;
-      opacity: 0.5;
-    }
-    ::ng-deep .inventory-tabs .mat-mdc-tab.mdc-tab--active {
-      opacity: 1;
-    }
-    ::ng-deep .inventory-tabs .mat-mdc-tab .mdc-tab__text-label {
-      color: inherit !important;
-    }
   `]
 })
 export class InventoryPageComponent {
-  private dialog = inject(MatDialog);
-
-  openProductForm() {
-    this.dialog.open(ProductFormMolecule, {
-      width: '600px',
-      maxWidth: '95vw',
-      disableClose: true
-    });
-  }
 }

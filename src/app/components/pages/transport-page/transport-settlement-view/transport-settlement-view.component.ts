@@ -1,14 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../../services/transport.service';
 import { TransportRoute } from '../../../../models/transport.model';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 
 @Component({
   selector: 'app-transport-settlement-view',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, ButtonAtom],
   template: `
     <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -55,11 +54,11 @@ import { TransportRoute } from '../../../../models/transport.model';
                     </span>
                   </td>
                   <td class="p-8 text-right">
-                    <button mat-flat-button color="primary" 
-                            (click)="onSettle(route)"
+                    <ui-button variant="primary" 
+                            (clicked)="onSettle(route)"
                             class="!rounded-full !h-10 !px-6 !font-black !bg-emerald-600 shadow-xl shadow-emerald-100 hover:scale-105 transition-all">
                       Liquidar
-                    </button>
+                    </ui-button>
                   </td>
                 </tr>
               }
@@ -77,7 +76,7 @@ import { TransportRoute } from '../../../../models/transport.model';
               <div class="p-6 bg-gray-50 rounded-[32px] border border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
-                    <mat-icon>task_alt</mat-icon>
+                    <span class="material-icons">task_alt</span>
                   </div>
                   <div class="flex flex-col">
                     <span class="text-xs font-black text-gray-900">{{ route.id }}</span>

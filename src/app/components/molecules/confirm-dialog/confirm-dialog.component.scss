@@ -1,0 +1,86 @@
+:host {
+  display: contents;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--color-bg) 50%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn var(--duration-fast) var(--ease-default);
+}
+
+.dialog-container {
+  max-width: 440px;
+  width: 90%;
+  animation: scaleIn var(--duration-fast) var(--ease-default);
+}
+
+.dialog-card {
+  box-shadow: var(--shadow-xl);
+}
+
+.dialog-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: var(--leading-tight);
+}
+
+.dialog-message {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: var(--spacing-6) 0;
+  line-height: var(--leading-relaxed);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+}
+
+.btn--danger {
+  --button-bg: var(--color-error);
+  --button-color: white;
+  --button-hover-bg: color-mix(in srgb, var(--color-error) 85%, black);
+
+  ::ng-deep .button--primary {
+    background: var(--color-error);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-error) 80%, black);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-backdrop,
+  .dialog-container {
+    animation: none;
+  }
+}

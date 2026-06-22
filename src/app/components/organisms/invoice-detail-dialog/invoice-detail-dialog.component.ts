@@ -1,13 +1,8 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, input, output, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
 import { InvoiceService } from '../../../services/invoice.service';
 import { Invoice } from '../../../models/invoice.model';
 import { SalesNoteService } from '../../../services/sales-note.service';
-import { SalesNoteFormDialogOrganism } from '../sales-note-form-dialog/sales-note-form-dialog.component';
 import { CreditNote, DebitNote } from '../../../models/sales-note.model';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 
@@ -16,10 +11,6 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatIconModule,
-    MatButtonModule,
-    MatDividerModule,
     CurrencyPipe,
     DatePipe
   ],
@@ -40,7 +31,7 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
               <div [className]="inv.status === 'CANCELLED' 
                 ? 'w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center shadow-sm'
                 : 'w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm'">
-                <mat-icon class="!text-[28px] !w-7 !h-7">{{ inv.status === 'CANCELLED' ? 'cancel' : 'verified' }}</mat-icon>
+                <span class="material-icons !text-[28px] !w-7 !h-7">{{ inv.status === 'CANCELLED' ? 'cancel' : 'verified' }}</span>
               </div>
               <div>
                 <div class="flex items-center gap-3">
@@ -54,8 +45,8 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                 <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Detalle de Operación</p>
               </div>
             </div>
-            <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-              <mat-icon>close</mat-icon>
+            <button (click)="close()" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+              <span class="material-icons">close</span>
             </button>
           </header>
 
@@ -65,19 +56,19 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
               <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Información del Cliente</label>
               <div class="p-6 bg-gray-50 rounded-[28px] border border-gray-100 flex items-start gap-4">
                 <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-indigo-600">
-                  <mat-icon>person</mat-icon>
+                  <span class="material-icons">person</span>
                 </div>
                 <div>
                   <h4 class="font-black text-gray-900 leading-none mb-1">{{ inv.customer?.name }}</h4>
                   <p class="text-xs text-gray-500 font-medium mb-2">{{ inv.customer?.documentType }}: {{ inv.customer?.documentNumber }}</p>
                   <div class="flex flex-col gap-1">
                     <div class="flex items-center gap-2 text-[11px] text-gray-400">
-                      <mat-icon class="!text-[14px] !w-3.5 !h-3.5">email</mat-icon>
+                      <span class="material-icons !text-[14px] !w-3.5 !h-3.5">email</span>
                       {{ inv.customer?.email }}
                     </div>
                     @if (inv.customer?.phone) {
                       <div class="flex items-center gap-2 text-[11px] text-gray-400">
-                        <mat-icon class="!text-[14px] !w-3.5 !h-3.5">phone</mat-icon>
+                        <span class="material-icons !text-[14px] !w-3.5 !h-3.5">phone</span>
                         {{ inv.customer?.phone }}
                       </div>
                     }
@@ -94,7 +85,7 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                   <span class="text-xs font-bold text-gray-500">Fecha de Emisión</span>
                   <span class="text-xs font-black text-gray-900">{{ inv.date | date:'longDate' }}</span>
                 </div>
-                <mat-divider></mat-divider>
+                <hr class="border-t border-indigo-100">
                 <div class="flex justify-between items-center pt-2">
                   <span class="text-xs font-bold text-gray-500">Total Facturado</span>
                   <span class="text-xl font-black text-indigo-600">{{ inv.totalAmount | currency }}</span>
@@ -151,7 +142,7 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                   <div class="p-5 bg-red-50/40 border border-red-100 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
                     <div class="flex items-start gap-4">
                       <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <mat-icon class="scale-90">assignment_returned</mat-icon>
+                        <span class="material-icons scale-90">assignment_returned</span>
                       </div>
                       <div>
                         <div class="flex items-center gap-2">
@@ -169,8 +160,8 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                     <div class="flex items-center gap-4 self-end md:self-auto">
                       <span class="text-base font-black text-red-600">-{{ note.amount | currency }}</span>
                       @if (note.publicUrl) {
-                        <a [href]="note.publicUrl" target="_blank" mat-stroked-button class="!rounded-full !px-4 !h-9 !border-red-200 !text-red-700 !bg-white hover:!bg-red-50 text-xs shadow-sm">
-                          <mat-icon class="mr-1 scale-75">picture_as_pdf</mat-icon>
+                        <a [href]="note.publicUrl" target="_blank" class="!rounded-full !px-4 !h-9 !border-red-200 !text-red-700 !bg-white hover:!bg-red-50 text-xs shadow-sm border inline-flex items-center gap-1 no-underline">
+                          <span class="material-icons mr-1 scale-75">picture_as_pdf</span>
                           PDF DIAN
                         </a>
                       }
@@ -183,7 +174,7 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                   <div class="p-5 bg-blue-50/40 border border-blue-100 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
                     <div class="flex items-start gap-4">
                       <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <mat-icon class="scale-90">assignment_turned_in</mat-icon>
+                        <span class="material-icons scale-90">assignment_turned_in</span>
                       </div>
                       <div>
                         <div class="flex items-center gap-2">
@@ -201,8 +192,8 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                     <div class="flex items-center gap-4 self-end md:self-auto">
                       <span class="text-base font-black text-blue-600">+{{ note.amount | currency }}</span>
                       @if (note.publicUrl) {
-                        <a [href]="note.publicUrl" target="_blank" mat-stroked-button class="!rounded-full !px-4 !h-9 !border-blue-200 !text-blue-700 !bg-white hover:!bg-blue-50 text-xs shadow-sm">
-                          <mat-icon class="mr-1 scale-75">picture_as_pdf</mat-icon>
+                        <a [href]="note.publicUrl" target="_blank" class="!rounded-full !px-4 !h-9 !border-blue-200 !text-blue-700 !bg-white hover:!bg-blue-50 text-xs shadow-sm border inline-flex items-center gap-1 no-underline">
+                          <span class="material-icons mr-1 scale-75">picture_as_pdf</span>
                           PDF DIAN
                         </a>
                       }
@@ -217,7 +208,7 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
           @if (inv.notes) {
             <div class="p-6 bg-amber-50/30 border border-amber-100 rounded-[24px] mb-8">
               <div class="flex items-center gap-2 mb-2">
-                <mat-icon class="text-amber-500 scale-75">description</mat-icon>
+                <span class="material-icons text-amber-500 scale-75">description</span>
                 <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Observaciones</span>
               </div>
               <p class="text-sm text-amber-900 font-medium">{{ inv.notes }}</p>
@@ -225,41 +216,41 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
           }
 
           <footer class="flex justify-end gap-3 pt-6 border-t border-gray-100 flex-wrap">
-            <button mat-button class="!rounded-full !px-6 md:!px-8 !h-12 !font-bold text-gray-500" (click)="dialogRef.close()">
+            <button (click)="close()" class="!rounded-full !px-6 md:!px-8 !h-12 !font-bold text-gray-500 hover:bg-gray-50 transition-colors">
               Cerrar
             </button>
             
             @if (inv.status !== 'CANCELLED') {
-              <button mat-stroked-button color="accent" (click)="openSalesNoteDialog(inv)" class="!rounded-full !px-6 md:!px-8 !h-12 !font-black !text-indigo-600 !border-indigo-200 hover:!bg-indigo-50 shadow-sm">
-                <mat-icon class="mr-2">post_add</mat-icon>
+              <button class="!rounded-full !px-6 md:!px-8 !h-12 !font-black !text-indigo-600 !border-indigo-200 hover:!bg-indigo-50 shadow-sm border inline-flex items-center gap-2">
+                <span class="material-icons">post_add</span>
                 Emitir Nota (Crédito/Débito)
               </button>
             }
 
-            <button mat-flat-button color="primary" (click)="printPdf(inv)" [disabled]="pdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50">
+            <button (click)="printPdf(inv)" [disabled]="pdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-indigo-600 text-white !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 inline-flex items-center gap-2">
               @if (pdfLoading()) {
                 <span class="flex items-center justify-center gap-2">
-                  <span class="w-5 h-5 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></span>
+                  <span class="w-5 h-5 border-2 border-indigo-100 border-t-white rounded-full animate-spin"></span>
                   <span>Generando PDF...</span>
                 </span>
               } @else {
                 <span class="flex items-center justify-center gap-2">
-                  <mat-icon class="mr-2">print</mat-icon>
+                  <span class="material-icons">print</span>
                   Imprimir Factura
                 </span>
               }
             </button>
 
             @if (inv.isElectronic) {
-              <button mat-flat-button (click)="downloadDianPdf(inv)" [disabled]="dianPdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-red-600 !text-white !font-black shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50">
+              <button (click)="downloadDianPdf(inv)" [disabled]="dianPdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-red-600 !text-white !font-black shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 inline-flex items-center gap-2">
                 @if (dianPdfLoading()) {
                   <span class="flex items-center justify-center gap-2">
-                    <span class="w-5 h-5 border-2 border-red-100 border-t-red-600 rounded-full animate-spin"></span>
+                    <span class="w-5 h-5 border-2 border-red-100 border-t-white rounded-full animate-spin"></span>
                     <span>Descargando PDF DIAN...</span>
                   </span>
                 } @else {
                   <span class="flex items-center justify-center gap-2">
-                    <mat-icon>picture_as_pdf</mat-icon>
+                    <span class="material-icons">picture_as_pdf</span>
                     <span>Descargar PDF DIAN</span>
                   </span>
                 }
@@ -269,6 +260,7 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
         </div>
       }
     </div>
+
   `,
   styles: [`
     :host { display: block; }
@@ -282,11 +274,10 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
   `]
 })
 export class InvoiceDetailDialogOrganism implements OnInit {
-  public dialogRef = inject(MatDialogRef<InvoiceDetailDialogOrganism>);
-  private data = inject(MAT_DIALOG_DATA);
+  data = input<any>({});
+  closed = output<void>();
   private invoiceService = inject(InvoiceService);
   private salesNoteService = inject(SalesNoteService);
-  private dialog = inject(MatDialog);
 
   invoice = signal<Invoice | null>(null);
   loading = signal(true);
@@ -295,21 +286,25 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   dianPdfLoading = signal(false);
 
   ngOnInit() {
-    if (this.data?.invoiceId) {
-      this.invoiceService.getInvoiceById(this.data.invoiceId).subscribe({
+    if (this.data()?.invoiceId) {
+      this.invoiceService.getInvoiceById(this.data().invoiceId).subscribe({
         next: (inv) => {
           this.invoice.set(inv);
           this.loading.set(false);
           this.loadNotes(inv.id);
         },
-        error: () => this.dialogRef.close()
+        error: () => this.close()
       });
-    } else if (this.data?.invoice) {
-      const inv = this.data.invoice;
+    } else if (this.data()?.invoice) {
+      const inv = this.data().invoice;
       this.invoice.set(inv);
       this.loading.set(false);
       this.loadNotes(inv.id);
     }
+  }
+
+  close() {
+    this.closed.emit();
   }
 
   loadNotes(invoiceId: string) {
@@ -318,32 +313,6 @@ export class InvoiceDetailDialogOrganism implements OnInit {
         this.notes.set(res);
       },
       error: (err) => console.error('Error cargando notas de ajuste:', err)
-    });
-  }
-
-  openSalesNoteDialog(invoice: Invoice) {
-    const ref = this.dialog.open(SalesNoteFormDialogOrganism, {
-      data: { invoice },
-      width: '850px',
-      maxWidth: '95vw'
-    });
-
-    ref.afterClosed().subscribe(result => {
-      if (result && result.success) {
-        // Re-load invoice state reactively to refresh total and cancelled state
-        this.loading.set(true);
-        this.invoiceService.getInvoiceById(invoice.id).subscribe({
-          next: (inv) => {
-            this.invoice.set(inv);
-            this.loading.set(false);
-            this.loadNotes(inv.id);
-          },
-          error: () => {
-            this.loading.set(false);
-            this.loadNotes(invoice.id);
-          }
-        });
-      }
     });
   }
 

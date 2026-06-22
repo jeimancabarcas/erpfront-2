@@ -1,94 +1,89 @@
-import { Component, inject } from '@angular/core';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { Component, inject, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { SalesService, Customer } from '../../../services/sales.service';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-customer-form',
   standalone: true,
   imports: [
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    FormsModule
+    CommonModule,
+    FormsModule,
+    ButtonAtom
   ],
   template: `
     <div class="p-2">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">Nuevo Cliente</h2>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-          <mat-icon>close</mat-icon>
-        </button>
+        <ui-button variant="icon" (clicked)="onClose()" class="!text-gray-400">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
       <div class="space-y-4">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Nombre del Representante</mat-label>
-          <input matInput [(ngModel)]="name" placeholder="Ej. Juan Pérez" required>
-        </mat-form-field>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Nombre de la Empresa</mat-label>
-            <input matInput [(ngModel)]="company" placeholder="Ej. Tech Solutions">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>NIT</mat-label>
-            <input matInput [(ngModel)]="nit" placeholder="Ej. 900.123.456-1" required>
-          </mat-form-field>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre del Representante</label>
+          <input [(ngModel)]="name" placeholder="Ej. Juan Pérez" required
+            class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
         </div>
 
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Correo Electrónico</mat-label>
-          <input matInput type="email" [(ngModel)]="email" placeholder="juan@ejemplo.com" required>
-        </mat-form-field>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre de la Empresa</label>
+            <input [(ngModel)]="company" placeholder="Ej. Tech Solutions"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">NIT</label>
+            <input [(ngModel)]="nit" placeholder="Ej. 900.123.456-1" required
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Correo Electrónico</label>
+          <input type="email" [(ngModel)]="email" placeholder="juan@ejemplo.com" required
+            class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Teléfono</mat-label>
-            <input matInput [(ngModel)]="phone" placeholder="Ej. +57 300 000 0000">
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Teléfono</label>
+            <input [(ngModel)]="phone" placeholder="Ej. +57 300 000 0000"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Dirección</mat-label>
-            <input matInput [(ngModel)]="address" placeholder="Ej. Calle 123 #45-67">
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Dirección</label>
+            <input [(ngModel)]="address" placeholder="Ej. Calle 123 #45-67"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
-          <button mat-button (click)="dialogRef.close()" class="!h-12 !px-8 !rounded-full !font-bold">
+          <ui-button variant="outline" (clicked)="onClose()" class="!h-12 !px-8 !rounded-full !font-bold">
             Cancelar
-          </button>
-          <button 
-            mat-flat-button 
-            color="primary" 
+          </ui-button>
+          <ui-button
+            variant="primary"
             [disabled]="!name || !email || !nit"
-            (click)="saveCustomer()"
+            (clicked)="saveCustomer()"
             class="!h-12 !px-12 !rounded-full !font-bold"
           >
             Crear Cliente
-          </button>
+          </ui-button>
         </div>
       </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 32px !important;
-      padding: 32px !important;
-    }
   `]
 })
 export class CustomerFormMolecule {
-  public dialogRef = inject(MatDialogRef<CustomerFormMolecule>);
+  closed = output<boolean>();
   private salesService = inject(SalesService);
 
   name = '';
@@ -97,6 +92,10 @@ export class CustomerFormMolecule {
   email = '';
   phone = '';
   address = '';
+
+  onClose() {
+    this.closed.emit(false);
+  }
 
   saveCustomer() {
     const newCustomer: Customer = {
@@ -112,6 +111,6 @@ export class CustomerFormMolecule {
     };
 
     this.salesService.addCustomer(newCustomer);
-    this.dialogRef.close(true);
+    this.closed.emit(true);
   }
 }

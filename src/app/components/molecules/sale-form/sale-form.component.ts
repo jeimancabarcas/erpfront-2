@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, input, output, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
   FormsModule,
@@ -8,7 +8,6 @@ import {
   FormArray,
   FormControl,
 } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,7 +16,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -28,6 +26,7 @@ import { CreateInvoiceDto } from '../../../models/invoice.model';
 import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ProductPriceInfoMolecule } from '../product-price-info/product-price-info.component';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-sale-form',
@@ -36,7 +35,6 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -45,10 +43,11 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
     MatIconModule,
     MatTableModule,
     MatTooltipModule,
-    MatSnackBarModule,
     MatSlideToggleModule,
     CurrencyPipe,
     ProductPriceInfoMolecule,
+    ButtonAtom,
+    CustomerDialogOrganism,
   ],
   template: `
     <div
@@ -76,9 +75,9 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
               </p>
             </div>
           </div>
-          <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-            <mat-icon>close</mat-icon>
-          </button>
+          <ui-button variant="icon" (clicked)="closed.emit(false)" class="!text-gray-400">
+            <span class="material-icons">close</span>
+          </ui-button>
         </header>
 
         <form [formGroup]="saleForm" (ngSubmit)="onSubmit()" class="space-y-8">
@@ -433,14 +432,13 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
 
           <!-- Footer Actions -->
           <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100">
-            <button
-              mat-button
-              type="button"
+            <ui-button
+              variant="outline"
+              (clicked)="closed.emit(false)"
               class="!rounded-full !px-8 !h-12 !font-bold text-gray-500"
-              (click)="dialogRef.close()"
             >
               Descartar
-            </button>
+            </ui-button>
             <button
               mat-flat-button
               color="primary"
@@ -454,6 +452,25 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
         </form>
       </div>
     </div>
+
+    <!-- Inline Customer Create Dialog -->
+    @if (showCreateCustomerDialog()) {
+      <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showCreateCustomerDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[600px]" (click)="$event.stopPropagation()">
+          <app-customer-dialog [data]="{}" (closed)="onCustomerDialogClosed($event)" />
+        </div>
+      </div>
+    }
+
+    <!-- Notification -->
+    @if (notification(); as notif) {
+      <div
+        class="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl text-white font-bold text-sm animate-in fade-in slide-in-from-bottom duration-300"
+        [ngClass]="notif.type === 'success' ? 'bg-green-600' : 'bg-red-600'"
+      >
+        {{ notif.message }}
+      </div>
+    }
   `,
   styles: [
     `
@@ -488,13 +505,16 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
   ],
 })
 export class SaleFormMolecule implements OnInit {
+  closed = output<boolean>();
   private fb = inject(FormBuilder);
-  public dialogRef = inject(MatDialogRef<SaleFormMolecule>);
   private productService = inject(ProductService);
   private customerService = inject(CustomerService);
   private invoiceService = inject(InvoiceService);
-  private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
+  notification = signal<{message: string; type: 'success' | 'error'} | null>(null);
+  private notifTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Inline customer create dialog signals
+  showCreateCustomerDialog = signal(false);
 
   // Local state signals for Customer Autocomplete
   customersList = signal<Customer[]>([]);
@@ -623,21 +643,19 @@ export class SaleFormMolecule implements OnInit {
   openCreateCustomerDialog(event: Event) {
     event.stopPropagation();
     event.preventDefault();
-    const dialogRef = this.dialog.open(CustomerDialogOrganism, {
-      width: '600px',
-    });
+    this.showCreateCustomerDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result === true) {
-        // Hybrid fallback (Option B):
-        const newCustomer = this.customerService.customers()[0];
-        if (newCustomer) {
-          this.customersList.update((list) => [newCustomer, ...list]);
-          this.customerSearchControl.setValue(newCustomer);
-          this.onCustomerSelected(newCustomer);
-        }
+  onCustomerDialogClosed(result: boolean) {
+    this.showCreateCustomerDialog.set(false);
+    if (result === true) {
+      const newCustomer = this.customerService.customers()[0];
+      if (newCustomer) {
+        this.customersList.update((list) => [newCustomer, ...list]);
+        this.customerSearchControl.setValue(newCustomer);
+        this.onCustomerSelected(newCustomer);
       }
-    });
+    }
   }
 
   displayCustomerFn(customer: Customer | string | null): string {
@@ -679,9 +697,7 @@ export class SaleFormMolecule implements OnInit {
         const currentQty = this.items.at(existingIndex).get('quantity')?.value || 0;
         const newQty = currentQty + qty;
         if (newQty > product.currentStock) {
-          this.snackBar.open(`Stock insuficiente para ${product.name}`, 'Cerrar', {
-            duration: 3000,
-          });
+          this.showNotification(`Stock insuficiente para ${product.name}`);
           return;
         }
         this.items.at(existingIndex).get('quantity')?.setValue(newQty);
@@ -716,10 +732,8 @@ export class SaleFormMolecule implements OnInit {
       control?.setValue(newQty);
       this.itemsTrigger.update((v) => v + 1);
     } else if (product && newQty > product.currentStock) {
-      this.snackBar.open(
+      this.showNotification(
         `No puedes exceder el stock disponible (${product.currentStock})`,
-        'Cerrar',
-        { duration: 2000 },
       );
     }
   }
@@ -765,18 +779,21 @@ export class SaleFormMolecule implements OnInit {
       this.invoiceService.createInvoice(dto).subscribe({
         next: () => {
           this.isManual.set(false);
-          this.snackBar.open('Factura generada exitosamente', 'Aceptar', { duration: 3000 });
-          this.dialogRef.close(true);
+          this.showNotification('Factura generada exitosamente');
+          this.closed.emit(true);
         },
         error: (err) => {
           this.isSubmitting.set(false);
           const message = err.error?.message || 'Error al procesar la venta';
-          this.snackBar.open(message, 'Cerrar', {
-            duration: 5000,
-            panelClass: ['bg-red-500', 'text-white'],
-          });
+          this.showNotification(message);
         },
       });
     }
+  }
+
+  private showNotification(message: string, type: 'success' | 'error' = 'success') {
+    this.notification.set({ message, type });
+    if (this.notifTimeout) clearTimeout(this.notifTimeout);
+    this.notifTimeout = setTimeout(() => this.notification.set(null), 3000);
   }
 }

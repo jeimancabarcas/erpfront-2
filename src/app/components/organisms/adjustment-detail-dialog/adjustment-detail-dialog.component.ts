@@ -1,9 +1,5 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, input, output, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
 import { FinanceService } from '../../../services/finance.service';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
@@ -13,10 +9,6 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatIconModule,
-    MatButtonModule,
-    MatDividerModule,
     CurrencyPipe,
     DatePipe
   ],
@@ -35,7 +27,7 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
             <div 
               class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
               [ngClass]="note.type === 'Credit' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'">
-              <mat-icon class="!text-[28px] !w-7 !h-7">{{ note.type === 'Credit' ? 'remove_circle' : 'add_circle' }}</mat-icon>
+              <span class="material-icons !text-[28px] !w-7 !h-7">{{ note.type === 'Credit' ? 'remove_circle' : 'add_circle' }}</span>
             </div>
             <div>
               <div class="flex items-center gap-3">
@@ -56,15 +48,15 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
               </p>
             </div>
           </div>
-          <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400" aria-label="Cerrar">
-            <mat-icon>close</mat-icon>
+          <button (click)="close()" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors" aria-label="Cerrar">
+            <span class="material-icons">close</span>
           </button>
         </header>
 
         <!-- Technical UUID / CUDE -->
         <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div class="flex items-center gap-2">
-            <mat-icon class="text-gray-400 scale-75">security</mat-icon>
+            <span class="material-icons text-gray-400 scale-75">security</span>
             <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">CUDE (DIAN)</span>
           </div>
           <code class="text-[11px] font-mono text-indigo-900 font-bold bg-indigo-50/50 px-2.5 py-1 rounded-lg break-all">
@@ -78,7 +70,7 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
             <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Factura Relacionada</label>
             <div class="p-6 bg-gray-50 rounded-[28px] border border-gray-100 flex items-start gap-4">
               <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-indigo-600 shrink-0">
-                <mat-icon>receipt</mat-icon>
+                <span class="material-icons">receipt</span>
               </div>
               <div>
                 <h4 class="font-black text-gray-900 leading-none mb-1">{{ note.invoiceId }}</h4>
@@ -106,7 +98,7 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
                 <span class="text-xs font-bold text-gray-500">IVA (19% Incluido)</span>
                 <span class="text-xs font-black text-gray-600">{{ taxAmount | currency }}</span>
               </div>
-              <mat-divider></mat-divider>
+              <hr class="border-t border-gray-200">
               <div class="flex justify-between items-center pt-2">
                 <span class="text-xs font-bold text-gray-500">Total Ajustado</span>
                 <span 
@@ -122,7 +114,7 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
         <!-- Justification / Reason -->
         <div class="p-6 bg-gray-50 border border-gray-100 rounded-[24px] mb-8">
           <div class="flex items-center gap-2 mb-3">
-            <mat-icon class="text-gray-400 scale-75">subject</mat-icon>
+            <span class="material-icons text-gray-400 scale-75">subject</span>
             <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Concepto / Justificación</span>
           </div>
           <p class="text-sm text-gray-700 font-medium leading-relaxed italic">
@@ -132,12 +124,11 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
 
         <!-- Footer Actions -->
         <footer class="flex justify-end gap-3 pt-6 border-t border-gray-100 flex-wrap">
-          <button mat-button class="!rounded-full !px-6 md:!px-8 !h-12 !font-bold text-gray-500" (click)="dialogRef.close()">
+          <button (click)="close()" class="!rounded-full !px-6 md:!px-8 !h-12 !font-bold text-gray-500 hover:bg-gray-50 transition-colors">
             Cerrar
           </button>
           
           <button 
-            mat-flat-button 
             (click)="simulatePdfDownload()"
             [disabled]="pdfLoading()"
             [ngClass]="note.type === 'Credit' ? '!bg-amber-500' : '!bg-indigo-600'"
@@ -150,7 +141,7 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
               </span>
             } @else {
               <span class="flex items-center justify-center gap-2">
-                <mat-icon>picture_as_pdf</mat-icon>
+                <span class="material-icons">picture_as_pdf</span>
                 <span>Descargar PDF DIAN</span>
               </span>
             }
@@ -168,8 +159,8 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
   `]
 })
 export class AdjustmentDetailDialogOrganism implements OnInit {
-  public dialogRef = inject(MatDialogRef<AdjustmentDetailDialogOrganism>);
-  private data = inject(MAT_DIALOG_DATA);
+  data = input<any>({});
+  closed = output<void>();
   private financeService = inject(FinanceService);
   private salesNoteService = inject(SalesNoteService);
 
@@ -180,7 +171,7 @@ export class AdjustmentDetailDialogOrganism implements OnInit {
   pdfLoading = signal(false);
 
   ngOnInit() {
-    this.note = this.data.note;
+    this.note = this.data().note;
     
     // Find associated invoice
     const foundInvoice = this.financeService.invoices().find(inv => inv.id === this.note.invoiceId);
@@ -195,6 +186,10 @@ export class AdjustmentDetailDialogOrganism implements OnInit {
     // tax = amount - base
     this.baseAmount = Math.round(this.note.amount / 1.19);
     this.taxAmount = this.note.amount - this.baseAmount;
+  }
+
+  close() {
+    this.closed.emit();
   }
 
   simulatePdfDownload() {

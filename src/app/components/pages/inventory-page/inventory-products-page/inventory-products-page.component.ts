@@ -1,20 +1,7 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { TableContainerMolecule } from '../../../../components/molecules/table-container/table-container.component';
-import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
 import { ProductService } from '../../../../services/product.service';
 import { CategoryService } from '../../../../services/category.service';
 import { Product } from '../../../../models/product.model';
@@ -22,6 +9,7 @@ import { ProductFormMolecule } from '../../../../components/molecules/product-fo
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { InventoryBatchDialogOrganism } from '../../../../components/organisms/inventory-batch-dialog/inventory-batch-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 
 @Component({
   selector: 'app-inventory-products-page',
@@ -29,19 +17,12 @@ import { QueryParams } from '../../../../models/pagination.model';
   imports: [
     CommonModule,
     DashboardLayoutComponent,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    ReactiveFormsModule,
     BreadcrumbMolecule,
-    TableContainerMolecule,
-    EmptyStateAtom
+    ButtonAtom,
+    CurrencyPipe,
+    ProductFormMolecule,
+    ConfirmDeleteDialogOrganism,
+    InventoryBatchDialogOrganism
   ],
   template: `
     <app-dashboard-layout>
@@ -58,175 +39,176 @@ import { QueryParams } from '../../../../models/pagination.model';
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Catálogo de Productos</h1>
           <p class="text-gray-500 font-medium">Gestiona la definición de tus productos, SKUs y categorías base.</p>
         </div>
-        <button 
-          mat-flat-button 
-          color="primary" 
-          (click)="openProductDialog()"
+        <ui-button 
+          variant="primary"
+          (clicked)="openProductDialog()"
           class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
-          <mat-icon class="mr-2">add</mat-icon>
+          <span class="material-icons mr-2">add</span>
           Nuevo Producto
-        </button>
+        </ui-button>
       </header>
 
       <!-- Barra de Filtros -->
       <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Nombre del Producto</mat-label>
-            <input matInput [formControl]="nameFilter" placeholder="Buscar por nombre...">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">search</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">search</span>
+            <input 
+              (input)="onNameFilterChange($event)" 
+              placeholder="Buscar por nombre..."
+              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            >
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>SKU</mat-label>
-            <input matInput [formControl]="skuFilter" placeholder="Buscar por SKU...">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">fingerprint</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</span>
+            <input 
+              (input)="onSkuFilterChange($event)" 
+              placeholder="Buscar por SKU..."
+              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            >
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Categoría</mat-label>
-            <mat-select [formControl]="categoryFilter">
-              <mat-option [value]="''">Todas las categorías</mat-option>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">category</span>
+            <select (change)="onCategoryFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+              <option value="">Todas las categorías</option>
               @for (cat of categories(); track cat.id) {
-                <mat-option [value]="cat.id">{{cat.name}}</mat-option>
+                <option [value]="cat.id">{{cat.name}}</option>
               }
-            </mat-select>
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">category</mat-icon>
-          </mat-form-field>
+            </select>
+          </div>
         </div>
       </div>
 
-      <app-table-container [hasData]="true">
-        <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="w-full">
-          <!-- SKU Column -->
-          <ng-container matColumnDef="sku">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="sku">SKU</th>
-            <td mat-cell *matCellDef="let product" [class]="cellClass">
-              <span class="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                {{ product.sku }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Nombre Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="name">Nombre</th>
-            <td mat-cell *matCellDef="let product" [class]="cellClass">
-              <div class="font-bold text-gray-900">{{ product.name }}</div>
-            </td>
-          </ng-container>
-
-          <!-- Categoría Column -->
-          <ng-container matColumnDef="category">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Categoría</th>
-            <td mat-cell *matCellDef="let product" [class]="cellClass">
-              <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-indigo-400"></div>
-                <span class="font-medium">{{ product.category?.name || 'Sin categoría' }}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Precios Column -->
-          <ng-container matColumnDef="prices">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Precios (Costo / Venta)</th>
-            <td mat-cell *matCellDef="let product" [class]="cellClass">
-              <div class="flex flex-col">
-                <div class="flex items-center gap-1">
-                  <span class="text-[10px] text-gray-400 font-bold uppercase">Costo:</span>
-                  <span class="font-bold text-gray-600 italic text-xs">{{ product.averagePurchasePrice | currency }}</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="text-[10px] text-indigo-400 font-black uppercase">Venta:</span>
-                  <span class="font-black text-indigo-600">{{ product.sellingPrice | currency }}</span>
-                </div>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Stock Column -->
-          <ng-container matColumnDef="currentStock">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="currentStock">Stock</th>
-            <td mat-cell *matCellDef="let product" [class]="cellClass">
-              <div class="flex flex-col">
-                <span class="font-black text-base" [class]="getStockColor(product)">
-                  {{ product.currentStock }}
-                </span>
-                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
-                  Mín: {{ product.minStock }} | Máx: {{ product.maxStock }}
-                </span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Acciones Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass"></th>
-            <td mat-cell *matCellDef="let product" [class]="cellClass">
-              <div class="flex justify-end gap-2">
-                <button 
-                  mat-icon-button 
-                  (click)="openBatchesDialog(product)"
-                  matTooltip="Trazabilidad por lotes"
-                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
-                >
-                  <mat-icon>history</mat-icon>
-                </button>
-                <button 
-                  mat-icon-button 
-                  (click)="openProductDialog(product)"
-                  matTooltip="Editar producto"
-                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button 
-                  mat-icon-button 
-                  (click)="confirmDelete(product)"
-                  class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/50 transition-colors"></tr>
-
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell p-12 text-center" [attr.colspan]="displayedColumns.length">
-              <app-empty-state 
-                icon="inventory_2"
-                title="No se encontraron productos"
-                description="Aún no has registrado productos en tu catálogo o los filtros aplicados no coinciden."
-              >
-                <button 
-                  mat-flat-button 
-                  color="primary" 
-                  (click)="openProductDialog()"
-                  class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100"
-                >
-                  <mat-icon class="mr-2">add</mat-icon>
-                  Registrar Primer Producto
-                </button>
-              </app-empty-state>
-            </td>
-          </tr>
+      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">SKU</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Nombre</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Categoría</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Precios (Costo / Venta)</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Stock</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of products(); track product.id) {
+              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                <td class="px-6 py-5">
+                  <span class="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {{ product.sku }}
+                  </span>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="font-bold text-gray-900">{{ product.name }}</div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-indigo-400"></div>
+                    <span class="font-medium">{{ product.category?.name || 'Sin categoría' }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex flex-col">
+                    <div class="flex items-center gap-1">
+                      <span class="text-[10px] text-gray-400 font-bold uppercase">Costo:</span>
+                      <span class="font-bold text-gray-600 italic text-xs">{{ product.averagePurchasePrice | currency }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="text-[10px] text-indigo-400 font-black uppercase">Venta:</span>
+                      <span class="font-black text-indigo-600">{{ product.sellingPrice | currency }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex flex-col">
+                    <span class="font-black text-base" [class]="getStockColor(product)">
+                      {{ product.currentStock }}
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                      Mín: {{ product.minStock }} | Máx: {{ product.maxStock }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-5 text-right">
+                  <ui-button variant="icon" (clicked)="openBatchesDialog(product)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                    <span class="material-icons">history</span>
+                  </ui-button>
+                  <ui-button variant="icon" (clicked)="openProductDialog(product)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                    <span class="material-icons">edit</span>
+                  </ui-button>
+                  <ui-button variant="icon" (clicked)="confirmDelete(product)" class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50">
+                    <span class="material-icons">delete</span>
+                  </ui-button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="p-12 text-center">
+                  <div class="flex flex-col items-center gap-4">
+                    <span class="material-icons text-5xl text-gray-200">inventory_2</span>
+                    <h3 class="text-lg font-bold text-gray-400">No se encontraron productos</h3>
+                    <p class="text-sm text-gray-300 max-w-xs">Aún no has registrado productos en tu catálogo o los filtros aplicados no coinciden.</p>
+                    <ui-button variant="primary" (clicked)="openProductDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                      <span class="material-icons mr-2">add</span>
+                      Registrar Primer Producto
+                    </ui-button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
         </table>
-
-        <mat-paginator 
-          [length]="meta()?.total || 0"
-          [pageSize]="pageSize()"
-          [pageIndex]="pageIndex() - 1"
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          (page)="onPageChange($event)"
-          aria-label="Seleccionar página"
-          class="!bg-transparent !border-t !border-gray-50"
-        ></mat-paginator>
-      </app-table-container>
+        
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+          <div class="flex items-center gap-2">
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
+              Anterior
+            </ui-button>
+            <span class="text-xs font-bold text-gray-400">
+              Página {{ pageIndex() }} de {{ totalPages() }}
+            </span>
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
+              Siguiente
+            </ui-button>
+          </div>
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+            <option value="5">5 / pág</option>
+            <option value="10" selected>10 / pág</option>
+            <option value="25">25 / pág</option>
+            <option value="100">100 / pág</option>
+          </select>
+        </div>
+      </div>
     </app-dashboard-layout>
+
+    <!-- Inline Dialogs -->
+    @if (showProductDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showProductDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[600px]" (click)="$event.stopPropagation()">
+          <app-product-form [data]="{ product: productDialogData() }" (closed)="onProductDialogClosed($event)" />
+        </div>
+      </div>
+    }
+
+    @if (showBatchDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showBatchDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[800px]" (click)="$event.stopPropagation()">
+          <app-inventory-batch-dialog [product]="batchDialogProduct()" (closed)="showBatchDialog.set(false)" />
+        </div>
+      </div>
+    }
+
+    @if (showDeleteDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDeleteDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[400px]" (click)="$event.stopPropagation()">
+          <app-confirm-delete-dialog [data]="deleteDialogData()" (closed)="onDeleteDialogClosed($event)" />
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -235,19 +217,16 @@ import { QueryParams } from '../../../../models/pagination.model';
 export class InventoryProductsPageComponent implements OnInit {
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
-  private dialog = inject(MatDialog);
 
   // Señales de datos
   products = this.productService.products;
   meta = this.productService.meta;
   categories = this.categoryService.categories;
-
-  dataSource = new MatTableDataSource<Product>([]);
   
   // Filtros
-  nameFilter = new FormControl('');
-  skuFilter = new FormControl('');
-  categoryFilter = new FormControl('');
+  nameFilter = signal('');
+  skuFilter = signal('');
+  categoryFilter = signal('');
 
   // Paginación y Orden
   pageSize = signal(10);
@@ -255,19 +234,21 @@ export class InventoryProductsPageComponent implements OnInit {
   sortBy = signal('name');
   order = signal<'ASC' | 'DESC'>('ASC');
 
-  displayedColumns = ['sku', 'name', 'category', 'prices', 'currentStock', 'actions'];
-  headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
-  cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
+  totalPages = computed(() => Math.max(1, Math.ceil((this.meta()?.total || 0) / this.pageSize())));
 
-  constructor() {
-    effect(() => {
-      this.dataSource.data = this.products();
-    });
-  }
+  private filterTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Dialog signals
+  showProductDialog = signal(false);
+  productDialogData = signal<Product | undefined>(undefined);
+  showBatchDialog = signal(false);
+  batchDialogProduct = signal<Product>({} as Product);
+  showDeleteDialog = signal(false);
+  deleteDialogData = signal<ConfirmDeleteData>({} as ConfirmDeleteData);
+  pendingDeleteProductId = signal<string | null>(null);
 
   ngOnInit() {
     this.loadData();
-    this.setupFilters();
     
     // Cargar categorías si no están cargadas
     if (this.categories().length === 0) {
@@ -275,18 +256,28 @@ export class InventoryProductsPageComponent implements OnInit {
     }
   }
 
-  setupFilters() {
-    const filters = [this.nameFilter, this.skuFilter, this.categoryFilter];
-    
-    filters.forEach(control => {
-      control.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged()
-      ).subscribe(() => {
-        this.pageIndex.set(1);
-        this.loadData();
-      });
-    });
+  onNameFilterChange(event: Event) {
+    this.nameFilter.set((event.target as HTMLInputElement).value);
+    this.debouncedFilter();
+  }
+
+  onSkuFilterChange(event: Event) {
+    this.skuFilter.set((event.target as HTMLInputElement).value);
+    this.debouncedFilter();
+  }
+
+  onCategoryFilterChange(event: Event) {
+    this.categoryFilter.set((event.target as HTMLSelectElement).value);
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  private debouncedFilter() {
+    if (this.filterTimeout) clearTimeout(this.filterTimeout);
+    this.filterTimeout = setTimeout(() => {
+      this.pageIndex.set(1);
+      this.loadData();
+    }, 400);
   }
 
   loadData() {
@@ -295,22 +286,29 @@ export class InventoryProductsPageComponent implements OnInit {
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       order: this.order(),
-      name: this.nameFilter.value || '',
-      sku: this.skuFilter.value || '',
-      categoryId: this.categoryFilter.value || ''
+      name: this.nameFilter() || '',
+      sku: this.skuFilter() || '',
+      categoryId: this.categoryFilter() || ''
     };
     this.productService.loadProducts(params).subscribe();
   }
 
-  onPageChange(event: PageEvent) {
-    this.pageSize.set(event.pageSize);
-    this.pageIndex.set(event.pageIndex + 1);
+  onPageChange(event: any) {
+    if (event.pageSize) this.pageSize.set(event.pageSize);
+    if (event.pageIndex !== undefined) this.pageIndex.set(event.pageIndex + 1);
     this.loadData();
   }
 
-  onSortChange(sort: Sort) {
-    this.sortBy.set(sort.active);
-    this.order.set(sort.direction === 'desc' ? 'DESC' : 'ASC');
+  onPageSizeChange(event: Event) {
+    const size = (event.target as HTMLSelectElement).value;
+    this.pageSize.set(parseInt(size));
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  onSortChange(sort: { column: string; order: 'ASC' | 'DESC' }) {
+    this.sortBy.set(sort.column);
+    this.order.set(sort.order);
     this.loadData();
   }
 
@@ -321,43 +319,38 @@ export class InventoryProductsPageComponent implements OnInit {
   }
 
   openProductDialog(product?: Product) {
-    const dialogRef = this.dialog.open(ProductFormMolecule, {
-      width: '600px',
-      maxWidth: '95vw',
-      panelClass: 'custom-dialog-container',
-      data: { product }
-    });
+    this.productDialogData.set(product);
+    this.showProductDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.loadData();
-    });
+  onProductDialogClosed(result: boolean) {
+    this.showProductDialog.set(false);
+    if (result) this.loadData();
   }
 
   openBatchesDialog(product: Product) {
-    this.dialog.open(InventoryBatchDialogOrganism, {
-      width: '800px',
-      maxWidth: '95vw',
-      data: { product }
-    });
+    this.batchDialogProduct.set(product);
+    this.showBatchDialog.set(true);
   }
 
   confirmDelete(product: Product) {
-    const dialogRef = this.dialog.open(ConfirmDeleteDialogOrganism, {
-      width: '400px',
-      maxWidth: '95vw',
-      data: { 
-        title: '¿Eliminar producto?',
-        message: 'Estás a punto de eliminar el producto',
-        itemName: product.name,
-        confirmText: 'Sí, eliminar definitivamente'
-      } as ConfirmDeleteData
-    });
+    this.pendingDeleteProductId.set(product.id);
+    this.deleteDialogData.set({ 
+      title: '¿Eliminar producto?',
+      message: 'Estás a punto de eliminar el producto',
+      itemName: product.name,
+      confirmText: 'Sí, eliminar definitivamente'
+    } as ConfirmDeleteData);
+    this.showDeleteDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.productService.deleteProduct(product.id).subscribe(() => this.loadData());
-      }
-    });
+  onDeleteDialogClosed(result: boolean) {
+    this.showDeleteDialog.set(false);
+    const id = this.pendingDeleteProductId();
+    this.pendingDeleteProductId.set(null);
+    if (result && id) {
+      this.productService.deleteProduct(id).subscribe(() => this.loadData());
+    }
   }
 }
 

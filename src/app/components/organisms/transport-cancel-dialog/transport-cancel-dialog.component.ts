@@ -1,11 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
 
@@ -14,22 +9,17 @@ import { TransportRoute } from '../../../models/transport.model';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
+    ReactiveFormsModule
   ],
   template: `
     <div class="p-0 overflow-hidden">
       <header class="bg-red-600 p-8 text-white flex justify-between items-center">
         <div>
           <h2 class="text-2xl font-black tracking-tight mb-1">Cancelar Servicio</h2>
-          <p class="text-red-100 text-sm font-medium">Esta acción liberará el vehículo {{ data.route.vehicleId }}.</p>
+          <p class="text-red-100 text-sm font-medium">Esta acción liberará el vehículo {{ data().route.vehicleId }}.</p>
         </div>
-        <button mat-icon-button mat-dialog-close class="text-white/80 hover:text-white">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-500 transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -40,38 +30,42 @@ import { TransportRoute } from '../../../models/transport.model';
           <div class="grid grid-cols-2 gap-4">
             <div>
               <p class="text-[10px] text-gray-400 font-bold uppercase">Cliente</p>
-              <p class="text-sm font-black text-gray-800">{{ data.route.customerName }}</p>
+              <p class="text-sm font-black text-gray-800">{{ data().route.customerName }}</p>
             </div>
             <div>
               <p class="text-[10px] text-gray-400 font-bold uppercase">Ruta</p>
-              <p class="text-sm font-black text-gray-800">{{ data.route.origin }} → {{ data.route.destination }}</p>
+              <p class="text-sm font-black text-gray-800">{{ data().route.origin }} → {{ data().route.destination }}</p>
             </div>
             <div>
               <p class="text-[10px] text-gray-400 font-bold uppercase">Vehículo</p>
-              <p class="text-sm font-black text-indigo-600">{{ data.route.vehicleId }}</p>
+              <p class="text-sm font-black text-indigo-600">{{ data().route.vehicleId }}</p>
             </div>
             <div>
               <p class="text-[10px] text-gray-400 font-bold uppercase">Valor</p>
-              <p class="text-sm font-black text-gray-800">{{ data.route.servicePrice | currency:'USD':'symbol':'1.0-0' }}</p>
+              <p class="text-sm font-black text-gray-800">{{ data().route.servicePrice | currency:'USD':'symbol':'1.0-0' }}</p>
             </div>
           </div>
         </div>
 
         <form [formGroup]="cancelForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Motivo de Cancelación</mat-label>
-            <textarea matInput formControlName="notes" placeholder="Explique por qué se cancela el servicio..." rows="4"></textarea>
-            <mat-icon matPrefix class="mr-2 text-gray-400">event_busy</mat-icon>
-            <mat-error *ngIf="cancelForm.get('notes')?.hasError('required')">El motivo es obligatorio</mat-error>
-          </mat-form-field>
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Motivo de Cancelación</label>
+            <div class="relative">
+              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">event_busy</span>
+              <textarea formControlName="notes" placeholder="Explique por qué se cancela el servicio..." rows="4" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
+            </div>
+            @if (cancelForm.get('notes')?.hasError('required') && cancelForm.get('notes')?.touched) {
+              <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio</p>
+            }
+          </div>
 
           <div class="flex gap-4 pt-4">
-            <button mat-button mat-dialog-close type="button" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200">
+            <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
               Cerrar
             </button>
-            <button mat-flat-button color="warn" type="submit" 
+            <button type="submit" 
                     [disabled]="cancelForm.invalid"
-                    class="!rounded-full !h-14 !px-8 !font-black !bg-red-600 flex-1 shadow-xl shadow-red-100 hover:scale-105 transition-all">
+                    class="!rounded-full !h-14 !px-8 !font-black !bg-red-600 text-white flex-1 shadow-xl shadow-red-100 hover:scale-105 transition-all disabled:opacity-50">
               Confirmar Cancelación
             </button>
           </div>
@@ -81,23 +75,26 @@ import { TransportRoute } from '../../../models/transport.model';
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
   `]
 })
 export class TransportCancelDialogOrganism {
   private fb = inject(FormBuilder);
-  private dialogRef = inject(MatDialogRef<TransportCancelDialogOrganism>);
-  public data = inject<{ route: TransportRoute }>(MAT_DIALOG_DATA);
+  data = input<{ route: TransportRoute }>({} as { route: TransportRoute });
+  closed = output<boolean | undefined>();
   private transportService = inject(TransportService);
 
   cancelForm = this.fb.group({
     notes: ['', [Validators.required, Validators.minLength(10)]]
   });
 
+  close(result?: boolean) {
+    this.closed.emit(result);
+  }
+
   onSubmit() {
     if (this.cancelForm.valid) {
-      this.transportService.cancelRoute(this.data.route.id, this.cancelForm.value.notes!);
-      this.dialogRef.close(true);
+      this.transportService.cancelRoute(this.data().route.id, this.cancelForm.value.notes!);
+      this.closed.emit(true);
     }
   }
 }

@@ -1,30 +1,15 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, input, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { TransportService } from '../../../services/transport.service';
 import { FinanceService } from '../../../services/finance.service';
-import { TransportRoute } from '../../../models/transport.model';
 
 @Component({
   selector: 'app-transport-dispatch-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDatepickerModule
+    ReactiveFormsModule
   ],
   template: `
     <div class="p-0 overflow-auto">
@@ -33,8 +18,8 @@ import { TransportRoute } from '../../../models/transport.model';
           <h2 class="text-2xl font-black tracking-tight mb-1">Programar Servicio</h2>
           <p class="text-indigo-100 text-sm font-medium">Completa los datos para comprometer el vehículo.</p>
         </div>
-        <button mat-icon-button mat-dialog-close class="text-white/80 hover:text-white">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-indigo-500 transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -42,52 +27,62 @@ import { TransportRoute } from '../../../models/transport.model';
         <form [formGroup]="dispatchForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Cliente / Empresa</mat-label>
-              <mat-select formControlName="customerName">
-                @for (c of financeService.customers(); track c.id) {
-                  <mat-option [value]="c.name">{{ c.name }}</mat-option>
-                }
-              </mat-select>
-              <mat-icon matPrefix class="mr-2 text-gray-400">business</mat-icon>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Cliente / Empresa</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">business</span>
+                <select formControlName="customerName" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
+                  @for (c of financeService.customers(); track c.id) {
+                    <option [value]="c.name">{{ c.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Origen</mat-label>
-              <input matInput formControlName="origin" placeholder="Ej: Bogotá, DC">
-              <mat-icon matPrefix class="mr-2 text-gray-400">location_on</mat-icon>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Origen</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">location_on</span>
+                <input formControlName="origin" placeholder="Ej: Bogotá, DC" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Destino</mat-label>
-              <input matInput formControlName="destination" placeholder="Ej: Medellín, ANT">
-              <mat-icon matPrefix class="mr-2 text-gray-400">flag</mat-icon>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Destino</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">flag</span>
+                <input formControlName="destination" placeholder="Ej: Medellín, ANT" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Vehículo</mat-label>
-              <input matInput [value]="data.vehicleId" readonly class="font-black text-indigo-600">
-              <mat-icon matPrefix class="mr-2 text-gray-400">local_shipping</mat-icon>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</span>
+                <input [value]="data().vehicleId" readonly class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl font-black text-indigo-600 bg-gray-50 text-sm">
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Fecha de Inicio</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="departureDate">
-              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker></mat-datepicker>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha de Inicio</label>
+              <input type="date" formControlName="departureDate" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Hora de Inicio</mat-label>
-              <input matInput type="time" formControlName="departureTime">
-              <mat-icon matPrefix class="mr-2 text-gray-400">schedule</mat-icon>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Inicio</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
+                <input type="time" formControlName="departureTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Precio del Servicio</mat-label>
-              <input matInput type="number" formControlName="servicePrice">
-              <span matPrefix class="text-gray-400 mr-1">$</span>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Precio del Servicio</label>
+              <div class="relative">
+                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
+                <input type="number" formControlName="servicePrice" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+              </div>
+            </div>
           </div>
 
           <div class="p-6 bg-indigo-50 rounded-3xl space-y-3">
@@ -100,12 +95,12 @@ import { TransportRoute } from '../../../models/transport.model';
           </div>
 
           <div class="flex gap-4 pt-4">
-            <button mat-button mat-dialog-close type="button" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200">
+            <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
               Cancelar
             </button>
-            <button mat-flat-button color="primary" type="submit" 
+            <button type="submit" 
                     [disabled]="dispatchForm.invalid"
-                    class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 flex-1 shadow-xl shadow-indigo-100 hover:scale-105 transition-all">
+                    class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 text-white flex-1 shadow-xl shadow-indigo-100 hover:scale-105 transition-all disabled:opacity-50">
               Confirmar Programación
             </button>
           </div>
@@ -115,7 +110,6 @@ import { TransportRoute } from '../../../models/transport.model';
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -123,8 +117,8 @@ import { TransportRoute } from '../../../models/transport.model';
 })
 export class TransportDispatchDialogOrganism implements OnInit {
   private fb = inject(FormBuilder);
-  private dialogRef = inject(MatDialogRef<TransportDispatchDialogOrganism>);
-  public data = inject(MAT_DIALOG_DATA);
+  data = input<any>({});
+  closed = output<boolean | undefined>();
   public transportService = inject(TransportService);
   public financeService = inject(FinanceService);
 
@@ -133,25 +127,25 @@ export class TransportDispatchDialogOrganism implements OnInit {
     origin: ['', Validators.required],
     destination: ['', Validators.required],
     vehicleId: [''],
-    departureDate: [new Date(), Validators.required],
+    departureDate: [new Date().toISOString().split('T')[0], Validators.required],
     departureTime: [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), Validators.required],
     servicePrice: [0, [Validators.required, Validators.min(0)]]
   });
 
-  ngOnInit() {
-    if (this.data.vehicleId) {
-      this.dispatchForm.patchValue({ vehicleId: this.data.vehicleId });
-    }
+  close(result?: boolean) {
+    this.closed.emit(result);
   }
 
-  onServiceChange(serviceId: string) {
-    // Removed
+  ngOnInit() {
+    if (this.data().vehicleId) {
+      this.dispatchForm.patchValue({ vehicleId: this.data().vehicleId });
+    }
   }
 
   onSubmit() {
     if (this.dispatchForm.valid) {
       const val = this.dispatchForm.value;
-      const date = val.departureDate as Date;
+      const date = new Date(val.departureDate!);
       const [hours, minutes] = (val.departureTime as string).split(':');
       date.setHours(parseInt(hours), parseInt(minutes));
 
@@ -174,7 +168,7 @@ export class TransportDispatchDialogOrganism implements OnInit {
         detailedExpenses: [],
         incidents: []
       });
-      this.dialogRef.close(true);
+      this.closed.emit(true);
     }
   }
 }

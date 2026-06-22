@@ -1,24 +1,13 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { TableContainerMolecule } from '../../../../components/molecules/table-container/table-container.component';
-import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
 import { SupplierService } from '../../../../services/supplier.service';
 import { Supplier } from '../../../../models/supplier.model';
 import { SupplierDialogOrganism } from '../../../../components/organisms/supplier-dialog/supplier-dialog.component';
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 
 @Component({
   selector: 'app-inventory-suppliers-page',
@@ -26,18 +15,10 @@ import { QueryParams } from '../../../../models/pagination.model';
   imports: [
     CommonModule,
     DashboardLayoutComponent,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatInputModule,
-    MatFormFieldModule,
-    ReactiveFormsModule,
     BreadcrumbMolecule,
-    TableContainerMolecule,
-    EmptyStateAtom
+    ButtonAtom,
+    SupplierDialogOrganism,
+    ConfirmDeleteDialogOrganism
   ],
   template: `
     <app-dashboard-layout>
@@ -54,134 +35,138 @@ import { QueryParams } from '../../../../models/pagination.model';
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Proveedores</h1>
           <p class="text-gray-500 font-medium">Administra tus socios comerciales y fuentes de suministro.</p>
         </div>
-        <button 
-          mat-flat-button 
-          color="primary" 
-          (click)="openSupplierDialog()"
+        <ui-button 
+          variant="primary"
+          (clicked)="openSupplierDialog()"
           class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
-          <mat-icon class="mr-2">add</mat-icon>
+          <span class="material-icons mr-2">add</span>
           Nuevo Proveedor
-        </button>
+        </ui-button>
       </header>
 
       <!-- Barra de Filtros -->
       <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Nombre del Proveedor</mat-label>
-            <input matInput [formControl]="nameFilter" placeholder="Buscar por nombre...">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">search</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">search</span>
+            <input 
+              (input)="onNameFilterChange($event)" 
+              placeholder="Buscar por nombre..." 
+              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            >
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>NIT / Identificación</mat-label>
-            <input matInput [formControl]="nitFilter" placeholder="Buscar por NIT...">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">fingerprint</mat-icon>
-          </mat-form-field>
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</span>
+            <input 
+              (input)="onNitFilterChange($event)" 
+              placeholder="Buscar por NIT..." 
+              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            >
+          </div>
         </div>
       </div>
 
-      <app-table-container [hasData]="true">
-        <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="w-full">
-          
-          <!-- NIT Column -->
-          <ng-container matColumnDef="nit">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="nit">NIT</th>
-            <td mat-cell *matCellDef="let supplier" [class]="cellClass">
-              <span class="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                {{ supplier.nit }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Nombre Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="name">Nombre</th>
-            <td mat-cell *matCellDef="let supplier" [class]="cellClass">
-              <div class="font-bold text-gray-900">{{ supplier.name }}</div>
-            </td>
-          </ng-container>
-
-          <!-- Dirección Column -->
-          <ng-container matColumnDef="address">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Dirección</th>
-            <td mat-cell *matCellDef="let supplier" [class]="cellClass">
-              <div class="flex items-center gap-2">
-                <mat-icon class="!text-gray-400 !text-sm">location_on</mat-icon>
-                <span class="text-xs truncate max-w-[200px]">{{ supplier.address }}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Teléfono Column -->
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Teléfono</th>
-            <td mat-cell *matCellDef="let supplier" [class]="cellClass">
-              <div class="flex items-center gap-2">
-                <mat-icon class="!text-gray-400 !text-sm">phone</mat-icon>
-                <span class="text-xs font-bold">{{ supplier.phone }}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Acciones Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass"></th>
-            <td mat-cell *matCellDef="let supplier" [class]="cellClass">
-              <div class="flex justify-end gap-2">
-                <button 
-                  mat-icon-button 
-                  (click)="openSupplierDialog(supplier)"
-                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button 
-                  mat-icon-button 
-                  (click)="confirmDelete(supplier)"
-                  class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/50 transition-colors"></tr>
-
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell p-12 text-center" [attr.colspan]="displayedColumns.length">
-              <app-empty-state 
-                icon="business"
-                title="No se encontraron proveedores"
-                description="Aún no has registrado proveedores en tu sistema o los filtros aplicados no coinciden."
-              >
-                <button 
-                  mat-flat-button 
-                  color="primary" 
-                  (click)="openSupplierDialog()"
-                  class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100"
-                >
-                  <mat-icon class="mr-2">add</mat-icon>
-                  Registrar Primer Proveedor
-                </button>
-              </app-empty-state>
-            </td>
-          </tr>
+      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">NIT</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Nombre</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Dirección</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Teléfono</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (supplier of suppliers(); track supplier.id) {
+              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                <td class="px-6 py-5">
+                  <span class="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {{ supplier.nit }}
+                  </span>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="font-bold text-gray-900">{{ supplier.name }}</div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-2">
+                    <span class="material-icons text-gray-400 text-sm">location_on</span>
+                    <span class="text-xs truncate max-w-[200px]">{{ supplier.address }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-2">
+                    <span class="material-icons text-gray-400 text-sm">phone</span>
+                    <span class="text-xs font-bold">{{ supplier.phone }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-5 text-right">
+                  <ui-button variant="icon" (clicked)="openSupplierDialog(supplier)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                    <span class="material-icons">edit</span>
+                  </ui-button>
+                  <ui-button variant="icon" (clicked)="confirmDelete(supplier)" class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50">
+                    <span class="material-icons">delete</span>
+                  </ui-button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="p-12 text-center">
+                  <div class="flex flex-col items-center gap-4">
+                    <span class="material-icons text-5xl text-gray-200">business</span>
+                    <h3 class="text-lg font-bold text-gray-400">No se encontraron proveedores</h3>
+                    <p class="text-sm text-gray-300 max-w-xs">Aún no has registrado proveedores en tu sistema o los filtros aplicados no coinciden.</p>
+                    <ui-button variant="primary" (clicked)="openSupplierDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                      <span class="material-icons mr-2">add</span>
+                      Registrar Primer Proveedor
+                    </ui-button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
         </table>
-
-        <mat-paginator 
-          [length]="meta()?.total || 0"
-          [pageSize]="pageSize()"
-          [pageIndex]="pageIndex() - 1"
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          (page)="onPageChange($event)"
-          class="!bg-transparent !border-t !border-gray-50"
-        ></mat-paginator>
-      </app-table-container>
+        
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+          <div class="flex items-center gap-2">
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
+              Anterior
+            </ui-button>
+            <span class="text-xs font-bold text-gray-400">
+              Página {{ pageIndex() }} de {{ totalPages() }}
+            </span>
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
+              Siguiente
+            </ui-button>
+          </div>
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+            <option value="5">5 / pág</option>
+            <option value="10" selected>10 / pág</option>
+            <option value="25">25 / pág</option>
+            <option value="100">100 / pág</option>
+          </select>
+        </div>
+      </div>
     </app-dashboard-layout>
+
+    <!-- Inline Dialogs -->
+    @if (showSupplierDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showSupplierDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[600px]" (click)="$event.stopPropagation()">
+          <app-supplier-dialog [data]="{ supplier: supplierDialogData() }" (closed)="onSupplierDialogClosed($event)" />
+        </div>
+      </div>
+    }
+
+    @if (showDeleteDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDeleteDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[400px]" (click)="$event.stopPropagation()">
+          <app-confirm-delete-dialog [data]="deleteDialogData()" (closed)="onDeleteDialogClosed($event)" />
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -189,47 +174,49 @@ import { QueryParams } from '../../../../models/pagination.model';
 })
 export class InventorySuppliersPageComponent implements OnInit {
   private supplierService = inject(SupplierService);
-  private dialog = inject(MatDialog);
 
   suppliers = this.supplierService.suppliers;
   meta = this.supplierService.meta;
-
-  dataSource = new MatTableDataSource<Supplier>([]);
   
-  nameFilter = new FormControl('');
-  nitFilter = new FormControl('');
+  nameFilter = signal('');
+  nitFilter = signal('');
 
   pageSize = signal(10);
   pageIndex = signal(1);
   sortBy = signal('name');
   order = signal<'ASC' | 'DESC'>('ASC');
 
-  displayedColumns = ['nit', 'name', 'address', 'phone', 'actions'];
-  headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
-  cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
+  totalPages = computed(() => Math.max(1, Math.ceil((this.meta()?.total || 0) / this.pageSize())));
 
-  constructor() {
-    effect(() => {
-      this.dataSource.data = this.suppliers();
-    });
-  }
+  private filterTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Dialog signals
+  showSupplierDialog = signal(false);
+  supplierDialogData = signal<Supplier | undefined>(undefined);
+  showDeleteDialog = signal(false);
+  deleteDialogData = signal<ConfirmDeleteData>({} as ConfirmDeleteData);
+  pendingDeleteSupplierId = signal<string | null>(null);
 
   ngOnInit() {
     this.loadData();
-    this.setupFilters();
   }
 
-  setupFilters() {
-    const filters = [this.nameFilter, this.nitFilter];
-    filters.forEach(control => {
-      control.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged()
-      ).subscribe(() => {
-        this.pageIndex.set(1);
-        this.loadData();
-      });
-    });
+  onNameFilterChange(event: Event) {
+    this.nameFilter.set((event.target as HTMLInputElement).value);
+    this.debouncedFilter();
+  }
+
+  onNitFilterChange(event: Event) {
+    this.nitFilter.set((event.target as HTMLInputElement).value);
+    this.debouncedFilter();
+  }
+
+  private debouncedFilter() {
+    if (this.filterTimeout) clearTimeout(this.filterTimeout);
+    this.filterTimeout = setTimeout(() => {
+      this.pageIndex.set(1);
+      this.loadData();
+    }, 400);
   }
 
   loadData() {
@@ -238,52 +225,58 @@ export class InventorySuppliersPageComponent implements OnInit {
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       order: this.order(),
-      name: this.nameFilter.value || '',
-      nit: this.nitFilter.value || ''
+      name: this.nameFilter() || '',
+      nit: this.nitFilter() || ''
     };
     this.supplierService.loadSuppliers(params).subscribe();
   }
 
-  onPageChange(event: PageEvent) {
-    this.pageSize.set(event.pageSize);
-    this.pageIndex.set(event.pageIndex + 1);
+  onPageChange(event: any) {
+    if (event.pageSize) this.pageSize.set(event.pageSize);
+    if (event.pageIndex !== undefined) this.pageIndex.set(event.pageIndex + 1);
     this.loadData();
   }
 
-  onSortChange(sort: Sort) {
-    this.sortBy.set(sort.active);
-    this.order.set(sort.direction === 'desc' ? 'DESC' : 'ASC');
+  onPageSizeChange(event: Event) {
+    const size = (event.target as HTMLSelectElement).value;
+    this.pageSize.set(parseInt(size));
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  onSortChange(sort: { column: string; order: 'ASC' | 'DESC' }) {
+    this.sortBy.set(sort.column);
+    this.order.set(sort.order);
     this.loadData();
   }
 
   openSupplierDialog(supplier?: Supplier) {
-    const dialogRef = this.dialog.open(SupplierDialogOrganism, {
-      width: '600px',
-      maxWidth: '95vw',
-      data: { supplier }
-    });
+    this.supplierDialogData.set(supplier);
+    this.showSupplierDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.loadData();
-    });
+  onSupplierDialogClosed(result: boolean) {
+    this.showSupplierDialog.set(false);
+    if (result) this.loadData();
   }
 
   confirmDelete(supplier: Supplier) {
-    const dialogRef = this.dialog.open(ConfirmDeleteDialogOrganism, {
-      width: '400px',
-      maxWidth: '95vw',
-      data: { 
-        title: '¿Eliminar proveedor?',
-        message: 'Estás a punto de eliminar al proveedor',
-        itemName: supplier.name,
-        confirmText: 'Sí, eliminar definitivamente'
-      } as ConfirmDeleteData
-    });
+    this.pendingDeleteSupplierId.set(supplier.id);
+    this.deleteDialogData.set({ 
+      title: '¿Eliminar proveedor?',
+      message: 'Estás a punto de eliminar al proveedor',
+      itemName: supplier.name,
+      confirmText: 'Sí, eliminar definitivamente'
+    } as ConfirmDeleteData);
+    this.showDeleteDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.supplierService.deleteSupplier(supplier.id).subscribe(() => this.loadData());
-      }
-    });
+  onDeleteDialogClosed(result: boolean) {
+    this.showDeleteDialog.set(false);
+    const id = this.pendingDeleteSupplierId();
+    this.pendingDeleteSupplierId.set(null);
+    if (result && id) {
+      this.supplierService.deleteSupplier(id).subscribe(() => this.loadData());
+    }
   }
 }

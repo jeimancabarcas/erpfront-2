@@ -1,26 +1,14 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { TableContainerMolecule } from '../../../../components/molecules/table-container/table-container.component';
-import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
 import { PurchaseOrderDialogOrganism } from '../../../../components/organisms/purchase-order-dialog/purchase-order-dialog.component';
 import { PurchaseOrderDetailDialogOrganism } from '../../../../components/organisms/purchase-order-detail-dialog/purchase-order-detail-dialog.component';
 import { PurchaseOrderService } from '../../../../services/purchase-order.service';
 import { SupplierService } from '../../../../services/supplier.service';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../../models/purchase-order.model';
 import { QueryParams } from '../../../../models/pagination.model';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 
 @Component({
   selector: 'app-inventory-purchases-page',
@@ -29,18 +17,11 @@ import { QueryParams } from '../../../../models/pagination.model';
     CommonModule,
     DashboardLayoutComponent,
     BreadcrumbMolecule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatDialogModule,
-    MatTooltipModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    ReactiveFormsModule,
-    TableContainerMolecule,
-    EmptyStateAtom
+    ButtonAtom,
+    CurrencyPipe,
+    DatePipe,
+    PurchaseOrderDialogOrganism,
+    PurchaseOrderDetailDialogOrganism
   ],
   template: `
     <app-dashboard-layout>
@@ -56,169 +37,164 @@ import { QueryParams } from '../../../../models/pagination.model';
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Ordenes de Compra</h1>
           <p class="text-gray-500 font-medium">Gestiona y realiza seguimiento a tus pedidos a proveedores.</p>
         </div>
-        <button 
-          mat-flat-button 
-          color="primary" 
-          (click)="openPurchaseOrderDialog()"
+        <ui-button 
+          variant="primary"
+          (clicked)="openPurchaseOrderDialog()"
           class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
-          <mat-icon class="mr-2">add_shopping_cart</mat-icon>
+          <span class="material-icons mr-2">add_shopping_cart</span>
           Nueva Orden de Compra
-        </button>
+        </ui-button>
       </header>
 
       <!-- Barra de Filtros -->
       <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Proveedor</mat-label>
-            <mat-select [formControl]="supplierFilter">
-              <mat-option [value]="''">Todos los proveedores</mat-option>
-              @for (supplier of suppliers(); track supplier.id) {
-                <mat-option [value]="supplier.id">{{ supplier.name }}</mat-option>
-              }
-            </mat-select>
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">business</mat-icon>
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Proveedor</label>
+            <div class="relative">
+              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">business</span>
+              <select (change)="onSupplierFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+                <option value="">Todos los proveedores</option>
+                @for (supplier of suppliers(); track supplier.id) {
+                  <option [value]="supplier.id">{{ supplier.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Estado</mat-label>
-            <mat-select [formControl]="statusFilter">
-              <mat-option [value]="''">Todos los estados</mat-option>
-              @for (status of statuses; track status.value) {
-                <mat-option [value]="status.value">{{ status.label }}</mat-option>
-              }
-            </mat-select>
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">filter_list</mat-icon>
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
+            <div class="relative">
+              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">filter_list</span>
+              <select (change)="onStatusFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+                <option value="">Todos los estados</option>
+                @for (status of statuses; track status.value) {
+                  <option [value]="status.value">{{ status.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      <app-table-container [hasData]="true">
-        <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="w-full">
-          <!-- ID Column -->
-          <ng-container matColumnDef="id">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="orderNumber">No. Orden</th>
-            <td mat-cell *matCellDef="let order" [class]="cellClass">
-              <span class="font-bold text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50">
-                {{ order.orderNumber }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Proveedor Column -->
-          <ng-container matColumnDef="supplier">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Proveedor</th>
-            <td mat-cell *matCellDef="let order" [class]="cellClass">
-              <div class="font-bold text-gray-900">{{ order.supplier?.name }}</div>
-              <div class="text-[10px] text-gray-400 font-medium tracking-wide">{{ order.supplier?.nit }}</div>
-            </td>
-          </ng-container>
-
-          <!-- Fecha Column -->
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="orderDate">Fecha</th>
-            <td mat-cell *matCellDef="let order" [class]="cellClass">
-              <span class="text-gray-500 text-xs font-medium">{{ order.orderDate | date:'dd MMM, yyyy' }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Items Column -->
-          <ng-container matColumnDef="items">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass">Items</th>
-            <td mat-cell *matCellDef="let order" [class]="cellClass">
-              <span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-[10px] font-black">
-                {{ order.items?.length || 0 }} productos
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Estado Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass" mat-sort-header="status">Estado</th>
-            <td mat-cell *matCellDef="let order" [class]="cellClass">
-              <span 
-                class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                [ngClass]="{
-                  'bg-amber-50 text-amber-600': order.status === 'DRAFT',
-                  'bg-indigo-50 text-indigo-600': order.status === 'SENT',
-                  'bg-amber-100 text-amber-700': order.status === 'IN_TRANSIT',
-                  'bg-emerald-50 text-emerald-600': order.status === 'COMPLETED',
-                  'bg-gray-50 text-gray-600': order.status === 'CANCELLED'
-                }"
-              >
-                {{ statusLabels[order.status] }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Acciones Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef [class]="headerClass"></th>
-            <td mat-cell *matCellDef="let order" [class]="cellClass">
-              <div class="flex justify-end gap-2">
-                <button 
-                  mat-icon-button 
-                  (click)="openPurchaseOrderDialog(order)"
-                  matTooltip="Editar orden"
-                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button 
-                  mat-icon-button 
-                  (click)="openOrderDetailDialog(order)"
-                  matTooltip="Ver detalles"
-                  class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50"
-                >
-                  <mat-icon>visibility</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/50 transition-colors"></tr>
-
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell p-12 text-center" [attr.colspan]="displayedColumns.length">
-              <app-empty-state 
-                icon="shopping_cart"
-                title="No se encontraron ordenes"
-                description="No hay registros que coincidan con los filtros seleccionados."
-              >
-                <button 
-                  mat-flat-button 
-                  color="primary" 
-                  (click)="openPurchaseOrderDialog()"
-                  class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100"
-                >
-                  <mat-icon class="mr-2">add_shopping_cart</mat-icon>
-                  Crear Nueva Orden
-                </button>
-              </app-empty-state>
-            </td>
-          </tr>
+      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">No. Orden</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Proveedor</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Fecha</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Items</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Estado</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of orders(); track order.id) {
+              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                <td class="px-6 py-5">
+                  <span class="font-bold text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50">
+                    {{ order.orderNumber }}
+                  </span>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="font-bold text-gray-900">{{ order.supplier?.name }}</div>
+                  <div class="text-[10px] text-gray-400 font-medium tracking-wide">{{ order.supplier?.nit }}</div>
+                </td>
+                <td class="px-6 py-5">
+                  <span class="text-gray-500 text-xs font-medium">{{ order.orderDate | date:'dd MMM, yyyy' }}</span>
+                </td>
+                <td class="px-6 py-5">
+                  <span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-[10px] font-black">
+                    {{ order.items?.length || 0 }} productos
+                  </span>
+                </td>
+                <td class="px-6 py-5">
+                  <span 
+                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                    [ngClass]="{
+                      'bg-amber-50 text-amber-600': order.status === 'DRAFT',
+                      'bg-indigo-50 text-indigo-600': order.status === 'SENT',
+                      'bg-amber-100 text-amber-700': order.status === 'IN_TRANSIT',
+                      'bg-emerald-50 text-emerald-600': order.status === 'COMPLETED',
+                      'bg-gray-50 text-gray-600': order.status === 'CANCELLED'
+                    }"
+                  >
+                    {{ statusLabels[order.status] }}
+                  </span>
+                </td>
+                <td class="px-6 py-5 text-right">
+                  <ui-button variant="icon" (clicked)="openPurchaseOrderDialog(order)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                    <span class="material-icons">edit</span>
+                  </ui-button>
+                  <ui-button variant="icon" (clicked)="openOrderDetailDialog(order)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                    <span class="material-icons">visibility</span>
+                  </ui-button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="p-12 text-center">
+                  <div class="flex flex-col items-center gap-4">
+                    <span class="material-icons text-5xl text-gray-200">shopping_cart</span>
+                    <h3 class="text-lg font-bold text-gray-400">No se encontraron ordenes</h3>
+                    <p class="text-sm text-gray-300 max-w-xs">No hay registros que coincidan con los filtros seleccionados.</p>
+                    <ui-button variant="primary" (clicked)="openPurchaseOrderDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                      <span class="material-icons mr-2">add_shopping_cart</span>
+                      Crear Nueva Orden
+                    </ui-button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
         </table>
-
-        <mat-paginator 
-          [length]="meta()?.total || 0"
-          [pageSize]="pageSize()"
-          [pageIndex]="pageIndex() - 1"
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          (page)="onPageChange($event)"
-          aria-label="Seleccionar página"
-          class="!bg-transparent !border-t !border-gray-50"
-        ></mat-paginator>
-      </app-table-container>
+        
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+          <div class="flex items-center gap-2">
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
+              Anterior
+            </ui-button>
+            <span class="text-xs font-bold text-gray-400">
+              Página {{ pageIndex() }} de {{ totalPages() }}
+            </span>
+            <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
+              Siguiente
+            </ui-button>
+          </div>
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+            <option value="5">5 / pág</option>
+            <option value="10" selected>10 / pág</option>
+            <option value="25">25 / pág</option>
+            <option value="100">100 / pág</option>
+          </select>
+        </div>
+      </div>
     </app-dashboard-layout>
+
+    <!-- Inline Dialogs -->
+    @if (showOrderDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showOrderDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <app-purchase-order-dialog [data]="{ order: orderDialogData() }" (closed)="onOrderDialogClosed($event)" />
+        </div>
+      </div>
+    }
+
+    @if (showDetailDialog()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDetailDialog.set(false)">
+        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[1000px] max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <app-purchase-order-detail-dialog [data]="{ order: detailDialogOrder() }" (closed)="onDetailDialogClosed($event)" />
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class InventoryPurchasesPageComponent implements OnInit {
-  private dialog = inject(MatDialog);
   private purchaseOrderService = inject(PurchaseOrderService);
   private supplierService = inject(SupplierService);
 
@@ -226,19 +202,20 @@ export class InventoryPurchasesPageComponent implements OnInit {
   orders = this.purchaseOrderService.orders;
   meta = this.purchaseOrderService.meta;
   suppliers = this.supplierService.suppliers;
-
-  dataSource = new MatTableDataSource<PurchaseOrder>([]);
-  displayedColumns = ['id', 'supplier', 'date', 'items', 'status', 'actions'];
   
   // Filtros
-  supplierFilter = new FormControl('');
-  statusFilter = new FormControl('');
+  supplierFilter = signal('');
+  statusFilter = signal('');
 
   // Paginación y Orden
   pageSize = signal(10);
   pageIndex = signal(1);
   sortBy = signal('createdAt');
   order = signal<'ASC' | 'DESC'>('DESC');
+
+  totalPages = computed(() => Math.max(1, Math.ceil((this.meta()?.total || 0) / this.pageSize())));
+
+  private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
   statuses = [
     { label: 'Borrador', value: 'DRAFT' },
@@ -256,35 +233,24 @@ export class InventoryPurchasesPageComponent implements OnInit {
     'CANCELLED': 'Cancelado'
   };
 
-  headerClass = 'px-6 !py-6 !text-xs !font-black !text-gray-400 !uppercase !tracking-widest !border-b !border-gray-100';
-  cellClass = 'px-6 !py-6 !text-sm !text-gray-600 !border-b !border-gray-100';
-
-  constructor() {
-    effect(() => {
-      this.dataSource.data = this.orders();
-    });
-  }
-
   ngOnInit() {
     this.loadData();
-    this.setupFilters();
 
     if (this.suppliers().length === 0) {
       this.supplierService.loadSuppliers({ limit: 100 }).subscribe();
     }
   }
 
-  setupFilters() {
-    const filters = [this.supplierFilter, this.statusFilter];
-    filters.forEach(control => {
-      control.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged()
-      ).subscribe(() => {
-        this.pageIndex.set(1);
-        this.loadData();
-      });
-    });
+  onSupplierFilterChange(event: Event) {
+    this.supplierFilter.set((event.target as HTMLSelectElement).value);
+    this.pageIndex.set(1);
+    this.loadData();
+  }
+
+  onStatusFilterChange(event: Event) {
+    this.statusFilter.set((event.target as HTMLSelectElement).value);
+    this.pageIndex.set(1);
+    this.loadData();
   }
 
   loadData() {
@@ -293,46 +259,55 @@ export class InventoryPurchasesPageComponent implements OnInit {
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       order: this.order(),
-      supplierId: this.supplierFilter.value || '',
-      status: this.statusFilter.value || ''
+      supplierId: this.supplierFilter() || '',
+      status: this.statusFilter() || ''
     };
     this.purchaseOrderService.loadOrders(params).subscribe();
   }
 
-  onPageChange(event: PageEvent) {
-    this.pageSize.set(event.pageSize);
-    this.pageIndex.set(event.pageIndex + 1);
+  onPageChange(event: any) {
+    if (event.pageSize) this.pageSize.set(event.pageSize);
+    if (event.pageIndex !== undefined) this.pageIndex.set(event.pageIndex + 1);
     this.loadData();
   }
 
-  onSortChange(sort: Sort) {
-    this.sortBy.set(sort.active === 'date' ? 'orderDate' : sort.active);
-    this.order.set(sort.direction === 'desc' ? 'DESC' : 'ASC');
+  onPageSizeChange(event: Event) {
+    const size = (event.target as HTMLSelectElement).value;
+    this.pageSize.set(parseInt(size));
+    this.pageIndex.set(1);
     this.loadData();
   }
+
+  onSortChange(sort: { column: string; order: 'ASC' | 'DESC' }) {
+    this.sortBy.set(sort.column === 'date' ? 'orderDate' : sort.column);
+    this.order.set(sort.order);
+    this.loadData();
+  }
+
+  // Dialog signals
+  showOrderDialog = signal(false);
+  orderDialogData = signal<{ order?: PurchaseOrder }>({});
+  showDetailDialog = signal(false);
+  detailDialogOrder = signal<PurchaseOrder>({} as PurchaseOrder);
 
   openPurchaseOrderDialog(order?: PurchaseOrder) {
-    const dialogRef = this.dialog.open(PurchaseOrderDialogOrganism, {
-      width: '900px',
-      maxWidth: '95vw',
-      data: { order }
-    });
+    this.orderDialogData.set({ order });
+    this.showOrderDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.loadData();
-    });
+  onOrderDialogClosed(result: any) {
+    this.showOrderDialog.set(false);
+    if (result) this.loadData();
   }
 
   openOrderDetailDialog(order: PurchaseOrder) {
-    const dialogRef = this.dialog.open(PurchaseOrderDetailDialogOrganism, {
-      width: '1000px',
-      maxWidth: '95vw',
-      data: { order }
-    });
+    this.detailDialogOrder.set(order);
+    this.showDetailDialog.set(true);
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) this.loadData();
-    });
+  onDetailDialogClosed(result: boolean) {
+    this.showDetailDialog.set(false);
+    if (result) this.loadData();
   }
 }
 

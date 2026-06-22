@@ -1,16 +1,10 @@
 import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { TransportService } from '../../../../services/transport.service';
 import { FinanceService } from '../../../../services/finance.service';
 import { TransportRoute } from '../../../../models/transport.model';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 
 @Component({
   selector: 'app-transport-dispatch-view',
@@ -18,13 +12,7 @@ import { TransportRoute } from '../../../../models/transport.model';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    ButtonAtom
   ],
   template: `
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -41,71 +29,85 @@ import { TransportRoute } from '../../../../models/transport.model';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               <!-- Customer Selection -->
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Cliente / Empresa</mat-label>
-                <mat-select formControlName="customerName">
-                  @for (c of financeService.customers(); track c.id) {
-                    <mat-option [value]="c.name">{{ c.name }}</mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix class="mr-2 text-gray-400">business</mat-icon>
-              </mat-form-field>
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Cliente / Empresa</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">business</span>
+                  <select formControlName="customerName" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+                    <option value="" disabled>Seleccionar cliente</option>
+                    @for (c of financeService.customers(); track c.id) {
+                      <option [value]="c.name">{{ c.name }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
 
-              <!-- Origin & Destination -->
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Origen</mat-label>
-                <input matInput formControlName="origin" placeholder="Ej: Bogotá, DC">
-                <mat-icon matPrefix class="mr-2 text-gray-400">location_on</mat-icon>
-              </mat-form-field>
+              <!-- Origin -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Origen</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">location_on</span>
+                  <input type="text" formControlName="origin" placeholder="Ej: Bogotá, DC" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Destino</mat-label>
-                <input matInput formControlName="destination" placeholder="Ej: Medellín, ANT">
-                <mat-icon matPrefix class="mr-2 text-gray-400">flag</mat-icon>
-              </mat-form-field>
+              <!-- Destination -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Destino</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">flag</span>
+                  <input type="text" formControlName="destination" placeholder="Ej: Medellín, ANT" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Vehículo Disponible</mat-label>
-                <mat-select formControlName="vehicleId">
-                  @for (v of availableVehicles(); track v.id) {
-                    <mat-option [value]="v.id">
-                      <div class="flex items-center gap-3">
-                        <span class="font-black text-indigo-600">{{ v.id }}</span>
-                        <span class="text-xs text-gray-400">— {{ v.driverName }} (Standby: {{ v.standbyRate | currency:'USD':'symbol':'1.0-0' }}/h)</span>
-                      </div>
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-icon matPrefix class="mr-2 text-gray-400">local_shipping</mat-icon>
-              </mat-form-field>
+              <!-- Vehicle Selection -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Vehículo Disponible</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">local_shipping</span>
+                  <select formControlName="vehicleId" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+                    <option value="" disabled>Seleccionar vehículo</option>
+                    @for (v of availableVehicles(); track v.id) {
+                      <option [value]="v.id">{{ v.id }} — {{ v.driverName }} (Standby: {{ v.standbyRate | currency:'USD':'symbol':'1.0-0' }}/h)</option>
+                    }
+                  </select>
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Fecha de Inicio</mat-label>
-                <input matInput [matDatepicker]="picker" formControlName="departureDate">
-                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
-              </mat-form-field>
+              <!-- Date -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Fecha de Inicio</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">calendar_today</span>
+                  <input type="date" formControlName="departureDate" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Hora de Inicio</mat-label>
-                <input matInput type="time" formControlName="departureTime">
-                <mat-icon matPrefix class="mr-2 text-gray-400">schedule</mat-icon>
-              </mat-form-field>
+              <!-- Time -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Hora de Inicio</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">schedule</span>
+                  <input type="time" formControlName="departureTime" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Precio del Servicio</mat-label>
-                <input matInput type="number" formControlName="servicePrice">
-                <span matPrefix class="text-gray-400 mr-1">$</span>
-                <mat-icon matSuffix class="text-gray-400">payments</mat-icon>
-              </mat-form-field>
+              <!-- Service Price -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Precio del Servicio</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg font-bold">$</span>
+                  <input type="number" formControlName="servicePrice" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+                </div>
+              </div>
             </div>
 
             <div class="pt-4">
-              <button mat-flat-button color="primary" type="submit" 
+              <ui-button variant="primary" type="submit"
                       [disabled]="dispatchForm.invalid"
                       class="!rounded-full !h-16 !px-10 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto">
                 Confirmar y Despachar
-              </button>
+              </ui-button>
             </div>
           </form>
         </div>

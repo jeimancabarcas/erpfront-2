@@ -1,26 +1,18 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, input, output, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { ProductService } from '../../../services/product.service';
 import { Product } from '../../../models/product.model';
 import { InventoryBatch } from '../../../models/inventory-batch.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-inventory-batch-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatTooltipModule,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    ButtonAtom
   ],
   template: `
     <div class="flex flex-col h-full max-h-[90vh]">
@@ -28,20 +20,20 @@ import { InventoryBatch } from '../../../models/inventory-batch.model';
       <header class="flex justify-between items-center mb-8 px-2">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <mat-icon class="!text-3xl">history</mat-icon>
+            <span class="material-icons !text-3xl">history</span>
           </div>
           <div>
             <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
               Trazabilidad por Lotes
             </h2>
             <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
-              {{ product.name }} • {{ product.sku }}
+              {{ product().name }} • {{ product().sku }}
             </p>
           </div>
         </div>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-          <mat-icon>close</mat-icon>
-        </button>
+        <ui-button variant="icon" (clicked)="onClose()" class="!text-gray-400">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
       <!-- Info del Producto -->
@@ -49,18 +41,18 @@ import { InventoryBatch } from '../../../models/inventory-batch.model';
         <div class="bg-gray-50 p-6 rounded-[28px] border border-gray-100">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Precio Medio Ponderado (PMP)</p>
           <p class="text-3xl font-black text-indigo-600 tracking-tighter">
-            {{ product.averagePurchasePrice | currency }}
+            {{ product().averagePurchasePrice | currency }}
           </p>
         </div>
         <div class="bg-gray-50 p-6 rounded-[28px] border border-gray-100">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual Total</p>
           <p class="text-3xl font-black text-gray-900 tracking-tighter">
-            {{ product.currentStock }} <span class="text-sm font-bold text-gray-400 ml-1 uppercase">unidades</span>
+            {{ product().currentStock }} <span class="text-sm font-bold text-gray-400 ml-1 uppercase">unidades</span>
           </p>
         </div>
       </div>
 
-      <mat-dialog-content class="flex-1 !px-2 custom-scrollbar">
+      <div class="flex-1 overflow-y-auto px-2 custom-scrollbar">
         <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-4 px-2">Historial de Ingresos</h3>
         
         @if (isLoading()) {
@@ -70,7 +62,7 @@ import { InventoryBatch } from '../../../models/inventory-batch.model';
           </div>
         } @else if (batches().length === 0) {
           <div class="bg-gray-50 rounded-3xl p-12 text-center border border-gray-100">
-            <mat-icon class="!text-5xl text-gray-300 mb-4">inventory_2</mat-icon>
+            <span class="material-icons !text-5xl text-gray-300 mb-4">inventory_2</span>
             <p class="text-gray-900 font-bold">No hay lotes registrados</p>
             <p class="text-xs text-gray-500">Este producto aún no tiene ingresos de stock trazables.</p>
           </div>
@@ -97,7 +89,7 @@ import { InventoryBatch } from '../../../models/inventory-batch.model';
                         <span class="text-gray-400 text-xs font-bold">{{ batch.initialQuantity }}</span>
                       </td>
                       <td class="px-6 py-4 text-center">
-                        <span 
+                        <span
                           class="px-3 py-1 rounded-full text-xs font-black"
                           [ngClass]="batch.remainingQuantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'"
                         >
@@ -114,37 +106,38 @@ import { InventoryBatch } from '../../../models/inventory-batch.model';
             </div>
           </div>
         }
-      </mat-dialog-content>
+      </div>
 
-      <mat-dialog-actions class="!justify-end !pt-6 !px-2 !min-h-0 border-t border-gray-100 mt-4">
-        <button 
-          mat-flat-button 
-          (click)="dialogRef.close()"
+      <div class="flex justify-end pt-6 px-2 border-t border-gray-100 mt-4">
+        <ui-button
+          variant="primary"
+          (clicked)="onClose()"
           class="!h-12 !px-8 !rounded-full !font-bold !bg-gray-900 !text-white"
         >
           Entendido
-        </button>
-      </mat-dialog-actions>
+        </ui-button>
+      </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 40px !important;
-      padding: 32px !important;
-    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
   `]
 })
 export class InventoryBatchDialogOrganism implements OnInit {
-  public dialogRef = inject(MatDialogRef<InventoryBatchDialogOrganism>);
-  public product: Product = inject(MAT_DIALOG_DATA).product;
+  product = input.required<Product>();
+  closed = output<void>();
+
   private productService = inject(ProductService);
 
   batches = signal<InventoryBatch[]>([]);
   isLoading = signal(true);
 
   ngOnInit() {
-    this.productService.getProductBatches(this.product.id).subscribe({
+    this.productService.getProductBatches(this.product().id).subscribe({
       next: (data: InventoryBatch[]) => {
         this.batches.set(data);
         this.isLoading.set(false);
@@ -153,5 +146,9 @@ export class InventoryBatchDialogOrganism implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  onClose() {
+    this.closed.emit();
   }
 }

@@ -1,14 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { TransportService } from '../../../services/transport.service';
 
 @Component({
@@ -16,25 +8,17 @@ import { TransportService } from '../../../services/transport.service';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    ReactiveFormsModule
   ],
   template: `
     <div class="p-0 overflow-hidden">
       <header class="bg-amber-500 p-8 text-white flex justify-between items-center">
         <div>
           <h2 class="text-2xl font-black tracking-tight mb-1">Programar Mantenimiento</h2>
-          <p class="text-amber-50 text-sm font-medium italic">Define el servicio técnico para el vehículo {{ data.vehicleId }}.</p>
+          <p class="text-amber-50 text-sm font-medium italic">Define el servicio técnico para el vehículo {{ data().vehicleId }}.</p>
         </div>
-        <button mat-icon-button mat-dialog-close class="text-white/80 hover:text-white">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" class="text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-amber-400 transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -42,46 +26,51 @@ import { TransportService } from '../../../services/transport.service';
         <form [formGroup]="maintenanceForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Tipo de Mantenimiento</mat-label>
-              <mat-select formControlName="type">
-                <mat-option value="Preventivo">Preventivo</mat-option>
-                <mat-option value="Correctivo">Correctivo</mat-option>
-                <mat-option value="Inspección">Inspección</mat-option>
-                <mat-option value="Otros">Otros</mat-option>
-              </mat-select>
-              <mat-icon matPrefix class="mr-2 text-gray-400">handyman</mat-icon>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Mantenimiento</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">handyman</span>
+                <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm bg-white">
+                  <option value="Preventivo">Preventivo</option>
+                  <option value="Correctivo">Correctivo</option>
+                  <option value="Inspección">Inspección</option>
+                  <option value="Otros">Otros</option>
+                </select>
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Fecha Programada</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="scheduledDate">
-              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker></mat-datepicker>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha Programada</label>
+              <input type="date" formControlName="scheduledDate" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm">
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full md:col-span-2">
-              <mat-label>Descripción Detallada</mat-label>
-              <textarea matInput formControlName="description" rows="4" 
-                        placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..."></textarea>
-              <mat-icon matPrefix class="mr-2 text-gray-400">description</mat-icon>
-            </mat-form-field>
+            <div class="md:col-span-2">
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción Detallada</label>
+              <div class="relative">
+                <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
+                <textarea formControlName="description" rows="4" 
+                          placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..."
+                          class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
+              </div>
+            </div>
 
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Costo Estimado (Opcional)</mat-label>
-              <input matInput type="number" formControlName="cost">
-              <span matPrefix class="text-gray-400 mr-1">$</span>
-              <mat-icon matSuffix class="text-gray-400">payments</mat-icon>
-            </mat-form-field>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Costo Estimado (Opcional)</label>
+              <div class="relative">
+                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
+                <input type="number" formControlName="cost" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm">
+                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
+              </div>
+            </div>
           </div>
 
           <div class="flex gap-4 pt-4">
-            <button mat-button mat-dialog-close type="button" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200">
+            <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
               Cancelar
             </button>
-            <button mat-flat-button color="primary" type="submit" 
+            <button type="submit" 
                     [disabled]="maintenanceForm.invalid"
-                    class="!rounded-full !h-14 !px-8 !font-black !bg-amber-600 flex-1 shadow-xl shadow-amber-100 hover:scale-105 transition-all">
+                    class="!rounded-full !h-14 !px-8 !font-black !bg-amber-600 text-white flex-1 shadow-xl shadow-amber-100 hover:scale-105 transition-all disabled:opacity-50">
               Programar Servicio
             </button>
           </div>
@@ -93,28 +82,32 @@ import { TransportService } from '../../../services/transport.service';
 export class TransportMaintenanceDialogOrganism {
   private fb = inject(FormBuilder);
   private transportService = inject(TransportService);
-  dialogRef = inject(MatDialogRef<TransportMaintenanceDialogOrganism>);
-  data = inject(MAT_DIALOG_DATA); // { vehicleId }
+  data = input<any>({}); // { vehicleId }
+  closed = output<boolean | undefined>();
 
   maintenanceForm = this.fb.group({
     type: ['Preventivo', Validators.required],
-    scheduledDate: [new Date(), Validators.required],
+    scheduledDate: [new Date().toISOString().split('T')[0], Validators.required],
     description: ['', [Validators.required, Validators.minLength(10)]],
-    cost: [null]
+    cost: [null as number | null]
   });
+
+  close(result?: boolean) {
+    this.closed.emit(result);
+  }
 
   onSubmit() {
     if (this.maintenanceForm.valid) {
       const val = this.maintenanceForm.value;
       this.transportService.scheduleMaintenance({
-        vehicleId: this.data.vehicleId,
+        vehicleId: this.data().vehicleId,
         type: val.type as any,
         description: val.description!,
-        scheduledDate: (val.scheduledDate as Date).toISOString(),
+        scheduledDate: new Date(val.scheduledDate!).toISOString(),
         status: 'Scheduled',
         cost: val.cost || undefined
       });
-      this.dialogRef.close(true);
+      this.closed.emit(true);
     }
   }
 }

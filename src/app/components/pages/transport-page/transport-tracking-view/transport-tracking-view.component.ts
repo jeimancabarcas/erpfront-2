@@ -1,29 +1,32 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { MatChipsModule } from '@angular/material/chips';
 import { TransportService } from '../../../../services/transport.service';
 import { TransportCancelDialogOrganism } from '../../../../components/organisms/transport-cancel-dialog/transport-cancel-dialog.component';
 import { TransportRoute } from '../../../../models/transport.model';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 
 @Component({
   selector: 'app-transport-tracking-view',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatDialogModule, MatChipsModule],
+  imports: [CommonModule, ButtonAtom],
   template: `
     <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       <!-- Filters -->
-      <div class="flex items-center gap-4 bg-white p-4 rounded-[32px] border border-gray-100 shadow-sm overflow-x-auto no-scrollbar">
-        <mat-chip-listbox [value]="statusFilter()" (change)="statusFilter.set($event.value)">
-          <mat-chip-option value="all" class="!rounded-full">Todos</mat-chip-option>
-          <mat-chip-option value="Active" class="!rounded-full">En Tránsito</mat-chip-option>
-          <mat-chip-option value="Planning" class="!rounded-full">Programados</mat-chip-option>
-          <mat-chip-option value="Cancelled" class="!rounded-full text-red-600">Cancelados</mat-chip-option>
-        </mat-chip-listbox>
+      <div class="flex items-center gap-2 bg-white p-2 rounded-[32px] border border-gray-100 shadow-sm overflow-x-auto no-scrollbar">
+        @for (opt of filterOptions; track opt.value) {
+          <button
+            class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all"
+            [class.bg-gray-900]="statusFilter() === opt.value"
+            [class.text-white]="statusFilter() === opt.value"
+            [class.bg-gray-50]="statusFilter() !== opt.value"
+            [class.text-gray-600]="statusFilter() !== opt.value"
+            [class.hover:bg-gray-100]="statusFilter() !== opt.value"
+            (click)="statusFilter.set(opt.value)"
+          >{{ opt.label }}</button>
+        }
       </div>
 
       <!-- Tracking List -->
@@ -43,9 +46,9 @@ import { TransportRoute } from '../../../../models/transport.model';
                    [class.text-blue-600]="route.status === 'Active'"
                    [class.text-amber-500]="route.status === 'Planning'"
                    [class.text-red-500]="route.status === 'Cancelled'">
-                <mat-icon class="!text-[32px] !w-8 !h-8">
+                <span class="material-icons !text-[32px] !w-8 !h-8">
                   {{ route.status === 'Active' ? 'my_location' : (route.status === 'Cancelled' ? 'event_busy' : 'event_available') }}
-                </mat-icon>
+                </span>
               </div>
             </div>
 
@@ -67,7 +70,7 @@ import { TransportRoute } from '../../../../models/transport.model';
                   </span>
                   <h3 class="text-2xl font-black text-gray-900 mt-2 tracking-tight">{{ route.origin }} → {{ route.destination }}</h3>
                   <div class="flex items-center gap-2 mt-1">
-                    <mat-icon class="!text-xs !w-3 !h-3 text-gray-400">business</mat-icon>
+                    <span class="material-icons !text-xs !w-3 !h-3 text-gray-400">business</span>
                     <span class="text-sm font-bold text-indigo-600">{{ route.customerName }}</span>
                   </div>
                   <p class="text-gray-400 text-xs font-medium mt-1">
@@ -92,7 +95,7 @@ import { TransportRoute } from '../../../../models/transport.model';
                      [class.text-blue-600]="route.status === 'Active'"
                      [class.text-amber-500]="route.status === 'Planning'"
                      [class.text-red-500]="route.status === 'Cancelled'">
-                  <mat-icon>{{ route.status === 'Active' ? 'place' : (route.status === 'Cancelled' ? 'error_outline' : 'pending_actions') }}</mat-icon>
+                  <span class="material-icons">{{ route.status === 'Active' ? 'place' : (route.status === 'Cancelled' ? 'error_outline' : 'pending_actions') }}</span>
                 </div>
                 <div>
                   <p class="text-[10px] font-black uppercase tracking-widest mb-0.5"
@@ -110,24 +113,24 @@ import { TransportRoute } from '../../../../models/transport.model';
 
             <!-- Actions -->
             <div class="p-8 md:p-10 bg-gray-50/50 flex flex-col justify-center items-center gap-4 min-w-[240px]">
-              <button mat-flat-button color="primary" (click)="onViewDetail(route.id)"
+              <ui-button variant="primary" (clicked)="onViewDetail(route.id)"
                       class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all w-full">
                 Ver Detalles
-              </button>
+              </ui-button>
               @if (route.status === 'Active') {
-                <button mat-stroked-button 
+                <ui-button variant="outline"
                         class="!rounded-full !h-12 !px-8 !font-bold !border-gray-200 hover:!bg-white transition-all w-full">
                   Reportar Hito
-                </button>
+                </ui-button>
               } @else if (route.status === 'Planning') {
-                <button mat-flat-button color="accent" (click)="onStartRoute(route.vehicleId)"
+                <ui-button variant="primary" (clicked)="onStartRoute(route.vehicleId)"
                         class="!rounded-full !h-12 !px-8 !font-bold !bg-amber-500 !text-white hover:scale-105 transition-all w-full shadow-lg shadow-amber-100">
                   Iniciar Ruta
-                </button>
-                <button mat-stroked-button color="warn" (click)="onCancelService(route)"
+                </ui-button>
+                <ui-button variant="outline" (clicked)="onCancelService(route)"
                         class="!rounded-full !h-10 !px-8 !font-bold !border-red-100 !text-red-400 hover:!bg-red-50 transition-all w-full !text-xs">
                   Cancelar Servicio
-                </button>
+                </ui-button>
               } @else if (route.status === 'Cancelled') {
                 <span class="text-[10px] font-black text-red-300 uppercase tracking-tighter">Servicio Finalizado</span>
               }
@@ -136,7 +139,7 @@ import { TransportRoute } from '../../../../models/transport.model';
         } @empty {
           <div class="p-20 bg-white rounded-[40px] border border-gray-100 border-dashed flex flex-col items-center justify-center text-center">
             <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-200 mb-6">
-              <mat-icon class="!text-[40px] !w-10 !h-10">sensors_off</mat-icon>
+              <span class="material-icons !text-[40px] !w-10 !h-10">sensors_off</span>
             </div>
             <h4 class="text-xl font-black text-gray-900 mb-2">No se encontraron rutas</h4>
             <p class="text-gray-400 text-sm max-w-xs mx-auto">Ajusta los filtros para ver otros estados o programa un nuevo servicio.</p>
@@ -158,6 +161,13 @@ export class TransportTrackingViewComponent {
   private router = inject(Router);
 
   statusFilter = signal<string>('all');
+
+  filterOptions = [
+    { value: 'all', label: 'Todos' },
+    { value: 'Active', label: 'En Tránsito' },
+    { value: 'Planning', label: 'Programados' },
+    { value: 'Cancelled', label: 'Cancelados' }
+  ];
 
   filteredRoutes = computed(() => {
     const routes = this.transportService.routes();

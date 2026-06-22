@@ -1,14 +1,11 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog } from '@angular/material/dialog';
 import { TransportService } from '../../../../services/transport.service';
 import { Vehicle, VehicleMaintenance } from '../../../../models/transport.model';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
+import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-tag.component';
 import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
 import { TransportMaintenanceDialogOrganism } from '../../../../components/organisms/transport-maintenance-dialog/transport-maintenance-dialog.component';
@@ -19,12 +16,8 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
   imports: [
     CommonModule,
     RouterModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
-    MatTooltipModule,
-    MatMenuModule,
     DashboardLayoutComponent,
+    ButtonAtom,
     StatusTagAtom,
     EmptyStateAtom
   ],
@@ -32,13 +25,12 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
     <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div class="flex items-center gap-6">
-          <button 
-            mat-icon-button 
-            routerLink="/transport" 
-            class="!bg-white !shadow-sm !border !border-gray-100 !text-gray-400 hover:!text-indigo-600 transition-colors"
+          <a 
+            routerLink="/transport"
+            class="inline-flex items-center justify-center w-12 h-12 bg-white shadow-sm border border-gray-100 text-gray-400 hover:text-indigo-600 transition-colors rounded-full"
           >
-            <mat-icon>arrow_back</mat-icon>
-          </button>
+            <span class="material-icons">arrow_back</span>
+          </a>
           <div>
             <div class="flex items-center gap-3 mb-1">
               <h1 class="text-3xl font-black text-gray-900 tracking-tight">{{ vehicleId() }}</h1>
@@ -52,14 +44,14 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
         </div>
         
         <div class="flex gap-3">
-          <button 
-            mat-flat-button 
-            (click)="openMaintenanceDialog()"
+          <ui-button 
+            variant="primary"
+            (clicked)="openMaintenanceDialog()"
             class="!rounded-full !h-12 !px-8 !font-black !bg-amber-500 !text-white shadow-xl shadow-amber-100 hover:scale-105 transition-all"
           >
-            <mat-icon class="mr-2">engineering</mat-icon>
+            <span class="material-icons mr-2">engineering</span>
             Programar Mantenimiento
-          </button>
+          </ui-button>
         </div>
       </header>
 
@@ -75,7 +67,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
             <div class="space-y-6 relative z-10">
               <div class="flex items-center gap-6">
                 <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400">
-                  <mat-icon class="!text-2xl">local_shipping</mat-icon>
+                  <span class="material-icons !text-2xl">local_shipping</span>
                 </div>
                 <div>
                   <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Modelo / Tipo</p>
@@ -86,7 +78,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
 
               <div class="flex items-center gap-6">
                 <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-                  <mat-icon class="!text-2xl">person</mat-icon>
+                  <span class="material-icons !text-2xl">person</span>
                 </div>
                 <div>
                   <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Conductor Asignado</p>
@@ -97,7 +89,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
 
               <div class="flex items-center gap-6">
                 <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
-                  <mat-icon class="!text-2xl">event_repeat</mat-icon>
+                  <span class="material-icons !text-2xl">event_repeat</span>
                 </div>
                 <div>
                   <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Próximo Servicio</p>
@@ -110,7 +102,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
 
           <!-- Stats Card -->
           <div class="bg-indigo-600 rounded-[40px] shadow-xl shadow-indigo-100 p-8 text-white relative overflow-hidden">
-             <mat-icon class="absolute -right-4 -bottom-4 !text-[120px] !w-[120px] !h-[120px] opacity-10 rotate-12">construction</mat-icon>
+             <span class="material-icons absolute -right-4 -bottom-4 !text-[120px] !w-[120px] !h-[120px] opacity-10 rotate-12">construction</span>
              <h3 class="text-lg font-black mb-1">Estado de Flota</h3>
              <p class="text-indigo-100 text-sm mb-8 font-medium opacity-80">Resumen de salud mecánica del vehículo.</p>
              
@@ -148,7 +140,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
                              [class.text-blue-500]="maint.status === 'InProcess'"
                              [class.text-emerald-500]="maint.status === 'Completed'"
                              [class.text-red-400]="maint.status === 'Cancelled'">
-                          <mat-icon class="!text-2xl">{{ getMaintenanceIcon(maint.type) }}</mat-icon>
+                          <span class="material-icons !text-2xl">{{ getMaintenanceIcon(maint.type) }}</span>
                         </div>
                         <div>
                           <div class="flex items-center gap-3 mb-1">
@@ -174,25 +166,29 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
                         </div>
                       </div>
 
-                      <button mat-icon-button [matMenuTriggerFor]="maintMenu" class="text-gray-300">
-                        <mat-icon>more_vert</mat-icon>
-                      </button>
-                      <mat-menu #maintMenu="matMenu" class="custom-premium-menu">
-                        @if (maint.status !== 'Completed' && maint.status !== 'Cancelled') {
-                          <button mat-menu-item (click)="updateStatus(maint.id, 'InProcess')">
-                            <mat-icon class="text-blue-500">play_circle</mat-icon>
-                            <span>Iniciar Trabajo</span>
-                          </button>
-                          <button mat-menu-item (click)="updateStatus(maint.id, 'Completed')">
-                            <mat-icon class="text-emerald-500">check_circle</mat-icon>
-                            <span>Completar</span>
-                          </button>
-                          <button mat-menu-item (click)="updateStatus(maint.id, 'Cancelled')">
-                            <mat-icon class="text-red-500">cancel</mat-icon>
-                            <span>Cancelar</span>
-                          </button>
+                      <div class="relative">
+                        <ui-button variant="icon" (clicked)="toggleMenu(maint.id)" class="text-gray-300">
+                          <span class="material-icons">more_vert</span>
+                        </ui-button>
+                        @if (openMenuId() === maint.id) {
+                          <div class="absolute right-0 top-12 z-50 bg-white rounded-2xl min-w-[200px] py-2 shadow-xl border border-gray-100" (click)="$event.stopPropagation()">
+                            @if (maint.status !== 'Completed' && maint.status !== 'Cancelled') {
+                              <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="updateStatus(maint.id, 'InProcess'); closeMenu()">
+                                <span class="material-icons text-blue-500">play_circle</span>
+                                <span>Iniciar Trabajo</span>
+                              </button>
+                              <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="updateStatus(maint.id, 'Completed'); closeMenu()">
+                                <span class="material-icons text-emerald-500">check_circle</span>
+                                <span>Completar</span>
+                              </button>
+                              <button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors text-sm font-bold text-gray-700" (click)="updateStatus(maint.id, 'Cancelled'); closeMenu()">
+                                <span class="material-icons text-red-500">cancel</span>
+                                <span>Cancelar</span>
+                              </button>
+                            }
+                          </div>
                         }
-                      </mat-menu>
+                      </div>
                     </div>
 
                     <p class="text-sm font-medium text-gray-600 mb-8 leading-relaxed italic border-l-4 border-gray-200 pl-4 py-2">
@@ -205,7 +201,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
                       <div class="flex flex-wrap gap-3">
                         @for (file of maint.attachments; track file) {
                           <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-gray-100 text-xs font-bold text-gray-500 shadow-sm transition-all hover:border-indigo-200 hover:text-indigo-600 cursor-pointer">
-                            <mat-icon class="!text-sm !w-4 !h-4">description</mat-icon>
+                            <span class="material-icons !text-sm !w-4 !h-4">description</span>
                             {{ file }}
                           </div>
                         }
@@ -215,7 +211,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
                             (click)="addSupport(maint.id)"
                             class="flex items-center gap-2 bg-white text-gray-400 px-4 py-2 rounded-2xl border border-dashed border-gray-200 text-xs font-bold hover:border-indigo-400 hover:text-indigo-600 transition-all"
                           >
-                            <mat-icon class="!text-sm !w-4 !h-4">add</mat-icon>
+                            <span class="material-icons !text-sm !w-4 !h-4">add</span>
                             Adjuntar Soporte
                           </button>
                         }
@@ -246,12 +242,6 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .custom-premium-menu {
-      border-radius: 20px !important;
-      padding: 8px !important;
-      border: 1px solid #f1f5f9 !important;
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05) !important;
-    }
   `]
 })
 export class TransportVehicleDetailPageComponent {
@@ -260,6 +250,15 @@ export class TransportVehicleDetailPageComponent {
   private dialog = inject(MatDialog);
   
   vehicleId = signal<string | null>(null);
+  openMenuId = signal<string | null>(null);
+
+  toggleMenu(id: string) {
+    this.openMenuId.update(v => v === id ? null : id);
+  }
+
+  closeMenu() {
+    this.openMenuId.set(null);
+  }
 
   vehicle = computed(() => {
     const id = this.vehicleId();

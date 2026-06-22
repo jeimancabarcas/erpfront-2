@@ -2,14 +2,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
@@ -34,6 +27,7 @@ import { IncapacityDialogComponent } from '../../organisms/incapacity-dialog/inc
 
 import { ConsultationActionMolecule } from '../../molecules/consultation-action/consultation-action.component';
 import { ConsultationSummaryOrganism } from '../../organisms/consultation-summary/consultation-summary.component';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-consultation-page',
@@ -42,17 +36,10 @@ import { ConsultationSummaryOrganism } from '../../organisms/consultation-summar
     CommonModule,
     FormsModule,
     DashboardLayoutComponent,
-    MatIconModule,
-    MatButtonModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDialogModule,
-    MatDividerModule,
-    MatSelectModule,
-    MatTooltipModule,
     BreadcrumbMolecule,
     ConsultationActionMolecule,
-    ConsultationSummaryOrganism
+    ConsultationSummaryOrganism,
+    ButtonAtom
   ],
   template: `
     <app-dashboard-layout>
@@ -65,7 +52,7 @@ import { ConsultationSummaryOrganism } from '../../organisms/consultation-summar
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div class="flex items-center gap-6">
             <div class="w-16 h-16 bg-indigo-600 text-white rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-100">
-              <mat-icon class="!w-8 !h-8 !text-[32px]">clinical_notes</mat-icon>
+              <span class="material-icons !w-8 !h-8 !text-[32px]">clinical_notes</span>
             </div>
             <div>
               <h1 class="text-3xl font-black text-gray-900 tracking-tight !m-0">Consulta Externa</h1>
@@ -74,12 +61,12 @@ import { ConsultationSummaryOrganism } from '../../organisms/consultation-summar
           </div>
 
           <div class="flex items-center gap-3 w-full sm:w-auto">
-            <button mat-stroked-button class="flex-1 sm:flex-initial !rounded-full !h-12 !px-8" (click)="cancel()">
+            <ui-button variant="outline" (clicked)="cancel()" class="flex-1 sm:flex-initial !rounded-full !h-12 !px-8">
               Cancelar
-            </button>
-            <button mat-flat-button color="primary" class="flex-1 sm:flex-initial !rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100" (click)="save()">
+            </ui-button>
+            <ui-button variant="primary" (clicked)="save()" class="flex-1 sm:flex-initial !rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100">
               Finalizar y Guardar
-            </button>
+            </ui-button>
           </div>
         </div>
       </header>
@@ -91,14 +78,14 @@ import { ConsultationSummaryOrganism } from '../../organisms/consultation-summar
             <h3 class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-6">Secciones de Consulta</h3>
             
             <!-- Load Last Consultation Meta-Action -->
-            <button 
-              mat-stroked-button 
+            <ui-button 
+              variant="outline"
+              (clicked)="loadLastConsultation()"
               class="w-full !rounded-2xl !h-12 !mb-6 !border-indigo-100 !text-indigo-600 !bg-indigo-50/30 hover:!bg-indigo-50 transition-all font-black"
-              (click)="loadLastConsultation()"
             >
-              <mat-icon class="mr-2">history</mat-icon>
+              <span class="material-icons mr-2">history</span>
               Cargar última consulta
-            </button>
+            </ui-button>
 
             <div class="grid grid-cols-1 gap-4">
               <app-consultation-action 
@@ -138,10 +125,10 @@ import { ConsultationSummaryOrganism } from '../../organisms/consultation-summar
             </div>
 
             <!-- Print Button -->
-            <button mat-flat-button class="w-full !rounded-2xl !h-14 !mt-10 !bg-gray-900 !text-white !font-black shadow-2xl shadow-gray-200" (click)="printSummary()">
-              <mat-icon class="mr-2">print</mat-icon>
+            <ui-button variant="primary" (clicked)="printSummary()" class="w-full !rounded-2xl !h-14 !mt-10 !bg-gray-900 !text-white !font-black shadow-2xl shadow-gray-200">
+              <span class="material-icons mr-2">print</span>
               Imprimir Resumen Médico
-            </button>
+            </ui-button>
           </div>
         </div>
 

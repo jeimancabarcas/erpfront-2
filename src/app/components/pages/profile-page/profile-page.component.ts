@@ -1,7 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatIconModule } from '@angular/material/icon';
+import { ButtonAtom } from '../../atoms/button/button.component';
 import { ProfilePersonalMolecule } from '../../molecules/profile-personal/profile-personal.component';
 import { ProfileAccountMolecule } from '../../molecules/profile-account/profile-account.component';
 
@@ -10,8 +9,7 @@ import { ProfileAccountMolecule } from '../../molecules/profile-account/profile-
   standalone: true,
   imports: [
     DashboardLayoutComponent, 
-    MatTabsModule, 
-    MatIconModule, 
+    ButtonAtom,
     ProfilePersonalMolecule, 
     ProfileAccountMolecule
   ],
@@ -23,33 +21,36 @@ import { ProfileAccountMolecule } from '../../molecules/profile-account/profile-
       </header>
 
       <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
-        <mat-tab-group class="profile-tabs" animationDuration="0ms">
-          <!-- Personal Info Tab -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <div class="flex items-center gap-3 py-4 px-2">
-                <mat-icon class="!text-[20px]">person</mat-icon>
-                <span class="text-sm font-bold tracking-wide">Información Personal</span>
-              </div>
-            </ng-template>
-            <div class="p-8 md:p-12">
-              <app-profile-personal />
-            </div>
-          </mat-tab>
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-100 bg-white">
+          <ui-button
+            [variant]="activeTab() === 0 ? 'primary' : 'ghost'"
+            (clicked)="activeTab.set(0)"
+            class="flex items-center gap-3 py-4 px-6 rounded-none"
+          >
+            <span class="material-icons text-[20px]">person</span>
+            <span class="text-sm font-bold tracking-wide">Información Personal</span>
+          </ui-button>
+          <ui-button
+            [variant]="activeTab() === 1 ? 'primary' : 'ghost'"
+            (clicked)="activeTab.set(1)"
+            class="flex items-center gap-3 py-4 px-6 rounded-none"
+          >
+            <span class="material-icons text-[20px]">security</span>
+            <span class="text-sm font-bold tracking-wide">Cuenta y Seguridad</span>
+          </ui-button>
+        </div>
 
-          <!-- Account Settings Tab -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <div class="flex items-center gap-3 py-4 px-2">
-                <mat-icon class="!text-[20px]">security</mat-icon>
-                <span class="text-sm font-bold tracking-wide">Cuenta y Seguridad</span>
-              </div>
-            </ng-template>
-            <div class="p-8 md:p-12">
-              <app-profile-account />
-            </div>
-          </mat-tab>
-        </mat-tab-group>
+        <!-- Tab Content -->
+        @if (activeTab() === 0) {
+          <div class="p-8 md:p-12">
+            <app-profile-personal />
+          </div>
+        } @else {
+          <div class="p-8 md:p-12">
+            <app-profile-account />
+          </div>
+        }
       </div>
     </app-dashboard-layout>
   `,
@@ -57,23 +58,8 @@ import { ProfileAccountMolecule } from '../../molecules/profile-account/profile-
     :host {
       display: block;
     }
-    ::ng-deep .profile-tabs .mat-mdc-tab-body-wrapper {
-      padding: 0;
-    }
-    ::ng-deep .profile-tabs .mat-mdc-tab-header {
-      background-color: #ffffff;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    ::ng-deep .profile-tabs .mat-mdc-tab {
-      height: 64px;
-      opacity: 0.5;
-    }
-    ::ng-deep .profile-tabs .mat-mdc-tab.mdc-tab--active {
-      opacity: 1;
-    }
-    ::ng-deep .profile-tabs .mat-mdc-tab .mdc-tab__text-label {
-      color: inherit !important;
-    }
   `]
 })
-export class ProfilePageComponent {}
+export class ProfilePageComponent {
+  activeTab = signal(0);
+}

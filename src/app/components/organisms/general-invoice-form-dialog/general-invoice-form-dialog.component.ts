@@ -1,18 +1,11 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatSelectModule } from '@angular/material/select';
 import { FinanceService } from '../../../services/finance.service';
 import { FinanceInvoice, InvoiceItem, FinanceCustomer, FinanceProduct } from '../../../models/finance.model';
 import { startWith, map } from 'rxjs';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-general-invoice-form-dialog',
@@ -20,14 +13,7 @@ import { startWith, map } from 'rxjs';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatAutocompleteModule,
-    MatSelectModule
+    ButtonAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white max-w-3xl flex flex-col max-h-[95vh]">
@@ -36,7 +22,7 @@ import { startWith, map } from 'rxjs';
       <!-- Fixed Header -->
       <header class="flex items-center gap-5 p-8 pb-4 relative z-10">
         <div class="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
-          <mat-icon class="!text-[28px]">add_business</mat-icon>
+          <span class="material-icons !text-[28px]">add_business</span>
         </div>
         <div>
           <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Nueva Factura de Venta</h2>
@@ -52,28 +38,35 @@ import { startWith, map } from 'rxjs';
             @if (!selectedCustomer()) {
               <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100 animate-in fade-in slide-in-from-top duration-300">
                 <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 mb-2 block">Seleccionar Cliente</label>
-                <mat-form-field appearance="outline" class="w-full !m-0">
-                  <mat-label>Buscar por nombre o identificación...</mat-label>
-                  <input matInput [matAutocomplete]="autoCustomer" formControlName="customerSearch">
-                  <mat-icon matPrefix class="mr-2 text-gray-400">search</mat-icon>
-                  <mat-autocomplete #autoCustomer="matAutocomplete" [displayWith]="displayCustomer" (optionSelected)="onCustomerSelected($event.option.value)">
-                    @for (customer of filteredCustomers(); track customer.id) {
-                      <mat-option [value]="customer">
-                        <div class="flex flex-col py-1">
-                          <span class="font-bold text-sm">{{ customer.name }}</span>
+                <div class="relative">
+                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">search</span>
+                  <input
+                    [formControl]="invoiceForm.controls.customerSearch"
+                    placeholder="Buscar por nombre o identificación..."
+                    class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                  />
+                  @if (showCustomerDropdown()) {
+                    <div class="absolute left-0 right-0 top-16 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto">
+                      @for (customer of filteredCustomers(); track customer.id) {
+                        <button
+                          type="button"
+                          class="w-full flex flex-col px-4 py-3 text-left hover:bg-indigo-50 transition-colors border-b border-gray-50 last:border-0"
+                          (click)="onCustomerSelected(customer)"
+                        >
+                          <span class="font-bold text-sm text-gray-900">{{ customer.name }}</span>
                           <span class="text-[10px] text-gray-400 tracking-tighter">NIT: {{ customer.taxId }}</span>
-                        </div>
-                      </mat-option>
-                    }
-                  </mat-autocomplete>
-                </mat-form-field>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
             } @else {
               <!-- Selected Customer Premium Card -->
               <div class="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100/50 flex justify-between items-center animate-in zoom-in duration-300">
                 <div class="flex items-center gap-5">
                   <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-50">
-                    <mat-icon class="!text-[28px]">business</mat-icon>
+                    <span class="material-icons !text-[28px]">business</span>
                   </div>
                   <div class="flex flex-col">
                     <span class="text-lg font-black text-indigo-900 leading-none mb-1">{{ selectedCustomer()?.name }}</span>
@@ -84,9 +77,9 @@ import { startWith, map } from 'rxjs';
                     </div>
                   </div>
                 </div>
-                <button type="button" mat-stroked-button color="primary" (click)="selectedCustomer.set(null)" class="!rounded-full !h-10 !border-indigo-200 hover:!bg-white">
+                <ui-button variant="outline" (clicked)="selectedCustomer.set(null)" class="!rounded-full !h-10 !border-indigo-200 hover:!bg-white">
                   Cambiar
-                </button>
+                </ui-button>
               </div>
             }
           </div>
@@ -95,9 +88,9 @@ import { startWith, map } from 'rxjs';
           <div class="space-y-4">
             <div class="flex justify-between items-center px-1">
               <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Detalle de Ítems</label>
-              <button type="button" mat-button color="primary" (click)="addItem()" class="!rounded-full !font-bold">
-                <mat-icon class="mr-1">add_circle</mat-icon> Añadir Ítem
-              </button>
+              <ui-button variant="ghost" (clicked)="addItem()" class="!rounded-full !font-bold">
+                <span class="material-icons mr-1">add_circle</span> Añadir Ítem
+              </ui-button>
             </div>
 
             <div formArrayName="items" class="space-y-4">
@@ -106,40 +99,59 @@ import { startWith, map } from 'rxjs';
                   
                   <!-- Line 1: Main Product / Service Search -->
                   <div class="flex gap-3 items-start">
-                    <mat-form-field appearance="outline" class="flex-1 !m-0">
-                      <mat-label>Descripción del Producto o Servicio</mat-label>
-                      <input matInput [matAutocomplete]="autoProd" formControlName="description" placeholder="Ej: Mantenimiento Preventivo">
-                      <mat-icon matPrefix class="mr-2 text-gray-400">inventory_2</mat-icon>
-                      <mat-autocomplete #autoProd="matAutocomplete" (optionSelected)="onProductSelected($index, $event.option.value)">
-                        @for (prod of financeService.catalog(); track prod.id) {
-                          <mat-option [value]="prod.name">
-                            <div class="flex justify-between items-center w-full">
-                              <span class="font-bold text-sm">{{ prod.name }}</span>
+                    <div class="flex-1 relative">
+                      <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">inventory_2</span>
+                      <input
+                          [formControl]="$any(item).controls.description"
+                        placeholder="Descripción del Producto o Servicio"
+                        (focus)="openProductDropdown($index)"
+                        (blur)="closeProductDropdown($index)"
+                        (input)="filterProducts($index, $event)"
+                        class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                      />
+                      @if (activeProductDropdown() === $index) {
+                        <div class="absolute left-0 right-0 top-16 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto">
+                          @for (prod of filteredCatalog(); track prod.id) {
+                            <button
+                              type="button"
+                              class="w-full flex justify-between items-center px-4 py-3 text-left hover:bg-indigo-50 transition-colors border-b border-gray-50 last:border-0"
+                              (mousedown)="onProductSelected($index, prod.name)"
+                            >
+                              <span class="font-bold text-sm text-gray-900">{{ prod.name }}</span>
                               <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full font-black text-gray-500 uppercase tracking-tighter">{{ prod.category }}</span>
-                            </div>
-                          </mat-option>
-                        }
-                      </mat-autocomplete>
-                    </mat-form-field>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
                     
-                    <button type="button" mat-icon-button color="warn" (click)="removeItem($index)" 
-                            class="!w-12 !h-12 !rounded-2xl bg-red-50 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <mat-icon>delete_outline</mat-icon>
-                    </button>
+                    <ui-button variant="icon" (clicked)="removeItem($index)" class="!w-12 !h-12 !rounded-2xl bg-red-50 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span class="material-icons">delete_outline</span>
+                    </ui-button>
                   </div>
 
                   <!-- Line 2: Numerical Inputs Grid -->
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <mat-form-field appearance="outline" class="w-full !m-0">
-                      <mat-label>Cantidad</mat-label>
-                      <input matInput type="number" formControlName="quantity">
-                    </mat-form-field>
+                    <div class="flex flex-col gap-1.5">
+                      <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Cantidad</label>
+                      <input
+                        type="number"
+                        [formControl]="$any(item).controls.quantity"
+                        class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                      />
+                    </div>
 
-                    <mat-form-field appearance="outline" class="w-full !m-0">
-                      <mat-label>Precio Unitario</mat-label>
-                      <input matInput type="number" formControlName="unitPrice" class="font-bold">
-                      <span matPrefix class="mr-1 text-gray-400 font-bold">$</span>
-                    </mat-form-field>
+                    <div class="flex flex-col gap-1.5">
+                      <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Precio Unitario</label>
+                      <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                        <input
+                          type="number"
+                          [formControl]="$any(item).controls.unitPrice"
+                          class="w-full h-14 pl-8 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                        />
+                      </div>
+                    </div>
 
                     <div class="flex flex-col justify-center items-end bg-indigo-50/30 rounded-2xl px-5 py-2 border border-dashed border-indigo-100/50">
                       <span class="text-[9px] text-indigo-400 font-black uppercase tracking-[0.15em]">Subtotal Ítem</span>
@@ -177,19 +189,18 @@ import { startWith, map } from 'rxjs';
         </div>
 
         <div class="flex flex-col sm:flex-row justify-end gap-3">
-          <button mat-button type="button" (click)="dialogRef.close()" class="!rounded-full !h-12 !px-8 !font-bold text-gray-500">
+          <ui-button variant="outline" (clicked)="onCancel()" class="!rounded-full !h-12 !px-8 !font-bold text-gray-500">
             Cancelar
-          </button>
-          <button mat-flat-button color="primary" type="button" (click)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer()" class="!rounded-full !h-12 !px-12 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-transform">
+          </ui-button>
+          <ui-button variant="primary" (clicked)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer()" class="!rounded-full !h-12 !px-12 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-transform">
             Emitir Factura Electrónica
-          </button>
+          </ui-button>
         </div>
       </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
@@ -198,7 +209,6 @@ import { startWith, map } from 'rxjs';
 })
 export class GeneralInvoiceFormDialogOrganism {
   private fb = inject(FormBuilder);
-  public dialogRef = inject(MatDialogRef<GeneralInvoiceFormDialogOrganism>);
   public financeService = inject(FinanceService);
 
   selectedCustomer = signal<FinanceCustomer | null>(null);
@@ -221,11 +231,30 @@ export class GeneralInvoiceFormDialogOrganism {
     { initialValue: this.financeService.customers() }
   );
 
+  showCustomerDropdown = signal(false);
+
   get items() {
     return this.invoiceForm.get('items') as FormArray;
   }
 
+  // Product dropdown state
+  activeProductDropdown = signal<number | null>(null);
+  productSearchQuery = signal('');
+  filteredCatalog = computed(() => {
+    const q = this.productSearchQuery().toLowerCase().trim();
+    if (!q) return this.financeService.catalog();
+    return this.financeService.catalog().filter(p =>
+      p.name.toLowerCase().includes(q)
+    );
+  });
+
+  // Output to replace MatDialogRef
+  closed = output<FinanceInvoice | null>();
+
   constructor() {
+    this.invoiceForm.get('customerSearch')?.valueChanges.subscribe(() => {
+      this.showCustomerDropdown.set(true);
+    });
     this.addItem(); // Initial item
   }
 
@@ -249,6 +278,26 @@ export class GeneralInvoiceFormDialogOrganism {
   onCustomerSelected(customer: FinanceCustomer) {
     this.selectedCustomer.set(customer);
     this.invoiceForm.get('customerSearch')?.setValue('');
+    this.showCustomerDropdown.set(false);
+  }
+
+  openProductDropdown(index: number) {
+    this.activeProductDropdown.set(index);
+    this.productSearchQuery.set('');
+  }
+
+  closeProductDropdown(index: number) {
+    // Delay to allow mousedown on option to fire first
+    setTimeout(() => {
+      if (this.activeProductDropdown() === index) {
+        this.activeProductDropdown.set(null);
+      }
+    }, 200);
+  }
+
+  filterProducts(index: number, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.productSearchQuery.set(value);
   }
 
   onProductSelected(index: number, productName: string) {
@@ -259,6 +308,7 @@ export class GeneralInvoiceFormDialogOrganism {
         taxRate: product.taxRate
       });
     }
+    this.activeProductDropdown.set(null);
   }
 
   displayCustomer(customer: FinanceCustomer): string {
@@ -287,6 +337,10 @@ export class GeneralInvoiceFormDialogOrganism {
     return this.calculateSubtotal() + this.calculateTax();
   }
 
+  onCancel() {
+    this.closed.emit(null);
+  }
+
   onSubmit() {
     if (this.invoiceForm.valid && this.selectedCustomer()) {
       const customer = this.selectedCustomer()!;
@@ -311,7 +365,7 @@ export class GeneralInvoiceFormDialogOrganism {
       };
 
       this.financeService.addInvoice(newInvoice);
-      this.dialogRef.close(newInvoice);
+      this.closed.emit(newInvoice);
     }
   }
 }

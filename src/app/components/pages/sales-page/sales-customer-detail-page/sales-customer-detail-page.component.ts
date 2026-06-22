@@ -1,9 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { PageEvent } from '@angular/material/paginator';
 import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { CustomerService } from '../../../../services/customer.service';
 import { InvoiceService } from '../../../../services/invoice.service';
@@ -12,6 +9,7 @@ import { Invoice } from '../../../../models/invoice.model';
 import { QueryParams } from '../../../../models/pagination.model';
 
 // Atomic Design Imports
+import { ButtonAtom } from '../../../atoms/button/button.component';
 import { CustomerInfoMolecule } from '../../../molecules/customer-info/customer-info.component';
 import { CustomerStatsMolecule } from '../../../molecules/customer-stats/customer-stats.component';
 import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoices-table/customer-invoices-table.component';
@@ -22,8 +20,7 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
   imports: [
     CommonModule,
     RouterModule,
-    MatButtonModule,
-    MatIconModule,
+    ButtonAtom,
     DashboardLayoutComponent,
     CustomerInfoMolecule,
     CustomerStatsMolecule,
@@ -35,10 +32,10 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
         
         <!-- Action Bar -->
         <div class="flex items-center justify-between">
-          <button mat-button routerLink="/sales/customers" class="!rounded-full !px-6 !text-gray-500 hover:!bg-gray-100 transition-all">
-            <mat-icon class="mr-2">arrow_back</mat-icon>
+          <ui-button variant="ghost" routerLink="/sales/customers" class="rounded-full px-6 text-gray-500 hover:bg-gray-100 transition-all">
+            <span class="material-icons mr-2">arrow_back</span>
             Volver a la lista de Clientes
-          </button>
+          </ui-button>
         </div>
 
         @if (loading() && !customer()) {
@@ -159,7 +156,7 @@ export class SalesCustomerDetailPageComponent implements OnInit {
     this.loadInvoices();
   }
 
-  onPageChange(event: PageEvent) {
+  onPageChange(event: { pageSize: number; pageIndex: number }) {
     this.pageSize.set(event.pageSize);
     this.pageIndex.set(event.pageIndex + 1);
     this.loadInvoices();

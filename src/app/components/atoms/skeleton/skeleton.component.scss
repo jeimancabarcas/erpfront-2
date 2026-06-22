@@ -1,0 +1,44 @@
+:host {
+  display: inline-block;
+  line-height: 0;
+}
+
+.skeleton {
+  display: block;
+  background: color-mix(in srgb, var(--color-border) 30%, transparent);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse var(--duration-xslow) ease-in-out infinite;
+  will-change: opacity;
+
+  &--text {
+    height: 1rem;
+    width: 100%;
+  }
+
+  &--card {
+    height: 12.5rem;
+    width: 100%;
+    border-radius: var(--radius-md);
+  }
+
+  &--table-row {
+    height: 2rem;
+    width: 100%;
+    border-radius: var(--radius-sm);
+  }
+
+  &--circle {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-pill);
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}

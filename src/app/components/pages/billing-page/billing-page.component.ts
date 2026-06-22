@@ -4,11 +4,7 @@ import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashb
 import { BillingService } from '../../../services/billing.service';
 import { BillingFiltersMolecule } from '../../molecules/billing-filters/billing-filters.component';
 import { BillingTableOrganism } from '../../organisms/billing-table/billing-table.component';
-import { InvoiceFormDialogOrganism } from '../../organisms/invoice-form-dialog/invoice-form-dialog.component';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-billing-page',
@@ -18,10 +14,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
     DashboardLayoutComponent,
     BillingFiltersMolecule,
     BillingTableOrganism,
-    MatButtonModule,
-    MatIconModule,
-    MatSnackBarModule,
-    MatDialogModule
+    ButtonAtom
   ],
   template: `
     <app-dashboard-layout>
@@ -37,19 +30,18 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
         </div>
         
         <div class="flex gap-3 animate-in fade-in slide-in-from-right duration-700">
-          <button mat-stroked-button class="!rounded-full !h-12 !px-6 !font-bold !border-gray-200">
-            <mat-icon class="mr-2">file_download</mat-icon>
+          <ui-button variant="outline" class="rounded-full h-12 px-6 font-bold border-gray-200">
+            <span class="material-icons mr-2">file_download</span>
             Exportar RIPS
-          </button>
-          <button 
-            mat-flat-button 
-            color="primary" 
-            (click)="openNewInvoiceDialog()"
-            class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100"
+          </ui-button>
+          <ui-button 
+            variant="primary" 
+            (clicked)="openNewInvoiceDialog()"
+            class="rounded-full h-12 px-8 font-black shadow-xl shadow-indigo-100"
           >
-            <mat-icon class="mr-2">add</mat-icon>
+            <span class="material-icons mr-2">add</span>
             Nueva Factura Manual
-          </button>
+          </ui-button>
         </div>
       </header>
 
@@ -57,7 +49,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <div class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex items-center gap-5">
           <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
-            <mat-icon class="!text-[32px] !w-8 !h-8">pending_actions</mat-icon>
+            <span class="material-icons text-[32px] w-8 h-8">pending_actions</span>
           </div>
           <div>
             <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Por Facturar</p>
@@ -66,7 +58,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
         </div>
         <div class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex items-center gap-5">
           <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-            <mat-icon class="!text-[32px] !w-8 !h-8">outbox</mat-icon>
+            <span class="material-icons text-[32px] w-8 h-8">outbox</span>
           </div>
           <div>
             <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Facturado / Enviado</p>
@@ -75,7 +67,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
         </div>
         <div class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex items-center gap-5">
           <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center">
-            <mat-icon class="!text-[32px] !w-8 !h-8">account_balance_wallet</mat-icon>
+            <span class="material-icons text-[32px] w-8 h-8">account_balance_wallet</span>
           </div>
           <div>
             <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Recaudado (Mes)</p>
@@ -99,6 +91,16 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
         (markPatientAsPaid)="handleMarkPatientAsPaid($event)"
       />
     </app-dashboard-layout>
+
+    <!-- Inline notification -->
+    @if (notification(); as notif) {
+      <div
+        class="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl text-white font-bold text-sm animate-in fade-in slide-in-from-bottom duration-300"
+        [ngClass]="notif.type === 'success' ? 'bg-green-600' : 'bg-red-600'"
+      >
+        {{ notif.message }}
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -106,8 +108,15 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 })
 export class BillingPageComponent {
   billingService = inject(BillingService);
-  private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
+
+  notification = signal<{message: string; type: 'success' | 'error'} | null>(null);
+  private notifTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  private showNotification(message: string, type: 'success' | 'error' = 'success') {
+    this.notification.set({ message, type });
+    if (this.notifTimeout) clearTimeout(this.notifTimeout);
+    this.notifTimeout = setTimeout(() => this.notification.set(null), 3000);
+  }
 
   // Filter Signals
   searchQuery = signal<string>('');
@@ -148,37 +157,26 @@ export class BillingPageComponent {
   });
 
   openNewInvoiceDialog() {
-    const dialogRef = this.dialog.open(InvoiceFormDialogOrganism, {
-      width: '600px',
-      maxWidth: '95vw',
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.billingService.addInvoice(result);
-        this.snackBar.open('Factura manual creada exitosamente', 'Cerrar', { duration: 3000 });
-      }
-    });
+    // Dialog functionality will be restored when dialog organisms are migrated
   }
 
   handleSingleInvoice(id: string) {
     this.billingService.invoiceProvider([id]);
-    this.snackBar.open('Cobro generado y enviado al prestador', 'Cerrar', { duration: 3000 });
+    this.showNotification('Cobro generado y enviado al prestador');
   }
 
   handleBulkInvoice(ids: string[]) {
     this.billingService.invoiceProvider(ids);
-    this.snackBar.open(`${ids.length} cobros generados exitosamente`, 'Cerrar', { duration: 3000 });
+    this.showNotification(`${ids.length} cobros generados exitosamente`);
   }
 
   handleMarkAsPaid(id: string) {
     this.billingService.markProviderAsPaid(id);
-    this.snackBar.open('Factura marcada como pagada por el prestador', 'Cerrar', { duration: 3000 });
+    this.showNotification('Factura marcada como pagada por el prestador');
   }
 
   handleMarkPatientAsPaid(id: string) {
     this.billingService.markPatientAsPaid(id);
-    this.snackBar.open('Copago recaudado exitosamente', 'Cerrar', { duration: 3000 });
+    this.showNotification('Copago recaudado exitosamente');
   }
 }

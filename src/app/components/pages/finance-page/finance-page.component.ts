@@ -1,13 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { CardAtom } from '../../atoms/card/card.component';
 import { FinanceService } from '../../../services/finance.service';
-import { GeneralInvoiceFormDialogOrganism } from '../../organisms/general-invoice-form-dialog/general-invoice-form-dialog.component';
-import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-dialog/adjustment-form-dialog.component';
 
 @Component({
   selector: 'app-finance-page',
@@ -15,10 +10,7 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
   imports: [
     CommonModule, 
     DashboardLayoutComponent, 
-    MatCardModule, 
-    MatIconModule, 
-    MatDialogModule,
-    MatSnackBarModule
+    CardAtom
   ],
   template: `
     <app-dashboard-layout>
@@ -30,7 +22,7 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
       <!-- KPI Grid -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         @for (metric of financeService.metrics(); track metric.label) {
-          <mat-card class="!rounded-[28px] !border-none !shadow-xl !shadow-gray-100/50 group overflow-hidden relative">
+          <ui-card padding="0" class="rounded-[28px] border-none shadow-xl shadow-gray-100/50 group overflow-hidden relative bg-white">
             <div class="absolute inset-0 bg-gradient-to-br opacity-[0.03] group-hover:opacity-[0.06] transition-opacity"
                  [ngClass]="{
                    'from-indigo-600 to-purple-600': metric.color === 'indigo',
@@ -47,11 +39,11 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
                        'bg-amber-50 text-amber-600 shadow-amber-100': metric.color === 'amber',
                        'bg-emerald-50 text-emerald-600 shadow-emerald-100': metric.color === 'emerald'
                      }">
-                  <mat-icon class="!text-[28px] !w-7 !h-7">{{ metric.icon }}</mat-icon>
+                  <span class="material-icons text-[28px] w-7 h-7">{{ metric.icon }}</span>
                 </div>
                 <div class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black tracking-wider"
                      [ngClass]="metric.trend > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
-                  <mat-icon class="!text-sm !w-3.5 !h-3.5">{{ metric.trend > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                  <span class="material-icons text-sm w-3.5 h-3.5">{{ metric.trend > 0 ? 'trending_up' : 'trending_down' }}</span>
                   {{ metric.trend > 0 ? '+' : '' }}{{ metric.trend }}%
                 </div>
               </div>
@@ -61,7 +53,7 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
                 {{ metric.value | currency:'USD':'symbol':'1.0-0' }}
               </h3>
             </div>
-          </mat-card>
+          </ui-card>
         }
       </div>
 
@@ -70,7 +62,7 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
         <div class="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm">
           <div class="flex items-center gap-4 mb-6">
             <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-              <mat-icon>bolt</mat-icon>
+              <span class="material-icons">bolt</span>
             </div>
             <h4 class="text-lg font-black text-gray-900">Accesos Rápidos</h4>
           </div>
@@ -79,14 +71,14 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
               (click)="openNewInvoice()"
               class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100 group text-center"
             >
-              <mat-icon class="!w-8 !h-8 !text-[32px] text-gray-400 group-hover:text-indigo-600">add_business</mat-icon>
+              <span class="material-icons w-8 h-8 text-[32px] text-gray-400 group-hover:text-indigo-600">add_business</span>
               <span class="text-xs font-black uppercase tracking-widest text-gray-600 group-hover:text-indigo-600">Nueva Factura</span>
             </button>
             <button 
               (click)="openNewAdjustment()"
               class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100 group text-center"
             >
-              <mat-icon class="!w-8 !h-8 !text-[32px] text-gray-400 group-hover:text-amber-600">history_edu</mat-icon>
+              <span class="material-icons w-8 h-8 text-[32px] text-gray-400 group-hover:text-amber-600">history_edu</span>
               <span class="text-xs font-black uppercase tracking-widest text-gray-600 group-hover:text-amber-600">Generar Nota</span>
             </button>
           </div>
@@ -107,6 +99,20 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
         </div>
       </div>
     </app-dashboard-layout>
+
+    <!-- Inline notifications -->
+    @if (notification(); as notif) {
+      <div
+        class="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl text-white font-bold text-sm animate-in fade-in slide-in-from-bottom duration-300"
+        [ngClass]="{
+          'bg-green-600': notif.type === 'success',
+          'bg-red-600': notif.type === 'error',
+          'bg-indigo-600': notif.type === 'info'
+        }"
+      >
+        {{ notif.message }}
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -114,34 +120,26 @@ import { AdjustmentFormDialogOrganism } from '../../organisms/adjustment-form-di
 })
 export class FinancePageComponent {
   financeService = inject(FinanceService);
-  private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
+
+  /** Inline notification signal replaces MatSnackBar */
+  notification = signal<{message: string; type: 'success' | 'error' | 'info'} | null>(null);
+  private notifTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  private showNotification(message: string, type: 'success' | 'error' | 'info' = 'success') {
+    this.notification.set({ message, type });
+    if (this.notifTimeout) clearTimeout(this.notifTimeout);
+    this.notifTimeout = setTimeout(() => this.notification.set(null), 5000);
+  }
+
+  /** Signal-based dialog toggles (replaces MatDialog) */
+  invoiceDialogOpen = signal(false);
+  adjustmentDialogOpen = signal(false);
 
   openNewInvoice() {
-    const dialogRef = this.dialog.open(GeneralInvoiceFormDialogOrganism, {
-      width: '600px',
-      maxWidth: '95vw',
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.snackBar.open(`Factura ${result.id} emitida con éxito`, 'Cerrar', { duration: 5000 });
-      }
-    });
+    this.invoiceDialogOpen.set(true);
   }
 
   openNewAdjustment() {
-    const dialogRef = this.dialog.open(AdjustmentFormDialogOrganism, {
-      width: '450px',
-      maxWidth: '95vw',
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.snackBar.open(`Nota ${result.id} transmitida correctamente`, 'Cerrar', { duration: 5000 });
-      }
-    });
+    this.adjustmentDialogOpen.set(true);
   }
 }

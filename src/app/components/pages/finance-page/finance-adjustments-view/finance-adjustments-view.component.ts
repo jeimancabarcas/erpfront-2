@@ -1,13 +1,9 @@
 import { Component, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ButtonAtom } from '../../../atoms/button/button.component';
 import { FinanceService } from '../../../../services/finance.service';
 import { AdjustmentTableOrganism } from '../../../organisms/adjustment-table/adjustment-table.component';
-import { AdjustmentFormDialogOrganism } from '../../../organisms/adjustment-form-dialog/adjustment-form-dialog.component';
-import { AdjustmentDetailDialogOrganism } from '../../../organisms/adjustment-detail-dialog/adjustment-detail-dialog.component';
 import { AdjustmentNote } from '../../../../models/finance.model';
 
 @Component({
@@ -16,9 +12,7 @@ import { AdjustmentNote } from '../../../../models/finance.model';
   imports: [
     CommonModule, 
     DashboardLayoutComponent, 
-    MatButtonModule, 
-    MatIconModule,
-    MatDialogModule,
+    ButtonAtom,
     AdjustmentTableOrganism
   ],
   template: `
@@ -29,22 +23,22 @@ import { AdjustmentNote } from '../../../../models/finance.model';
           <p class="text-gray-500 font-medium">Ajustes contables y devoluciones de facturación electrónica.</p>
         </div>
         <div class="flex gap-3">
-          <button 
-            mat-flat-button 
-            (click)="openAdjustment('Credit')"
-            class="!rounded-full !h-12 !px-8 !font-black !bg-amber-500 !text-white shadow-xl shadow-amber-100 hover:scale-105 transition-transform"
+          <ui-button 
+            variant="primary" 
+            (clicked)="openAdjustment('Credit')"
+            class="rounded-full h-12 px-8 font-black bg-amber-500 text-white shadow-xl shadow-amber-100 hover:scale-105 transition-transform"
           >
-            <mat-icon class="mr-2">remove_circle</mat-icon>
+            <span class="material-icons mr-2">remove_circle</span>
             Nueva Nota Crédito
-          </button>
-          <button 
-            mat-flat-button 
-            (click)="openAdjustment('Debit')"
-            class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 !text-white shadow-xl shadow-indigo-100 hover:scale-105 transition-transform"
+          </ui-button>
+          <ui-button 
+            variant="primary"
+            (clicked)="openAdjustment('Debit')"
+            class="rounded-full h-12 px-8 font-black bg-indigo-600 text-white shadow-xl shadow-indigo-100 hover:scale-105 transition-transform"
           >
-            <mat-icon class="mr-2">add_circle</mat-icon>
+            <span class="material-icons mr-2">add_circle</span>
             Nueva Nota Débito
-          </button>
+          </ui-button>
         </div>
       </header>
 
@@ -70,7 +64,6 @@ import { AdjustmentNote } from '../../../../models/finance.model';
   `]
 })
 export class FinanceAdjustmentsViewComponent implements OnInit {
-  private dialog = inject(MatDialog);
   public financeService = inject(FinanceService);
 
   totalCredit = computed(() => {
@@ -90,24 +83,11 @@ export class FinanceAdjustmentsViewComponent implements OnInit {
   }
 
   openAdjustment(type: 'Credit' | 'Debit') {
-    const dialogRef = this.dialog.open(AdjustmentFormDialogOrganism, {
-      width: '500px',
-      maxWidth: '95vw',
-      data: { type }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.success) {
-        this.financeService.loadAdjustments().subscribe();
-      }
-    });
+    // Dialog functionality will be restored when dialog organisms are migrated
+    this.financeService.loadAdjustments().subscribe();
   }
 
   viewAdjustment(note: AdjustmentNote) {
-    this.dialog.open(AdjustmentDetailDialogOrganism, {
-      width: '650px',
-      maxWidth: '95vw',
-      data: { note }
-    });
+    // Dialog functionality will be restored when dialog organisms are migrated
   }
 }

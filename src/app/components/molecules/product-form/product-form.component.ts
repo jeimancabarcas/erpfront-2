@@ -1,28 +1,19 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { Component, inject, signal, input, output, OnInit } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
 import { Product } from '../../../models/product.model';
+import { ButtonAtom } from '../../atoms/button/button.component';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    FormsModule
+    FormsModule,
+    CurrencyPipe,
+    ButtonAtom
   ],
   template: `
     <div class="p-2">
@@ -30,108 +21,99 @@ import { Product } from '../../../models/product.model';
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}
         </h2>
-        <button mat-icon-button (click)="dialogRef.close()" class="!text-gray-400">
-          <mat-icon>close</mat-icon>
-        </button>
+        <ui-button variant="icon" (clicked)="onClose()" class="!text-gray-400">
+          <span class="material-icons">close</span>
+        </ui-button>
       </header>
 
       <form #productForm="ngForm" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Nombre del Producto</mat-label>
-            <input matInput [(ngModel)]="product().name" name="name" required placeholder="Ej. MacBook Pro 16">
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre del Producto</label>
+            <input [(ngModel)]="product().name" name="name" required placeholder="Ej. MacBook Pro 16"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>SKU</mat-label>
-            <input matInput [(ngModel)]="product().sku" name="sku" required placeholder="Ej. LAP-123">
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">SKU</label>
+            <input [(ngModel)]="product().sku" name="sku" required placeholder="Ej. LAP-123"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Categoría</mat-label>
-            <mat-select [(ngModel)]="product().categoryId" name="categoryId" required>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Categoría</label>
+            <select [(ngModel)]="product().categoryId" name="categoryId" required
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
+              <option value="" disabled>Seleccionar categoría</option>
               @for (cat of categoryList(); track cat.id) {
-                <mat-option [value]="cat.id">{{cat.name}}</mat-option>
+                <option [value]="cat.id">{{cat.name}}</option>
               }
-            </mat-select>
-          </mat-form-field>
+            </select>
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Stock Actual</mat-label>
-            <input matInput type="number" [(ngModel)]="product().currentStock" name="currentStock" required min="0">
-            <span matSuffix class="pr-2 text-gray-400 text-sm">unidades</span>
-            @if (productForm.controls['currentStock']?.errors?.['min']) {
-              <mat-error>El stock no puede ser negativo</mat-error>
-            }
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Stock Actual</label>
+            <input type="number" [(ngModel)]="product().currentStock" name="currentStock" required min="0"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Stock Mínimo</mat-label>
-            <input matInput type="number" [(ngModel)]="product().minStock" name="minStock" required min="0">
-            @if (productForm.controls['minStock']?.errors?.['min']) {
-              <mat-error>El stock mínimo no puede ser negativo</mat-error>
-            }
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Stock Mínimo</label>
+            <input type="number" [(ngModel)]="product().minStock" name="minStock" required min="0"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
 
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Stock Máximo</mat-label>
-            <input matInput type="number" [(ngModel)]="product().maxStock" name="maxStock" required min="0">
-            @if (productForm.controls['maxStock']?.errors?.['min']) {
-              <mat-error>El stock máximo no puede ser negativo</mat-error>
-            }
-          </mat-form-field>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Stock Máximo</label>
+            <input type="number" [(ngModel)]="product().maxStock" name="maxStock" required min="0"
+              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+          </div>
 
           @if (isEditMode) {
-            <mat-form-field appearance="outline" class="w-full animate-in fade-in slide-in-from-top duration-300">
-              <mat-label>Precio de Venta</mat-label>
-              <input matInput type="number" [(ngModel)]="product().sellingPrice" name="sellingPrice" required min="0" placeholder="Ej. 15000">
-              <mat-icon matPrefix class="mr-2 text-indigo-600">payments</mat-icon>
-              @if (productForm.controls['sellingPrice']?.errors?.['min']) {
-                <mat-error>El precio de venta no puede ser negativo</mat-error>
-              }
-              <mat-hint class="text-indigo-400 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</mat-hint>
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top duration-300">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Precio de Venta</label>
+              <div class="relative">
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">payments</span>
+                <input type="number" [(ngModel)]="product().sellingPrice" name="sellingPrice" required min="0" placeholder="Ej. 15000"
+                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+              </div>
+              <span class="text-xs text-indigo-400 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</span>
+            </div>
           }
 
           @if (isReasonRequired()) {
-            <mat-form-field appearance="outline" class="w-full md:col-span-2 animate-in fade-in slide-in-from-top duration-300">
-              <mat-label>Motivo del Ajuste de Stock</mat-label>
-              <input matInput [(ngModel)]="adjustmentReason" name="adjustmentReason" required placeholder="Ej. Pérdida, Ajuste de auditoría, etc.">
-              @if (!adjustmentReason) {
-                <mat-error>El motivo del ajuste es obligatorio cuando el stock cambia</mat-error>
-              }
-            </mat-form-field>
+            <div class="flex flex-col gap-1.5 md:col-span-2 animate-in fade-in slide-in-from-top duration-300">
+              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Motivo del Ajuste de Stock</label>
+              <input [(ngModel)]="adjustmentReason" name="adjustmentReason" required placeholder="Ej. Pérdida, Ajuste de auditoría, etc."
+                class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+            </div>
           }
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
-          <button mat-button (click)="dialogRef.close()" class="!h-12 !px-8 !rounded-full !font-bold text-gray-500">
+          <ui-button variant="outline" (clicked)="onClose()" class="!h-12 !px-8 !rounded-full !font-bold text-gray-500">
             Cancelar
-          </button>
-          <button 
-            mat-flat-button 
-            color="primary" 
+          </ui-button>
+          <ui-button
+            variant="primary"
             [disabled]="!productForm.valid"
-            (click)="saveProduct()"
+            (clicked)="saveProduct()"
             class="!h-12 !px-8 !rounded-full !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
           >
             {{ isEditMode ? 'Guardar Cambios' : 'Crear Producto' }}
-          </button>
+          </ui-button>
         </div>
       </form>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 40px !important;
-      padding: 32px !important;
-    }
   `]
 })
 export class ProductFormMolecule implements OnInit {
-  public dialogRef = inject(MatDialogRef<ProductFormMolecule>);
-  private data = inject(MAT_DIALOG_DATA, { optional: true });
+  data = input<{ product?: Product }>({});
+  closed = output<boolean>();
+
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
 
@@ -158,11 +140,16 @@ export class ProductFormMolecule implements OnInit {
       this.categoryService.loadCategories({ limit: 100 }).subscribe();
     }
 
-    if (this.data && this.data.product) {
+    const incoming = this.data();
+    if (incoming.product) {
       this.isEditMode = true;
-      this.product.set({ ...this.data.product });
-      this.originalStock = this.data.product.currentStock;
+      this.product.set({ ...incoming.product });
+      this.originalStock = incoming.product.currentStock;
     }
+  }
+
+  onClose() {
+    this.closed.emit(false);
   }
 
   isReasonRequired(): boolean {
@@ -190,9 +177,8 @@ export class ProductFormMolecule implements OnInit {
       : this.productService.createProduct(payload);
 
     request.subscribe({
-      next: () => this.dialogRef.close(true),
+      next: () => this.closed.emit(true),
       error: (err) => console.error('Error saving product:', err)
     });
   }
 }
-
