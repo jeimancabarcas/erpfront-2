@@ -1,8 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormArray, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+
 import { MatButtonModule } from '@angular/material/button';
 
 export interface DiagnosticItem {
@@ -26,14 +26,24 @@ export interface DiagnosticsDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-10 max-h-[85vh] overflow-y-auto">
       <div class="flex items-center gap-4 mb-8">
         <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
-          <mat-icon>fact_check</mat-icon>
+          <span class="material-icons">fact_check</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Diagnósticos (CIE-10/11)</h2>
       </div>
@@ -55,7 +65,7 @@ export interface DiagnosticsDialogResult {
           <div class="flex justify-between items-center">
             <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Diagnósticos Secundarios</h3>
             <button type="button" (click)="addSecondary()" class="!rounded-full !bg-indigo-600 text-white !text-[10px] !font-black !h-10 !px-6 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors">
-              <mat-icon class="!text-sm mr-1 align-middle">add_circle</mat-icon>
+              <span class="material-icons !text-sm mr-1 align-middle">add_circle</span>
               Añadir Otro
             </button>
           </div>
@@ -66,7 +76,7 @@ export interface DiagnosticsDialogResult {
                 <input formControlName="code" placeholder="Código" class="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
                 <input formControlName="description" placeholder="Descripción del diagnóstico secundario" class="flex-grow px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
                 <button type="button" (click)="removeSecondary($index)" class="!bg-red-50 !text-red-400 !rounded-2xl w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100">
-                  <mat-icon class="text-sm">close</mat-icon>
+                  <span class="material-icons text-sm">close</span>
                 </button>
               </div>
             }
@@ -84,9 +94,12 @@ export interface DiagnosticsDialogResult {
         </div>
       </form>
     </div>
+    }
   `
 })
 export class DiagnosticsDialogComponent implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<DiagnosticsDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<DiagnosticsDialogComponent, DiagnosticsDialogResult>);
   private fb = inject(FormBuilder);

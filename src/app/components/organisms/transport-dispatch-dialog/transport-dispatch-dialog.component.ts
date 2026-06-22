@@ -1,8 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { FinanceService } from '../../../services/finance.service';
@@ -19,105 +19,115 @@ export type TransportDispatchResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
-    <div class="p-0 overflow-auto">
-      <header class="bg-indigo-600 p-8 text-white flex justify-between items-center">
-        <div>
-          <h2 class="text-2xl font-black tracking-tight mb-1">Programar Servicio</h2>
-          <p class="text-indigo-100 text-sm font-medium">Completa los datos para comprometer el vehículo.</p>
-        </div>
-        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
-        </button>
-      </header>
-
-      <div class="p-10 bg-white max-h-[70vh] overflow-y-auto custom-scrollbar">
-        <form [formGroup]="dispatchForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Cliente / Empresa</label>
-              <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">business</mat-icon>
-                <select formControlName="customerName" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                  @for (c of financeService.customers(); track c.id) {
-                    <option [value]="c.name">{{ c.name }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Origen</label>
-              <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">location_on</mat-icon>
-                <input formControlName="origin" placeholder="Ej: Bogotá, DC" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-              </div>
-            </div>
-
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Destino</label>
-              <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">flag</mat-icon>
-                <input formControlName="destination" placeholder="Ej: Medellín, ANT" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-              </div>
-            </div>
-
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo</label>
-              <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</mat-icon>
-                <input [value]="data.vehicleId" readonly class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl font-black text-indigo-600 bg-gray-50 text-sm">
-              </div>
-            </div>
-
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha de Inicio</label>
-              <input type="date" formControlName="departureDate" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-            </div>
-
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Inicio</label>
-              <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">schedule</mat-icon>
-                <input type="time" formControlName="departureTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-              </div>
-            </div>
-
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Precio del Servicio</label>
-              <div class="relative">
-                <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
-                <input type="number" formControlName="servicePrice" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-              </div>
-            </div>
-          </div>
-
-          <div class="p-6 bg-indigo-50 rounded-3xl space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Resumen Financiero</span>
-              <span class="text-xs font-black text-indigo-900 tabular-nums">
-                {{ (dispatchForm.value.servicePrice || 0) | currency:'USD':'symbol':'1.0-0' }} TOTAL
-              </span>
-            </div>
-          </div>
-
-          <div class="flex gap-4 pt-4">
-            <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" 
-                    [disabled]="dispatchForm.invalid"
-                    class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 text-white flex-1 shadow-xl shadow-indigo-100 hover:scale-105 transition-all disabled:opacity-50">
-              Confirmar Programación
-            </button>
-          </div>
-        </form>
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
-    </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+      </div>
+    } @else {
+      <div class="p-0 overflow-auto">
+        <header class="bg-indigo-600 p-8 text-white flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-black tracking-tight mb-1">Programar Servicio</h2>
+            <p class="text-indigo-100 text-sm font-medium">Completa los datos para comprometer el vehículo.</p>
+          </div>
+          <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+            <span class="material-icons">close</span>
+          </button>
+        </header>
+
+        <div class="p-10 bg-white max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <form [formGroup]="dispatchForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Cliente / Empresa</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">business</span>
+                  <select formControlName="customerName" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
+                    @for (c of financeService.customers(); track c.id) {
+                      <option [value]="c.name">{{ c.name }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Origen</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">location_on</span>
+                  <input formControlName="origin" placeholder="Ej: Bogotá, DC" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Destino</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">flag</span>
+                  <input formControlName="destination" placeholder="Ej: Medellín, ANT" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</span>
+                  <input [value]="data.vehicleId" readonly class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl font-black text-indigo-600 bg-gray-50 text-sm">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha de Inicio</label>
+                <input type="date" formControlName="departureDate" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+              </div>
+
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Inicio</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
+                  <input type="time" formControlName="departureTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Precio del Servicio</label>
+                <div class="relative">
+                  <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
+                  <input type="number" formControlName="servicePrice" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
+                </div>
+              </div>
+            </div>
+
+            <div class="p-6 bg-indigo-50 rounded-3xl space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Resumen Financiero</span>
+                <span class="text-xs font-black text-indigo-900 tabular-nums">
+                  {{ (dispatchForm.value.servicePrice || 0) | currency:'USD':'symbol':'1.0-0' }} TOTAL
+                </span>
+              </div>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+              <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                Cancelar
+              </button>
+              <button type="submit" 
+                      [disabled]="dispatchForm.invalid"
+                      class="!rounded-full !h-14 !px-8 !font-black !bg-indigo-600 text-white flex-1 shadow-xl shadow-indigo-100 hover:scale-105 transition-all disabled:opacity-50">
+                Confirmar Programación
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -127,6 +137,8 @@ export type TransportDispatchResult = boolean | undefined;
   `]
 })
 export class TransportDispatchDialogOrganism implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<TransportDispatchDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<TransportDispatchDialogOrganism, TransportDispatchResult>);
   private fb = inject(FormBuilder);

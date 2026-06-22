@@ -57,7 +57,7 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
                 <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Detalle de Operación</p>
               </div>
             </div>
-            <button (click)="close()" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+            <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
               <span class="material-icons">close</span>
             </button>
           </header>

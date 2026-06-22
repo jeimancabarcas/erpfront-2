@@ -1,8 +1,13 @@
-import { Component, inject, signal, computed, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FinanceService } from '../../../services/finance.service';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
+
+export interface AdjustmentDetailData {
+  note: AdjustmentNote;
+}
 
 @Component({
   selector: 'app-adjustment-detail-dialog',
@@ -13,6 +18,16 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
     DatePipe
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+      </div>
+    } @else {
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[650px] shadow-2xl">
       <!-- Decorative background blur -->
       <div 
@@ -149,6 +164,7 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
         </footer>
       </div>
     </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -159,8 +175,10 @@ import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
   `]
 })
 export class AdjustmentDetailDialogOrganism implements OnInit {
-  data = input<any>({});
-  closed = output<void>();
+  loading = signal(false);
+  error = signal<string | null>(null);
+  private dialogRef = inject(MatDialogRef<AdjustmentDetailDialogOrganism>);
+  private dialogData = inject<AdjustmentDetailData>(MAT_DIALOG_DATA);
   private financeService = inject(FinanceService);
   private salesNoteService = inject(SalesNoteService);
 
@@ -171,7 +189,7 @@ export class AdjustmentDetailDialogOrganism implements OnInit {
   pdfLoading = signal(false);
 
   ngOnInit() {
-    this.note = this.data().note;
+    this.note = this.dialogData.note;
     
     // Find associated invoice
     const foundInvoice = this.financeService.invoices().find(inv => inv.id === this.note.invoiceId);
@@ -189,7 +207,7 @@ export class AdjustmentDetailDialogOrganism implements OnInit {
   }
 
   close() {
-    this.closed.emit();
+    this.dialogRef.close();
   }
 
   simulatePdfDownload() {

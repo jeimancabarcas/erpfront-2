@@ -2,7 +2,6 @@ import { Component, inject, signal, input, output, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { CustomerService } from '../../../services/customer.service';
 import { Customer, CreateCustomerDto } from '../../../models/customer.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
@@ -17,15 +16,25 @@ export interface CustomerDialogData {
   imports: [
     CommonModule,
     FormsModule,
-    MatIconModule,
     ButtonAtom
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="onClosed()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="flex flex-col h-full max-h-[90vh]">
       <header class="flex justify-between items-center mb-8 px-2">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <mat-icon class="!text-3xl">person_add</mat-icon>
+            <span class="material-icons !text-3xl">person_add</span>
           </div>
           <div>
             <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
@@ -37,7 +46,7 @@ export interface CustomerDialogData {
           </div>
         </div>
         <ui-button variant="icon" (clicked)="onClosed()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
+          <span class="material-icons">close</span>
         </ui-button>
       </header>
 
@@ -48,7 +57,7 @@ export interface CustomerDialogData {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Nombre Completo / Razón Social</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</span>
                 <input [(ngModel)]="customer().name" name="name" required placeholder="Ej. Juan Pérez o Tech SA"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -57,7 +66,7 @@ export interface CustomerDialogData {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Correo Electrónico</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">email</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">email</span>
                 <input type="email" [(ngModel)]="customer().email" name="email" required placeholder="ejemplo@correo.com"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -68,7 +77,7 @@ export interface CustomerDialogData {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Tipo de Documento</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">badge</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">badge</span>
                 <select [(ngModel)]="customer().documentType" name="documentType" required
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
                   <option value="CC">Cédula de Ciudadanía</option>
@@ -82,7 +91,7 @@ export interface CustomerDialogData {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Número de Documento</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</span>
                 <input [(ngModel)]="customer().documentNumber" name="documentNumber" required placeholder="Ej. 123456789"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -91,7 +100,7 @@ export interface CustomerDialogData {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">toggle_on</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">toggle_on</span>
                 <select [(ngModel)]="customer().status" name="status" required
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
                   <option value="ACTIVE">Activo</option>
@@ -105,7 +114,7 @@ export interface CustomerDialogData {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Teléfono de Contacto</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">phone</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">phone</span>
                 <input [(ngModel)]="customer().phone" name="phone" placeholder="Ej. +57 300 123 4567"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -114,7 +123,7 @@ export interface CustomerDialogData {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Dirección</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">location_on</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">location_on</span>
                 <input [(ngModel)]="customer().address" name="address" placeholder="Ej. Calle 123 #45-67"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -136,6 +145,7 @@ export interface CustomerDialogData {
         </ui-button>
       </footer>
     </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -146,6 +156,8 @@ export interface CustomerDialogData {
   `]
 })
 export class CustomerDialogOrganism implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   /** Input for inline usage via template binding */
   data = input<{ customer?: Customer }>({});
   /** Output for inline usage */

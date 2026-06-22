@@ -7,6 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { InventoryService, StockItem } from '../../../services/inventory.service';
 import { ProductFormMolecule } from '../product-form/product-form.component';
 import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-stock-table',
@@ -83,9 +84,9 @@ export class StockTableMolecule {
 
   editProduct(product: StockItem) {
     this.dialog.open(ProductFormMolecule, {
-      width: '600px',
-      maxWidth: '95vw',
-      disableClose: true,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      ...DIALOG_DEFAULTS,
       data: { product }
     });
   }

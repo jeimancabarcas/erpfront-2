@@ -1,8 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { OperationType } from '../../../models/transport.model';
@@ -20,18 +20,28 @@ export type TransportOperationResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-0 overflow-hidden">
       <header class="bg-indigo-600 p-8 text-white flex justify-between items-center">
         <div>
           <h2 class="text-2xl font-black tracking-tight mb-1">Registrar Operación</h2>
           <p class="text-indigo-100 text-sm font-medium">Define la actividad logística realizada.</p>
         </div>
-        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -42,7 +52,7 @@ export type TransportOperationResult = boolean | undefined;
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Operación</label>
               <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">settings_suggest</mat-icon>
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">settings_suggest</span>
                 <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                   @for (type of operationTypes; track type) {
                     <option [value]="type">{{ type }}</option>
@@ -59,7 +69,7 @@ export type TransportOperationResult = boolean | undefined;
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Operación</label>
               <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">schedule</mat-icon>
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
                 <input type="time" formControlName="operationTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
             </div>
@@ -67,7 +77,7 @@ export type TransportOperationResult = boolean | undefined;
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo Responsable</label>
               <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</mat-icon>
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</span>
                 <select formControlName="vehicleId" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                   @for (v of transportService.vehicles(); track v.id) {
                     <option [value]="v.id">{{ v.id }} - {{ v.driverName }}</option>
@@ -79,7 +89,7 @@ export type TransportOperationResult = boolean | undefined;
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción / Observaciones</label>
               <div class="relative">
-                <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">description</mat-icon>
+                <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
                 <textarea formControlName="description" rows="3" placeholder="Ej: Cargue de contenedor de 40 pies..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
               </div>
             </div>
@@ -89,16 +99,16 @@ export type TransportOperationResult = boolean | undefined;
               <div class="flex flex-wrap gap-3">
                 @for (file of selectedFiles; track $index) {
                   <div class="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-2xl border border-indigo-100 text-xs font-bold animate-in zoom-in-95">
-                    <mat-icon class="!text-sm !w-4 !h-4">attach_file</mat-icon>
+                    <span class="material-icons !text-sm !w-4 !h-4">attach_file</span>
                     {{ file }}
                     <button type="button" (click)="removeFile($index)" class="hover:text-red-500 transition-colors">
-                      <mat-icon class="!text-sm !w-4 !h-4">close</mat-icon>
+                      <span class="material-icons !text-sm !w-4 !h-4">close</span>
                     </button>
                   </div>
                 }
                 <button type="button" (click)="fileInput.click()" 
                         class="flex items-center gap-2 bg-white text-gray-400 px-4 py-2 rounded-2xl border border-dashed border-gray-200 text-xs font-bold hover:border-indigo-400 hover:text-indigo-600 transition-all">
-                  <mat-icon class="!text-sm !w-4 !h-4">add</mat-icon>
+                  <span class="material-icons !text-sm !w-4 !h-4">add</span>
                   Adjuntar Archivo
                 </button>
                 <input #fileInput type="file" (change)="onFileSelected($event)" multiple class="hidden">
@@ -120,12 +130,15 @@ export type TransportOperationResult = boolean | undefined;
         </form>
       </div>
     </div>
+    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class TransportOperationDialogOrganism implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<TransportOperationDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<TransportOperationDialogOrganism, TransportOperationResult>);
   private fb = inject(FormBuilder);

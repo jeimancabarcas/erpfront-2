@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
@@ -19,18 +19,28 @@ export type TransportCancelResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-0 overflow-hidden">
       <header class="bg-red-600 p-8 text-white flex justify-between items-center">
         <div>
           <h2 class="text-2xl font-black tracking-tight mb-1">Cancelar Servicio</h2>
           <p class="text-red-100 text-sm font-medium">Esta acción liberará el vehículo {{ data.route.vehicleId }}.</p>
         </div>
-        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -62,7 +72,7 @@ export type TransportCancelResult = boolean | undefined;
           <div>
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Motivo de Cancelación</label>
             <div class="relative">
-              <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">event_busy</mat-icon>
+              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">event_busy</span>
               <textarea formControlName="notes" placeholder="Explique por qué se cancela el servicio..." rows="4" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
             </div>
             @if (cancelForm.get('notes')?.hasError('required') && cancelForm.get('notes')?.touched) {
@@ -83,12 +93,15 @@ export type TransportCancelResult = boolean | undefined;
         </form>
       </div>
     </div>
+    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class TransportCancelDialogOrganism {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<TransportCancelDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<TransportCancelDialogOrganism, TransportCancelResult>);
   private fb = inject(FormBuilder);

@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 
@@ -18,18 +18,28 @@ export type TransportIncidentResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-6">
       <header class="flex justify-between items-center mb-8">
         <div>
           <h2 class="text-2xl font-black text-gray-900">Reportar Novedad</h2>
           <p class="text-gray-400 text-sm font-medium italic">Registro de incidencias o eventos relevantes en ruta.</p>
         </div>
-        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -38,7 +48,7 @@ export type TransportIncidentResult = boolean | undefined;
           <div>
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Novedad</label>
             <div class="relative">
-              <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">category</mat-icon>
+              <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">category</span>
               <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                 <option value="Retraso">Retraso</option>
                 <option value="Accidente">Accidente</option>
@@ -60,7 +70,7 @@ export type TransportIncidentResult = boolean | undefined;
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora</label>
               <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">schedule</mat-icon>
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
                 <input type="time" formControlName="incidentTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm">
               </div>
             </div>
@@ -69,7 +79,7 @@ export type TransportIncidentResult = boolean | undefined;
           <div class="md:col-span-2">
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción de la Novedad</label>
             <div class="relative">
-              <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">description</mat-icon>
+              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
               <textarea formControlName="description" rows="4" placeholder="Describa lo sucedido detalladamente..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
             </div>
             @if (incidentForm.get('description')?.hasError('required') && incidentForm.get('description')?.touched) {
@@ -93,9 +103,12 @@ export type TransportIncidentResult = boolean | undefined;
         </div>
       </form>
     </div>
+    }
   `
 })
 export class TransportIncidentDialogOrganism {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<TransportIncidentDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<TransportIncidentDialogOrganism, TransportIncidentResult>);
   private fb = inject(FormBuilder);

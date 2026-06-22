@@ -7,6 +7,7 @@ import { CurrencyPipe } from '@angular/common';
 import { SalesService, Invoice } from '../../../services/sales.service';
 import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
 import { InvoiceDetailMolecule } from '../invoice-detail/invoice-detail.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-invoices-table',
@@ -77,8 +78,9 @@ export class InvoicesTableMolecule {
 
   viewDetail(invoice: Invoice) {
     this.dialog.open(InvoiceDetailMolecule, {
-      width: '800px',
-      maxWidth: '95vw',
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS,
+      ...DIALOG_DEFAULTS,
       data: { invoice }
     });
   }

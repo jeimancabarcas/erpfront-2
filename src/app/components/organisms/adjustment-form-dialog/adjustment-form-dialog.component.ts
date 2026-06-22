@@ -7,7 +7,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { FinanceService } from '../../../services/finance.service';
@@ -16,6 +15,11 @@ import { SalesNoteService } from '../../../services/sales-note.service';
 import { Invoice } from '../../../models/invoice.model';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
 import { startWith, map } from 'rxjs';
+
+export interface AdjustmentFormData {
+  type?: 'Credit' | 'Debit';
+  invoice?: FinanceInvoice;
+}
 
 @Component({
   selector: 'app-adjustment-form-dialog',
@@ -28,18 +32,28 @@ import { startWith, map } from 'rxjs';
     MatInputModule, 
     MatSelectModule, 
     MatButtonModule, 
-    MatIconModule,
     MatAutocompleteModule,
     MatSnackBarModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="dialogRef.close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="relative overflow-hidden rounded-[40px] bg-white flex flex-col max-h-[95vh]">
       <div class="absolute -top-24 -right-24 w-64 h-64 bg-amber-50 rounded-full blur-3xl opacity-50"></div>
       
       <!-- Fixed Header -->
       <header class="flex items-center gap-6 p-10 pb-6 relative z-10">
         <div class="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-[24px] flex items-center justify-center shadow-xl shadow-amber-100">
-          <mat-icon class="!text-[32px] !w-8 !h-8">history_edu</mat-icon>
+          <span class="material-icons !text-[32px] !w-8 !h-8">history_edu</span>
         </div>
         <div>
           <h2 class="text-3xl font-black text-gray-900 tracking-tight !m-0">Nota de Ajuste</h2>
@@ -91,7 +105,7 @@ import { startWith, map } from 'rxjs';
                 <mat-form-field appearance="outline" class="w-full !m-0">
                   <mat-label>Buscar factura por número o cliente...</mat-label>
                   <input matInput [matAutocomplete]="autoInvoice" formControlName="invoiceSearch">
-                  <mat-icon matPrefix class="mr-2 text-gray-400">search</mat-icon>
+                  <span class="material-icons" matPrefix class="mr-2 text-gray-400">search</span>
                   <mat-autocomplete #autoInvoice="matAutocomplete" [displayWith]="displayInvoice" (optionSelected)="onInvoiceSelected($event.option.value)">
                     @for (inv of filteredInvoices(); track inv.id) {
                       <mat-option [value]="inv">
@@ -109,7 +123,7 @@ import { startWith, map } from 'rxjs';
               <div class="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100/50 flex justify-between items-center animate-in zoom-in duration-300">
                 <div class="flex items-center gap-5">
                   <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-50">
-                    <mat-icon class="!text-[28px]">receipt</mat-icon>
+                    <span class="material-icons !text-[28px]">receipt</span>
                   </div>
                   <div class="flex flex-col">
                     <span class="text-lg font-black text-indigo-900 leading-none mb-1">{{ selectedInvoice()?.id }}</span>
@@ -138,7 +152,7 @@ import { startWith, map } from 'rxjs';
                   </mat-option>
                 }
               </mat-select>
-              <mat-icon matPrefix class="mr-2 text-gray-400">info</mat-icon>
+              <span class="material-icons" matPrefix class="mr-2 text-gray-400">info</span>
             </mat-form-field>
           </div>
 
@@ -148,7 +162,7 @@ import { startWith, map } from 'rxjs';
             <mat-form-field appearance="outline" class="w-full !m-0">
               <mat-label>Monto total del ajuste</mat-label>
               <input matInput type="number" formControlName="amount" placeholder="0.00" class="font-black">
-              <mat-icon matPrefix class="mr-2 text-gray-400">attach_money</mat-icon>
+              <span class="material-icons" matPrefix class="mr-2 text-gray-400">attach_money</span>
             </mat-form-field>
           </div>
 
@@ -158,7 +172,7 @@ import { startWith, map } from 'rxjs';
             <mat-form-field appearance="outline" class="w-full !m-0">
               <mat-label>Motivo detallado del ajuste contable</mat-label>
               <textarea matInput formControlName="reason" rows="4" placeholder="Ej: Devolución por mercancía en mal estado..."></textarea>
-              <mat-icon matPrefix class="mr-2 text-gray-400">subject</mat-icon>
+              <span class="material-icons" matPrefix class="mr-2 text-gray-400">subject</span>
             </mat-form-field>
           </div>
         </form>
@@ -182,6 +196,7 @@ import { startWith, map } from 'rxjs';
         </div>
       </div>
     </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -194,9 +209,11 @@ import { startWith, map } from 'rxjs';
   `]
 })
 export class AdjustmentFormDialogOrganism implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   private fb = inject(FormBuilder);
   public dialogRef = inject(MatDialogRef<AdjustmentFormDialogOrganism>);
-  public data = inject(MAT_DIALOG_DATA, { optional: true });
+  private readonly data: AdjustmentFormData = inject(MAT_DIALOG_DATA, { optional: true }) || {};
   public financeService = inject(FinanceService);
   private invoiceService = inject(InvoiceService);
   private salesNoteService = inject(SalesNoteService);
@@ -206,7 +223,7 @@ export class AdjustmentFormDialogOrganism implements OnInit {
   isSubmitting = signal<boolean>(false);
 
   adjustmentForm = this.fb.group({
-    type: [this.data?.type || 'Credit', Validators.required],
+    type: [this.data.type || 'Credit', Validators.required],
     invoiceSearch: [''],
     reason: ['', Validators.required],
     amount: [0, [Validators.required, Validators.min(1)]],
@@ -253,9 +270,9 @@ export class AdjustmentFormDialogOrganism implements OnInit {
   });
 
   constructor() {
-    if (this.data?.invoice) {
+    if (this.data.invoice) {
       setTimeout(() => {
-        if (this.data?.invoice) {
+        if (this.data.invoice) {
           this.onInvoiceSelected(this.data.invoice);
         }
       });
@@ -355,6 +372,8 @@ export class AdjustmentFormDialogOrganism implements OnInit {
           this.isSubmitting.set(false);
           console.error(err);
           const errorMsg = err.error?.message || err.message || 'Error desconocido al emitir comprobante';
+          this.error.set(errorMsg);
+          setTimeout(() => this.dialogRef.close(), 3000);
           this.snackBar.open(
             `Error: ${errorMsg}`,
             'Cerrar',

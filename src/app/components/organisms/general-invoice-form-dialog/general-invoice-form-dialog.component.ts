@@ -2,10 +2,15 @@ import { Component, inject, signal, computed, input, output } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MatDialogRef } from '@angular/material/dialog';
 import { FinanceService } from '../../../services/finance.service';
 import { FinanceInvoice, InvoiceItem, FinanceCustomer, FinanceProduct } from '../../../models/finance.model';
 import { startWith, map } from 'rxjs';
 import { ButtonAtom } from '../../atoms/button/button.component';
+
+export interface GeneralInvoiceFormResult {
+  invoice: FinanceInvoice | null;
+}
 
 @Component({
   selector: 'app-general-invoice-form-dialog',
@@ -208,8 +213,11 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   `]
 })
 export class GeneralInvoiceFormDialogOrganism {
+  loading = signal(false);
+  error = signal<string | null>(null);
   private fb = inject(FormBuilder);
   public financeService = inject(FinanceService);
+  private dialogRef = inject(MatDialogRef<GeneralInvoiceFormDialogOrganism, GeneralInvoiceFormResult>);
 
   selectedCustomer = signal<FinanceCustomer | null>(null);
 
@@ -338,11 +346,13 @@ export class GeneralInvoiceFormDialogOrganism {
   }
 
   onCancel() {
+    this.dialogRef.close(null);
     this.closed.emit(null);
   }
 
   onSubmit() {
     if (this.invoiceForm.valid && this.selectedCustomer()) {
+      this.error.set(null);
       const customer = this.selectedCustomer()!;
       const val = this.invoiceForm.value;
 
@@ -365,6 +375,7 @@ export class GeneralInvoiceFormDialogOrganism {
       };
 
       this.financeService.addInvoice(newInvoice);
+      this.dialogRef.close(newInvoice);
       this.closed.emit(newInvoice);
     }
   }

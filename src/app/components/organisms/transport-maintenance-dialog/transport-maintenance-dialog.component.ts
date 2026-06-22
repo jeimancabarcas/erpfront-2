@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 
@@ -18,18 +18,28 @@ export type TransportMaintenanceResult = boolean | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-0 overflow-hidden">
       <header class="bg-amber-500 p-8 text-white flex justify-between items-center">
         <div>
           <h2 class="text-2xl font-black tracking-tight mb-1">Programar Mantenimiento</h2>
           <p class="text-amber-50 text-sm font-medium italic">Define el servicio técnico para el vehículo {{ data.vehicleId }}.</p>
         </div>
-        <button mat-icon-button (click)="close()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
+        <button (click)="close()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -40,7 +50,7 @@ export type TransportMaintenanceResult = boolean | undefined;
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Mantenimiento</label>
               <div class="relative">
-                <mat-icon class="absolute left-3 top-3.5 text-gray-400 text-sm">handyman</mat-icon>
+                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">handyman</span>
                 <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm bg-white">
                   <option value="Preventivo">Preventivo</option>
                   <option value="Correctivo">Correctivo</option>
@@ -58,7 +68,7 @@ export type TransportMaintenanceResult = boolean | undefined;
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción Detallada</label>
               <div class="relative">
-                <mat-icon class="absolute left-3 top-4 text-gray-400 text-sm">description</mat-icon>
+                <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
                 <textarea formControlName="description" rows="4" 
                           placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..."
                           class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
@@ -70,7 +80,7 @@ export type TransportMaintenanceResult = boolean | undefined;
               <div class="relative">
                 <span class="text-gray-400 absolute left-3 top-3.5 text-sm font-medium">$</span>
                 <input type="number" formControlName="cost" class="w-full pl-8 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm">
-                <mat-icon class="absolute right-3 top-3.5 text-gray-400 text-sm">payments</mat-icon>
+                <span class="material-icons absolute right-3 top-3.5 text-gray-400 text-sm">payments</span>
               </div>
             </div>
           </div>
@@ -88,9 +98,12 @@ export type TransportMaintenanceResult = boolean | undefined;
         </form>
       </div>
     </div>
+    }
   `
 })
 export class TransportMaintenanceDialogOrganism {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<TransportMaintenanceDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<TransportMaintenanceDialogOrganism, TransportMaintenanceResult>);
   private fb = inject(FormBuilder);

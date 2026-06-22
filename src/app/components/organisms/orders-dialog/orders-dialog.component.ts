@@ -1,8 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormArray, FormGroup, FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
 export interface PrescriptionData {
@@ -35,14 +34,24 @@ export interface OrdersDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-10 max-h-[85vh] overflow-y-auto">
       <div class="flex items-center gap-4 mb-8">
         <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
-          <mat-icon>assignment</mat-icon>
+          <span class="material-icons">assignment</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Órdenes Médicas</h2>
       </div>
@@ -52,11 +61,11 @@ export interface OrdersDialogResult {
         <div class="mb-12">
           <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-2">
-              <mat-icon class="text-indigo-400">medication</mat-icon>
+              <span class="material-icons text-indigo-400">medication</span>
               <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest">Medicamentos</h3>
             </div>
             <button type="button" (click)="addMed()" class="!rounded-full !bg-indigo-600 text-white !text-[10px] !font-black !h-10 !px-6 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors">
-              <mat-icon class="!text-sm mr-1 align-middle">add_circle</mat-icon>
+              <span class="material-icons !text-sm mr-1 align-middle">add_circle</span>
               Añadir Medicamento
             </button>
           </div>
@@ -65,14 +74,14 @@ export interface OrdersDialogResult {
             @for (med of prescriptions.controls; track $index) {
               <div class="p-8 bg-gray-50/50 rounded-[32px] border border-gray-100 relative group animate-in zoom-in-95 duration-300" [formGroup]="getPrescriptionGroup($index)">
                 <button type="button" (click)="removeMed($index)" class="absolute -top-3 -right-3 !bg-white !shadow-sm !text-red-400 border border-red-50 hover:!bg-red-50 transition-all rounded-2xl w-10 h-10 flex items-center justify-center">
-                  <mat-icon class="text-sm">close</mat-icon>
+                  <span class="material-icons text-sm">close</span>
                 </button>
                 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <input formControlName="code" placeholder="Cód." class="md:col-span-3 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
                   <div class="md:col-span-9 w-full relative">
                     <input formControlName="name" placeholder="Ej: Acetaminofén 500mg" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm pr-10">
-                    <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-300 text-sm">search</mat-icon>
+                    <span class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-indigo-300 text-sm">search</span>
                   </div>
                   
                   <input formControlName="dose" placeholder="Ej: 5ml" class="md:col-span-4 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
@@ -91,7 +100,7 @@ export interface OrdersDialogResult {
             }
             @if (prescriptions.controls.length === 0) {
               <div class="py-10 text-center bg-gray-50/30 rounded-[32px] border border-dashed border-gray-200">
-                <mat-icon class="text-gray-200 !w-12 !h-12 !text-[48px] mb-4 block">healing</mat-icon>
+                <span class="material-icons text-gray-200 !w-12 !h-12 !text-[48px] mb-4 block">healing</span>
                 <p class="text-sm text-gray-400 italic">No hay medicamentos prescritos aún</p>
               </div>
             }
@@ -104,11 +113,11 @@ export interface OrdersDialogResult {
         <div>
           <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-2">
-              <mat-icon class="text-indigo-400">biotech</mat-icon>
+              <span class="material-icons text-indigo-400">biotech</span>
               <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest">Procedimientos</h3>
             </div>
             <button type="button" (click)="addProc()" class="!rounded-full !bg-indigo-600 text-white !text-[10px] !font-black !h-10 !px-6 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors">
-              <mat-icon class="!text-sm mr-1 align-middle">add_circle</mat-icon>
+              <span class="material-icons !text-sm mr-1 align-middle">add_circle</span>
               Añadir Procedimiento
             </button>
           </div>
@@ -119,7 +128,7 @@ export interface OrdersDialogResult {
                 <input formControlName="code" placeholder="Código" class="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
                 <input formControlName="name" placeholder="Nombre del Procedimiento" class="flex-grow px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
                 <button type="button" (click)="removeProc($index)" class="!bg-red-50 !text-red-400 !rounded-2xl w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100">
-                  <mat-icon class="text-sm">delete</mat-icon>
+                  <span class="material-icons text-sm">delete</span>
                 </button>
               </div>
             }
@@ -137,9 +146,12 @@ export interface OrdersDialogResult {
         </div>
       </form>
     </div>
+    }
   `
 })
 export class OrdersDialogComponent implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<OrdersDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<OrdersDialogComponent, OrdersDialogResult>);
   private fb = inject(FormBuilder);

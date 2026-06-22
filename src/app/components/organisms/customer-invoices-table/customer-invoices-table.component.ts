@@ -15,6 +15,7 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-customer-invoices-table-organism',
@@ -169,9 +170,8 @@ export class CustomerInvoicesTableOrganism {
   viewInvoiceDetail(invoice: Invoice) {
     this.dialog.open(InvoiceDetailDialogOrganism, {
       data: { invoiceId: invoice.id },
-      width: '100%',
-      maxWidth: '950px',
-      panelClass: 'premium-dialog'
+      panelClass: DIALOG_PANEL_CLASS,
+      width: DIALOG_WIDTHS.xl
     });
   }
 

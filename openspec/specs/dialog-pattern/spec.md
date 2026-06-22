@@ -11,13 +11,15 @@ Canonical MatDialog pattern for all dialog organisms. Every component opened via
 | REQ-1 | P0 | Export typed `interface XxxDialogData` alongside component; inject via `inject(MAT_DIALOG_DATA)<XxxDialogData>` — NOT `input()`/`@Input()` |
 | REQ-2 | P0 | Inject `MatDialogRef<Component, T>`; close via `dialogRef.close(result)` — `closed.emit()` PROHIBITED |
 | REQ-3 | P0 | Use `FormBuilder`/`FormGroup`/`FormControl`; `[(ngModel)]` PROHIBITED |
-| REQ-4 | P1 | `loading` signal (boolean); show `<mat-spinner>` while `true` |
-| REQ-5 | P1 | `errorMsg` signal (`string \| null`); dismissible error banner when non-null |
+| REQ-4 | P0 | `loading` signal (boolean); show loading indicator (spinner/skeleton) while `true` |
+| REQ-5 | P0 | `errorMsg` signal (`string \| null`); dismissible error banner when non-null |
 | REQ-6 | P1 | Handle `undefined`/partial `MAT_DIALOG_DATA` with sensible defaults |
 | REQ-7 | P1 | Import only Material modules used; always include `ReactiveFormsModule`, never `FormsModule` |
-| REQ-8 | P1 | Icons via `<mat-icon>` only — `<span class="material-icons">` PROHIBITED |
+| REQ-8 | P1 | Icons via `<span class="material-icons">` only — `<mat-icon>` PROHIBITED |
 | REQ-9 | P1 | Close buttons MUST have `aria-label`; form controls MUST use `for`/`id` or `aria-label` |
 | REQ-10 | P1 | Tailwind classes for styling; `::ng-deep` PROHIBITED unless documented inline |
+| REQ-11 | P0 | Dialog MUST use header-body-footer layout: header with title + optional status badge + close button, scrollable content body, footer with action/CTA buttons |
+| REQ-12 | P0 | Dialog MUST apply `rounded-[32px]`, `shadow-2xl`, `max-h-[95vh]`, and CSS scrollbar styling on the content body |
 
 ### Key Scenarios
 
@@ -35,7 +37,7 @@ Canonical MatDialog pattern for all dialog organisms. Every component opened via
 #### Scenario: REQ-4 / REQ-5 — Loading and error flow
 - **GIVEN** a dialog that fetches data on init
 - **WHEN** the fetch is in progress
-- **THEN** `loading()` is `true` and spinner is visible
+- **THEN** `loading()` is `true` and a loading indicator is shown
 - **WHEN** the fetch fails
 - **THEN** `loading()` is `false`, `errorMsg` is set, and the dismissible banner appears
 
@@ -54,3 +56,23 @@ Canonical MatDialog pattern for all dialog organisms. Every component opened via
 - **WHEN** its styles are reviewed
 - **THEN** width constraints use `class="max-w-[Npx]"`, not `::ng-deep`
 - **AND** any `::ng-deep` usage has a preceding comment explaining why Tailwind cannot achieve the same result
+
+#### Scenario: REQ-11 — Header-body-footer renders correctly
+- **GIVEN** a dialog component
+- **WHEN** it renders
+- **THEN** header contains title, optional status badge, and close button with `aria-label`
+- **AND** content body is scrollable below header
+- **AND** footer contains CTAs aligned to end
+- **AND** header/footer remain fixed when body scrolls
+
+#### Scenario: REQ-11 — Overflow content
+- **GIVEN** a dialog with content exceeding viewport
+- **WHEN** the dialog renders
+- **THEN** only the content body scrolls
+- **AND** header and footer stay visible (fixed, non-scrolling)
+
+#### Scenario: REQ-12 — Styling applied on render
+- **GIVEN** a dialog component
+- **WHEN** inspected
+- **THEN** container has `rounded-[32px]`, `shadow-2xl`, `max-h-[95vh]`
+- **AND** content body uses custom scrollbar (thin, styled track/thumb)

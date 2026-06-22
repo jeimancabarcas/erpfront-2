@@ -1,7 +1,6 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, signal, input, output } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Invoice } from '../../../services/sales.service';
 import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
@@ -16,12 +15,22 @@ export interface InvoiceDetailDialogData {
   standalone: true,
   imports: [
     CurrencyPipe,
-    MatIconModule,
     MatButtonModule,
     StatusTagAtom,
     ButtonAtom
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-2">
       <header class="flex justify-between items-start mb-8">
         <div>
@@ -32,7 +41,7 @@ export interface InvoiceDetailDialogData {
           <p class="text-gray-500 font-medium">Detalle de facturación - {{ dialogInvoice.date }}</p>
         </div>
         <ui-button variant="icon" (clicked)="onClose()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
+          <span class="material-icons">close</span>
         </ui-button>
       </header>
 
@@ -72,7 +81,7 @@ export interface InvoiceDetailDialogData {
 
       <div class="flex justify-end gap-3 pt-4">
         <button mat-button type="button" (click)="onClose()" class="!rounded-full !px-6 !h-12 !font-bold">
-          <mat-icon class="mr-2">print</mat-icon>
+          <span class="material-icons mr-2">print</span>
           Imprimir
         </button>
         <button mat-flat-button color="primary" (clicked)="onClose()" class="!rounded-full !px-8 !h-12 !font-black">
@@ -80,12 +89,15 @@ export interface InvoiceDetailDialogData {
         </button>
       </div>
     </div>
+    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class InvoiceDetailMolecule {
+  loading = signal(false);
+  error = signal<string | null>(null);
   /** Input for inline usage via template binding */
   data = input.required<{ invoice: Invoice }>();
   /** Output for inline usage */

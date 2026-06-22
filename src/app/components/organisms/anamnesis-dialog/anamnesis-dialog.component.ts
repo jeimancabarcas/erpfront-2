@@ -1,8 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+
 import { MatButtonModule } from '@angular/material/button';
 
 export interface AnamnesisDialogData {
@@ -21,14 +21,24 @@ export interface AnamnesisDialogResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatButtonModule
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-10 rounded-[32px]">
       <div class="flex items-center gap-4 mb-8">
         <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
-          <mat-icon>psychology</mat-icon>
+          <span class="material-icons">psychology</span>
         </div>
         <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0">Anamnesis</h2>
       </div>
@@ -50,9 +60,12 @@ export interface AnamnesisDialogResult {
         </div>
       </form>
     </div>
+    }
   `
 })
 export class AnamnesisDialogComponent implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   readonly data = inject<AnamnesisDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<AnamnesisDialogComponent, AnamnesisDialogResult>);
   private fb = inject(FormBuilder);

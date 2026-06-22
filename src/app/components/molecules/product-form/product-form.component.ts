@@ -2,7 +2,6 @@ import { Component, inject, signal, input, output, OnInit } from '@angular/core'
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
@@ -22,18 +21,28 @@ export type ProductFormResult = boolean | undefined;
     CommonModule,
     FormsModule,
     CurrencyPipe,
-    MatIconModule,
     MatButtonModule,
     ButtonAtom
   ],
   template: `
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    } @else if (error()) {
+      <div class="flex flex-col items-center gap-2 text-red-500 py-12">
+        <span class="material-icons text-5xl">error_outline</span>
+        <p>{{ error() }}</p>
+        <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+      </div>
+    } @else {
     <div class="p-2">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}
         </h2>
-        <button mat-icon-button (click)="onClose()" aria-label="Cerrar diálogo">
-          <mat-icon>close</mat-icon>
+        <button (click)="onClose()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+          <span class="material-icons">close</span>
         </button>
       </header>
 
@@ -84,7 +93,7 @@ export type ProductFormResult = boolean | undefined;
             <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top duration-300">
               <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Precio de Venta</label>
               <div class="relative">
-                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">payments</mat-icon>
+                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">payments</span>
                 <input type="number" [(ngModel)]="product().sellingPrice" name="sellingPrice" required min="0" placeholder="Ej. 15000"
                   class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
               </div>
@@ -115,12 +124,15 @@ export type ProductFormResult = boolean | undefined;
         </div>
       </form>
     </div>
+    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class ProductFormMolecule implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
   /** Input for inline usage via template binding */
   data = input<{ product?: Product }>({});
   /** Output for inline usage */
