@@ -64,11 +64,11 @@ export interface CustomerDialogData {
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <ui-select label="Tipo de Documento" [options]="documentTypeOptions" [value]="customer().documentType" (valueChange)="updateCustomer('documentType', $event)" [required]="true" />
+            <ui-select label="Tipo de Documento" [options]="documentTypeOptions" [value]="customer().documentType ?? ''" (valueChange)="updateCustomer('documentType', $event)" [required]="true" />
 
             <ui-text-input label="Número de Documento" icon="fingerprint" [value]="customer().documentNumber ?? ''" (valueChange)="updateCustomer('documentNumber', $event)" name="documentNumber" [required]="true" placeholder="Ej. 123456789" />
 
-            <ui-select label="Estado" [options]="statusOptions" [value]="customer().status" (valueChange)="updateCustomer('status', $event)" [required]="true" />
+            <ui-select label="Estado" [options]="statusOptions" [value]="customer().status ?? 'ACTIVE'" (valueChange)="updateCustomer('status', $event)" [required]="true" />
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

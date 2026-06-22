@@ -5,11 +5,11 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 
 @Component({
@@ -22,11 +22,11 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSelectModule,
     MatDatepickerModule,
     MatIconModule,
     MatDialogModule,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     <div class="p-2 max-w-4xl mx-auto">
@@ -61,24 +61,9 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
                 <mat-datepicker #picker></mat-datepicker>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Sexo</mat-label>
-                <mat-select formControlName="gender" required>
-                  <mat-option value="M">Masculino</mat-option>
-                  <mat-option value="F">Femenino</mat-option>
-                  <mat-option value="O">Otro</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <ui-select label="Sexo" [options]="genderOptions" [formControl]="personalForm.controls.gender" />
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Tipo de Identificación</mat-label>
-                <mat-select formControlName="idType" required>
-                  <mat-option value="RC">Registro Civil</mat-option>
-                  <mat-option value="TI">Tarjeta de Identidad</mat-option>
-                  <mat-option value="CC">Cédula de Ciudadanía</mat-option>
-                  <mat-option value="CE">Cédula de Extranjería</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <ui-select label="Tipo de Identificación" [options]="idTypeOptions" [formControl]="personalForm.controls.idType" />
 
               <ui-text-input label="Identificación" icon="badge" placeholder="Número de documento" [required]="true" [formControl]="personalForm.controls.idNumber" />
             </div>
@@ -102,13 +87,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
               <ui-text-input label="Ciudad" placeholder="Ej. Bogotá" [required]="true" [formControl]="locationForm.controls.city" />
               <ui-text-input label="País" placeholder="Ej. Colombia" [required]="true" [formControl]="locationForm.controls.country" />
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Zona</mat-label>
-                <mat-select formControlName="zone" required>
-                  <mat-option value="Urbana">Urbana</mat-option>
-                  <mat-option value="Rural">Rural</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <ui-select label="Zona" [options]="zoneOptions" [formControl]="locationForm.controls.zone" />
 
               <ui-text-input label="Código Postal" placeholder="Opcional" [formControl]="locationForm.controls.postalCode" />
             </div>
@@ -133,14 +112,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <ui-text-input label="EPS" icon="health_and_safety" placeholder="Ej. Sanitas" [required]="true" [formControl]="healthForm.controls.eps" />
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Régimen de Salud</mat-label>
-                <mat-select formControlName="healthRegime" required>
-                  <mat-option value="Contributivo">Contributivo</mat-option>
-                  <mat-option value="Subsidiado">Subsidiado</mat-option>
-                  <mat-option value="Especial">Especial</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <ui-select label="Régimen de Salud" [options]="healthRegimeOptions" [formControl]="healthForm.controls.healthRegime" />
 
               <ui-text-input label="Clínica o Lugar donde nació" icon="local_hospital" placeholder="Ej. Clínica del Country" [required]="true" [formControl]="healthForm.controls.birthPlace" class="md:col-span-2" />
 
@@ -318,6 +290,30 @@ export class PatientRegistrationWizardOrganism implements OnInit {
       this.patchFormValues();
     }
   }
+
+  genderOptions: SelectOption[] = [
+    { value: 'M', label: 'Masculino' },
+    { value: 'F', label: 'Femenino' },
+    { value: 'O', label: 'Otro' },
+  ];
+
+  idTypeOptions: SelectOption[] = [
+    { value: 'RC', label: 'Registro Civil' },
+    { value: 'TI', label: 'Tarjeta de Identidad' },
+    { value: 'CC', label: 'Cédula de Ciudadanía' },
+    { value: 'CE', label: 'Cédula de Extranjería' },
+  ];
+
+  zoneOptions: SelectOption[] = [
+    { value: 'Urbana', label: 'Urbana' },
+    { value: 'Rural', label: 'Rural' },
+  ];
+
+  healthRegimeOptions: SelectOption[] = [
+    { value: 'Contributivo', label: 'Contributivo' },
+    { value: 'Subsidiado', label: 'Subsidiado' },
+    { value: 'Especial', label: 'Especial' },
+  ];
 
   personalForm = this.fb.group({
     firstNames: ['', Validators.required],

@@ -60,17 +60,17 @@ Chain strategy: pending
 - [x] 3.6 `organisms/invoice-form-dialog` — appointmentType, provider
 - [x] 3.7 `organisms/sales-note-form-dialog` — noteType, correctionConceptCode
 - [x] 3.8 `organisms/purchase-order-dialog` — supplierId, productId
-- [ ] 3.9 Remove `MatSelectModule` imports where unused per component
+- [x] 3.9 Remove `MatSelectModule` imports where unused per component
 - [x] 3.10 `organisms/general-invoice-form-dialog` — remaining selects (none needed)
 
 ## Phase 4: PatientRegistrationWizard (High Risk)
 
-- [ ] 4.1 Replace 4 mat-selects (gender, idType, zone, healthRegime) with `<ui-select>`
-- [ ] 4.2 Keep `MatStepperModule` — verify step navigation works
-- [ ] 4.3 Manual QA: selected values persist on stepper transitions
+- [x] 4.1 Replace 4 mat-selects (gender, idType, zone, healthRegime) with `<ui-select>`
+- [x] 4.2 Keep `MatStepperModule` — verify step navigation works
+- [x] 4.3 Manual QA: selected values persist on stepper transitions
 
 ## Validation
 
-- [ ] V.1 `npx tsc --noEmit` — zero errors
-- [ ] V.2 `ng build` — production build passes
+- [x] V.1 `npx tsc --noEmit` — zero errors
+- [x] V.2 `ng build` — production build passes
 - [ ] V.3 Run affected component tests
