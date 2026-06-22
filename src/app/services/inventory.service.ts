@@ -33,6 +33,16 @@ export interface Movement {
   operator?: string;
 }
 
+export interface PaginatedMovements {
+  data: Movement[];
+  meta: {
+    total: number;
+    page: number;
+    lastPage: number;
+    limit: number;
+  };
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -50,13 +60,26 @@ export class InventoryService {
   ]);
 
   private _movements = signal<Movement[]>([]);
+  private _meta = signal<{ total: number; page: number; lastPage: number; limit: number } | null>(null);
 
   public stock = this._stock.asReadonly();
   public movements = this._movements.asReadonly();
+  public meta = this._meta.asReadonly();
 
-  loadMovements(): Observable<Movement[]> {
-    return this.http.get<Movement[]>(this.apiUrl).pipe(
-      tap(data => this._movements.set(data))
+  loadMovements(params?: { page?: number; limit?: number; sortBy?: string; order?: string; type?: string }): Observable<PaginatedMovements> {
+    const queryParams: any = {};
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams[key] = value;
+        }
+      });
+    }
+    return this.http.get<PaginatedMovements>(this.apiUrl, { params: queryParams }).pipe(
+      tap(res => {
+        this._movements.set(res.data);
+        this._meta.set(res.meta);
+      })
     );
   }
 

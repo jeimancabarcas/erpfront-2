@@ -1,84 +1,142 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { FormsModule } from '@angular/forms';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { InventoryService } from '../../../services/inventory.service';
 
 @Component({
   selector: 'app-movements-table',
   standalone: true,
-  imports: [MatTableModule, MatIconModule],
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatIconModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    FormsModule,
+  ],
   template: `
-    <div class="overflow-x-auto">
-      <table mat-table [dataSource]="inventoryService.movements()" class="w-full">
-        <!-- ID Column -->
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">ID</th>
-          <td mat-cell *matCellDef="let movement" class="!text-gray-500 font-mono">{{movement.id}}</td>
-        </ng-container>
+    <div class="flex flex-col">
+      <!-- Filters -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3 p-6 pb-4 min-w-0">
+        <div class="flex flex-wrap items-center gap-3 min-w-0">
+          <mat-form-field appearance="outline" class="!w-[140px]" subscriptSizing="dynamic">
+            <mat-label>Tipo</mat-label>
+            <mat-select [(ngModel)]="filterType" (selectionChange)="applyFilters()">
+              <mat-option value="">Todos</mat-option>
+              <mat-option value="In">Entrada</mat-option>
+              <mat-option value="Out">Salida</mat-option>
+            </mat-select>
+          </mat-form-field>
 
-        <!-- Product Column -->
-        <ng-container matColumnDef="product">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Producto</th>
-          <td mat-cell *matCellDef="let movement" class="font-bold text-gray-900">{{movement.product}}</td>
-        </ng-container>
+          <mat-form-field appearance="outline" class="!w-[200px]" subscriptSizing="dynamic">
+            <mat-label>Usuario</mat-label>
+            <input matInput [(ngModel)]="filterUser" (input)="onUserInput($any($event.target).value)" placeholder="Filtrar por usuario">
+            @if (filterUser()) {
+              <button matSuffix mat-icon-button (click)="clearUserFilter()">
+                <mat-icon class="!text-[18px]">close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+        </div>
 
-        <!-- Type Column -->
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Tipo</th>
-          <td mat-cell *matCellDef="let movement">
-            <div class="flex items-center gap-2">
-              <div 
-                class="w-8 h-8 rounded-full flex items-center justify-center"
-                [class]="getTypeBg(movement.type)"
-              >
-                <mat-icon class="!text-[18px] !w-auto !h-auto" [class]="getTypeColor(movement.type)">
-                  {{getTypeIcon(movement.type)}}
-                </mat-icon>
+        <span class="sm:ml-auto text-xs text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">
+          {{ totalItems() }} registros
+        </span>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="inventoryService.movements()" class="w-full">
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">ID</th>
+            <td mat-cell *matCellDef="let movement" class="!text-gray-500 font-mono text-xs">{{movement.id}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="product">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Producto</th>
+            <td mat-cell *matCellDef="let movement" class="font-bold text-gray-900 text-sm">{{movement.product}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Tipo</th>
+            <td mat-cell *matCellDef="let movement">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center" [class]="getTypeBg(movement.type)">
+                  <mat-icon class="!text-[18px] !w-auto !h-auto" [class]="getTypeColor(movement.type)">
+                    {{getTypeIcon(movement.type)}}
+                  </mat-icon>
+                </div>
+                <span class="text-sm font-medium">{{movement.type === 'In' ? 'Entrada' : 'Salida'}}</span>
               </div>
-              <span class="text-sm font-medium">{{movement.type}}</span>
-            </div>
-          </td>
-        </ng-container>
+            </td>
+          </ng-container>
 
-        <!-- Quantity Column -->
-        <ng-container matColumnDef="quantity">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Cantidad</th>
-          <td mat-cell *matCellDef="let movement" class="font-bold">{{movement.quantity}}</td>
-        </ng-container>
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Cantidad</th>
+            <td mat-cell *matCellDef="let movement" class="font-bold text-sm">{{movement.quantity}}</td>
+          </ng-container>
 
-        <!-- Origin Column -->
-        <ng-container matColumnDef="origin">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Origen</th>
-          <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.origin}}</td>
-        </ng-container>
+          <ng-container matColumnDef="origin">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Origen</th>
+            <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.origin}}</td>
+          </ng-container>
 
-        <!-- Destination Column -->
-        <ng-container matColumnDef="destination">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Destino</th>
-          <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.destination}}</td>
-        </ng-container>
+          <ng-container matColumnDef="destination">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Destino</th>
+            <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.destination}}</td>
+          </ng-container>
 
-        <!-- Operator Column -->
-        <ng-container matColumnDef="operator">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Usuario</th>
-          <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.operator}}</td>
-        </ng-container>
+          <ng-container matColumnDef="operator">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Usuario</th>
+            <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.operator}}</td>
+          </ng-container>
 
-        <!-- Date Column -->
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Fecha</th>
-          <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.date}}</td>
-        </ng-container>
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Fecha</th>
+            <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.date}}</td>
+          </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50 transition-colors"></tr>
-      </table>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50 transition-colors"></tr>
+
+          @if (inventoryService.movements().length === 0) {
+            <tr class="mat-row">
+              <td class="mat-cell text-center py-12 text-gray-400 font-medium" [attr.colspan]="displayedColumns.length">
+                <div class="flex flex-col items-center gap-3">
+                  <mat-icon class="!text-4xl !w-auto !h-auto text-gray-200">inventory_2</mat-icon>
+                  <span>No se encontraron movimientos</span>
+                </div>
+              </td>
+            </tr>
+          }
+        </table>
+      </div>
+
+      <!-- Paginator -->
+      <mat-paginator
+        [length]="totalItems()"
+        [pageSize]="pageSize()"
+        [pageIndex]="pageIndex() - 1"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        (page)="onPageChange($event)"
+        class="!border-t !border-gray-50"
+        showFirstLastButtons
+      ></mat-paginator>
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+    :host { display: block; }
     .mat-mdc-header-cell {
       padding-top: 16px;
       padding-bottom: 16px;
@@ -89,19 +147,77 @@ import { InventoryService } from '../../../services/inventory.service';
     }
   `]
 })
-export class MovementsTableMolecule implements OnInit {
+export class MovementsTableMolecule implements OnInit, OnDestroy {
   inventoryService = inject(InventoryService);
   displayedColumns: string[] = ['id', 'product', 'type', 'quantity', 'origin', 'destination', 'operator', 'date'];
 
+  filterType = signal('');
+  filterUser = signal('');
+  pageSize = signal(10);
+  pageIndex = signal(1);
+  totalItems = signal(0);
+  sortBy = signal('date');
+  sortOrder = signal<'ASC' | 'DESC'>('DESC');
+
+  private userInput$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
+
   ngOnInit() {
-    this.inventoryService.loadMovements().subscribe();
+    this.userInput$.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(() => {
+      this.applyFilters();
+    });
+
+    this.loadPage();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onUserInput(value: string) {
+    this.filterUser.set(value);
+    this.userInput$.next(value);
+  }
+
+  clearUserFilter() {
+    this.filterUser.set('');
+    this.userInput$.next('');
+  }
+
+  loadPage() {
+    this.inventoryService.loadMovements({
+      page: this.pageIndex(),
+      limit: this.pageSize(),
+      sortBy: this.sortBy(),
+      order: this.sortOrder(),
+      type: this.filterType() || undefined,
+    }).subscribe({
+      next: (res) => {
+        this.totalItems.set(res.meta.total);
+      },
+    });
+  }
+
+  applyFilters() {
+    this.pageIndex.set(1);
+    this.loadPage();
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageSize.set(event.pageSize);
+    this.pageIndex.set(event.pageIndex + 1);
+    this.loadPage();
   }
 
   getTypeIcon(type: string): string {
     switch (type) {
       case 'In': return 'south_west';
       case 'Out': return 'north_east';
-      case 'Transfer': return 'sync_alt';
       default: return 'help';
     }
   }
@@ -110,7 +226,6 @@ export class MovementsTableMolecule implements OnInit {
     switch (type) {
       case 'In': return 'bg-green-50';
       case 'Out': return 'bg-red-50';
-      case 'Transfer': return 'bg-blue-50';
       default: return 'bg-gray-50';
     }
   }
@@ -119,7 +234,6 @@ export class MovementsTableMolecule implements OnInit {
     switch (type) {
       case 'In': return '!text-green-600';
       case 'Out': return '!text-red-600';
-      case 'Transfer': return '!text-blue-600';
       default: return '!text-gray-600';
     }
   }
