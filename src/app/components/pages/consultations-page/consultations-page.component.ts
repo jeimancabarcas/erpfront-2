@@ -15,7 +15,7 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Consultas Médicas</h1>
           <p class="text-gray-500 font-medium">Gestión de atención y triaje pediátrico.</p>
         </div>
-        <ui-button variant="primary" class="rounded-full h-12 px-6 font-bold">
+        <ui-button variant="primary">
           <span class="material-icons mr-2">medical_services</span>
           Nueva Consulta
         </ui-button>
@@ -40,7 +40,7 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
                   <app-status-tag [label]="c.status" [color]="c.status === 'Completed' ? 'green' : 'amber'" />
                 </td>
                 <td class="px-6 py-5 text-right">
-                  <ui-button variant="primary" class="rounded-xl text-xs font-bold">Atender</ui-button>
+                  <ui-button variant="primary">Atender</ui-button>
                 </td>
               </tr>
             }

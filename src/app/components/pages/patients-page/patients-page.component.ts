@@ -22,7 +22,6 @@ import { RouterLink } from '@angular/router';
         <ui-button 
           variant="primary" 
           (clicked)="openRegistrationWizard()"
-          class="rounded-full h-12 px-6 font-bold"
         >
           <span class="material-icons mr-2">person_add</span>
           Nuevo Paciente
@@ -49,11 +48,11 @@ import { RouterLink } from '@angular/router';
                 <td class="px-6 py-5 text-sm text-gray-700">{{p.idType}} {{p.idNumber}}</td>
                 <td class="px-6 py-5 text-right">
                   <a [routerLink]="['/pediatrics/patients', p.id]">
-                    <ui-button variant="icon" class="text-indigo-600 bg-indigo-50 rounded-xl mr-2">
+                    <ui-button variant="icon" class="mr-2"><!-- TODO: add variant for colored icon button -->
                       <span class="material-icons">visibility</span>
                     </ui-button>
                   </a>
-                  <ui-button variant="icon" (clicked)="openRegistrationWizard(p)" class="text-gray-400">
+                  <ui-button variant="icon" (clicked)="openRegistrationWizard(p)">
                     <span class="material-icons">edit</span>
                   </ui-button>
                 </td>

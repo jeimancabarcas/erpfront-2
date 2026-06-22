@@ -30,7 +30,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             </p>
           </div>
         </div>
-        <ui-button variant="icon" (clicked)="onClose()" class="!text-gray-400">
+        <ui-button variant="icon" (clicked)="onClose()">
           <span class="material-icons">close</span>
         </ui-button>
       </header>
@@ -98,7 +98,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
                     <span class="material-icons text-emerald-500">check_circle</span>
                     <span class="text-xs font-bold text-emerald-900 truncate max-w-[200px]">{{ selectedFile()?.name }}</span>
                   </div>
-                  <ui-button variant="icon" (clicked)="selectedFile.set(null)" class="text-red-400">
+                  <ui-button variant="icon" (clicked)="selectedFile.set(null)"><!-- TODO: add variant for red icon button -->
                     <span class="material-icons">delete</span>
                   </ui-button>
                 </div>

@@ -77,7 +77,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
                     </div>
                   </div>
                 </div>
-                <ui-button variant="outline" (clicked)="selectedCustomer.set(null)" class="!rounded-full !h-10 !border-indigo-200 hover:!bg-white">
+                <ui-button variant="outline" (clicked)="selectedCustomer.set(null)"><!-- TODO: add variant for custom border color -->
                   Cambiar
                 </ui-button>
               </div>
@@ -88,7 +88,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
           <div class="space-y-4">
             <div class="flex justify-between items-center px-1">
               <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Detalle de Ítems</label>
-              <ui-button variant="ghost" (clicked)="addItem()" class="!rounded-full !font-bold">
+              <ui-button variant="ghost" (clicked)="addItem()">
                 <span class="material-icons mr-1">add_circle</span> Añadir Ítem
               </ui-button>
             </div>
@@ -125,7 +125,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
                       }
                     </div>
                     
-                    <ui-button variant="icon" (clicked)="removeItem($index)" class="!w-12 !h-12 !rounded-2xl bg-red-50 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ui-button variant="icon" (clicked)="removeItem($index)" class="opacity-0 group-hover:opacity-100 transition-opacity"><!-- TODO: add variant for colored icon button -->
                       <span class="material-icons">delete_outline</span>
                     </ui-button>
                   </div>
@@ -189,10 +189,10 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         </div>
 
         <div class="flex flex-col sm:flex-row justify-end gap-3">
-          <ui-button variant="outline" (clicked)="onCancel()" class="!rounded-full !h-12 !px-8 !font-bold text-gray-500">
+          <ui-button variant="outline" (clicked)="onCancel()">
             Cancelar
           </ui-button>
-          <ui-button variant="primary" (clicked)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer()" class="!rounded-full !h-12 !px-12 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-transform">
+          <ui-button variant="primary" (clicked)="onSubmit()" [disabled]="invoiceForm.invalid || !selectedCustomer()">
             Emitir Factura Electrónica
           </ui-button>
         </div>

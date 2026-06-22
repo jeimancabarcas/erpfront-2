@@ -63,7 +63,7 @@ import { TransportCancelDialogOrganism } from '../../../../components/organisms/
               />
               
               <div class="relative">
-                <ui-button variant="icon" (clicked)="toggleMenu(vehicle.id)" class="!text-gray-300 hover:!text-indigo-600 transition-colors">
+                <ui-button variant="icon" (clicked)="toggleMenu(vehicle.id)">
                   <span class="material-icons">more_horiz</span>
                 </ui-button>
                 @if (openMenuId() === vehicle.id) {

@@ -15,8 +15,8 @@ describe('MenuItemMolecule', () => {
     expect(component.icon()).toBe('');
     expect(component.label()).toBe('');
     expect(component.count()).toBe(0);
-    expect(component.active()).toBeFalse();
-    expect(component.disabled()).toBeFalse();
+    expect(component.active()).toBe(false);
+    expect(component.disabled()).toBe(false);
   });
 
   it('should render icon and label', () => {
@@ -47,7 +47,7 @@ describe('MenuItemMolecule', () => {
     const el = fixture.nativeElement as HTMLElement;
     const item = el.querySelector('[role="menuitem"]');
     expect(item?.getAttribute('aria-current')).toBe('page');
-    expect(item?.classList.contains('menu-item--active')).toBeTrue();
+    expect(item?.classList.contains('menu-item--active')).toBe(true);
   });
 
   it('should apply disabled state', () => {
@@ -58,7 +58,7 @@ describe('MenuItemMolecule', () => {
     const el = fixture.nativeElement as HTMLElement;
     const item = el.querySelector('[role="menuitem"]');
     expect(item?.getAttribute('aria-disabled')).toBe('true');
-    expect(item?.classList.contains('menu-item--disabled')).toBeTrue();
+    expect(item?.classList.contains('menu-item--disabled')).toBe(true);
   });
 
   it('should emit clicked when not disabled', () => {
@@ -70,7 +70,7 @@ describe('MenuItemMolecule', () => {
     let emitted = false;
     fixture.componentInstance.clicked.subscribe(() => (emitted = true));
     item.dispatchEvent(new MouseEvent('click'));
-    expect(emitted).toBeTrue();
+    expect(emitted).toBe(true);
   });
 
   it('should not emit clicked when disabled', () => {
@@ -83,6 +83,6 @@ describe('MenuItemMolecule', () => {
     let emitted = false;
     fixture.componentInstance.clicked.subscribe(() => (emitted = true));
     item.dispatchEvent(new MouseEvent('click'));
-    expect(emitted).toBeFalse();
+    expect(emitted).toBe(false);
   });
 });

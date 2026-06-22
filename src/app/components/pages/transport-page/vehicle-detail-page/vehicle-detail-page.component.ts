@@ -44,10 +44,10 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
         </div>
         
         <div class="flex gap-3">
+          <!-- TODO: add variant for amber/action button -->
           <ui-button 
             variant="primary"
             (clicked)="openMaintenanceDialog()"
-            class="!rounded-full !h-12 !px-8 !font-black !bg-amber-500 !text-white shadow-xl shadow-amber-100 hover:scale-105 transition-all"
           >
             <span class="material-icons mr-2">engineering</span>
             Programar Mantenimiento
@@ -167,7 +167,7 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
                       </div>
 
                       <div class="relative">
-                        <ui-button variant="icon" (clicked)="toggleMenu(maint.id)" class="text-gray-300">
+                        <ui-button variant="icon" (clicked)="toggleMenu(maint.id)">
                           <span class="material-icons">more_vert</span>
                         </ui-button>
                         @if (openMenuId() === maint.id) {

@@ -18,7 +18,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
           </div>
           <p class="text-gray-500 font-medium">Detalle de facturación - {{ data().invoice.date }}</p>
         </div>
-        <ui-button variant="icon" (clicked)="onClose()" class="!text-gray-400">
+        <ui-button variant="icon" (clicked)="onClose()">
           <span class="material-icons">close</span>
         </ui-button>
       </header>
@@ -58,11 +58,11 @@ import { ButtonAtom } from '../../atoms/button/button.component';
       </div>
 
       <div class="flex justify-end gap-3 pt-4">
-        <ui-button variant="outline" class="!h-12 !px-8 !rounded-full !font-bold !border-gray-200">
+        <ui-button variant="outline">
           <span class="material-icons mr-2">print</span>
           Imprimir
         </ui-button>
-        <ui-button variant="primary" (clicked)="onClose()" class="!h-12 !px-8 !rounded-full !font-bold">
+        <ui-button variant="primary" (clicked)="onClose()">
           Cerrar
         </ui-button>
       </div>

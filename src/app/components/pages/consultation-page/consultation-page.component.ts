@@ -61,10 +61,10 @@ import { ButtonAtom } from '../../atoms/button/button.component';
           </div>
 
           <div class="flex items-center gap-3 w-full sm:w-auto">
-            <ui-button variant="outline" (clicked)="cancel()" class="flex-1 sm:flex-initial !rounded-full !h-12 !px-8">
+            <ui-button variant="outline" (clicked)="cancel()" class="flex-1 sm:flex-initial">
               Cancelar
             </ui-button>
-            <ui-button variant="primary" (clicked)="save()" class="flex-1 sm:flex-initial !rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100">
+            <ui-button variant="primary" (clicked)="save()" class="flex-1 sm:flex-initial">
               Finalizar y Guardar
             </ui-button>
           </div>
@@ -77,11 +77,11 @@ import { ButtonAtom } from '../../atoms/button/button.component';
           <div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm sticky top-10">
             <h3 class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-6">Secciones de Consulta</h3>
             
-            <!-- Load Last Consultation Meta-Action -->
+            <!-- TODO: add variant for this use case (indigo-50 background, indigo border) -->
             <ui-button 
               variant="outline"
               (clicked)="loadLastConsultation()"
-              class="w-full !rounded-2xl !h-12 !mb-6 !border-indigo-100 !text-indigo-600 !bg-indigo-50/30 hover:!bg-indigo-50 transition-all font-black"
+              class="w-full mb-6"
             >
               <span class="material-icons mr-2">history</span>
               Cargar última consulta
@@ -125,7 +125,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             </div>
 
             <!-- Print Button -->
-            <ui-button variant="primary" (clicked)="printSummary()" class="w-full !rounded-2xl !h-14 !mt-10 !bg-gray-900 !text-white !font-black shadow-2xl shadow-gray-200">
+            <!-- TODO: add variant for this use case (dark gray background) -->
+            <ui-button variant="primary" (clicked)="printSummary()" class="w-full mt-10">
               <span class="material-icons mr-2">print</span>
               Imprimir Resumen Médico
             </ui-button>

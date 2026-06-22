@@ -32,7 +32,7 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
         
         <!-- Action Bar -->
         <div class="flex items-center justify-between">
-          <ui-button variant="ghost" routerLink="/sales/customers" class="rounded-full px-6 text-gray-500 hover:bg-gray-100 transition-all">
+          <ui-button variant="ghost" routerLink="/sales/customers">
             <span class="material-icons mr-2">arrow_back</span>
             Volver a la lista de Clientes
           </ui-button>

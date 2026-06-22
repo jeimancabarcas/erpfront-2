@@ -4,10 +4,10 @@ import { CardItem } from '../../../models/organism.models';
 
 describe('CardGridOrganism', () => {
   const mockItems: CardItem[] = [
-    { title: 'Item 1', subtitle: 'Sub 1' },
-    { title: 'Item 2', subtitle: 'Sub 2' },
-    { title: 'Item 3', subtitle: 'Sub 3' },
-    { title: 'Item 4', subtitle: 'Sub 4' },
+    { id: '1', title: 'Item 1', subtitle: 'Sub 1' },
+    { id: '2', title: 'Item 2', subtitle: 'Sub 2' },
+    { id: '3', title: 'Item 3', subtitle: 'Sub 3' },
+    { id: '4', title: 'Item 4', subtitle: 'Sub 4' },
   ];
 
   beforeEach(async () => {

@@ -39,7 +39,6 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         <ui-button 
           variant="primary"
           (clicked)="openCustomerDialog()"
-          class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
           <span class="material-icons mr-2">person_add</span>
           Nuevo Cliente
@@ -131,14 +130,14 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                 </td>
                 <td class="px-6 py-5 text-right">
                   <a [routerLink]="['/sales/customers', customer.id]">
-                    <ui-button variant="icon" class="!text-indigo-600 hover:!bg-indigo-50 transition-all">
+                    <ui-button variant="icon"><!-- TODO: add variant for colored icon button -->
                       <span class="material-icons">visibility</span>
                     </ui-button>
                   </a>
-                  <ui-button variant="icon" (clicked)="openCustomerDialog(customer)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                  <ui-button variant="icon" (clicked)="openCustomerDialog(customer)">
                     <span class="material-icons">edit</span>
                   </ui-button>
-                  <ui-button variant="icon" (clicked)="confirmDelete(customer)" class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50">
+                  <ui-button variant="icon" (clicked)="confirmDelete(customer)">
                     <span class="material-icons">delete</span>
                   </ui-button>
                 </td>
@@ -150,7 +149,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                     <span class="material-icons text-5xl text-gray-200">people</span>
                     <h3 class="text-lg font-bold text-gray-400">No se encontraron clientes</h3>
                     <p class="text-sm text-gray-300 max-w-xs">Aún no tienes clientes registrados o los filtros no coinciden con ninguna búsqueda.</p>
-                    <ui-button variant="primary" (clicked)="openCustomerDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                    <ui-button variant="primary" (clicked)="openCustomerDialog()">
                       <span class="material-icons mr-2">person_add</span>
                       Registrar Primer Cliente
                     </ui-button>

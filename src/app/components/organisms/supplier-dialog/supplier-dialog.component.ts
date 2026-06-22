@@ -19,7 +19,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
         </h2>
-        <ui-button variant="icon" (clicked)="onClose()" class="!text-gray-400">
+        <ui-button variant="icon" (clicked)="onClose()">
           <span class="material-icons">close</span>
         </ui-button>
       </header>
@@ -73,14 +73,13 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
-          <ui-button variant="outline" (clicked)="onClose()" class="!h-12 !px-8 !rounded-full !font-bold text-gray-500">
+          <ui-button variant="outline" (clicked)="onClose()">
             Cancelar
           </ui-button>
           <ui-button
             variant="primary"
             [disabled]="!supplierForm.valid"
             (clicked)="saveSupplier()"
-            class="!h-12 !px-8 !rounded-full !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
           >
             {{ isEditMode ? 'Guardar Cambios' : 'Registrar Proveedor' }}
           </ui-button>

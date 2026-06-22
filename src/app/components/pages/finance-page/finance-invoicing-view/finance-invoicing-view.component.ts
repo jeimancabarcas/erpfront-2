@@ -23,14 +23,13 @@ import { FinanceInvoice } from '../../../../models/finance.model';
           <p class="text-gray-500 font-medium">Gestión de facturas de venta para servicios generales.</p>
         </div>
         <div class="flex gap-3">
-          <ui-button variant="outline" class="rounded-full h-12 px-6 font-bold border-gray-200 hover:bg-gray-50">
+          <ui-button variant="outline">
             <span class="material-icons mr-2">cloud_upload</span>
             Importar DIAN
           </ui-button>
           <ui-button 
             variant="primary" 
             (clicked)="openNewInvoice()"
-            class="rounded-full h-12 px-8 font-black shadow-xl shadow-indigo-100 hover:scale-105 transition-transform"
           >
             <span class="material-icons mr-2">add</span>
             Nueva Factura
@@ -48,7 +47,7 @@ import { FinanceInvoice } from '../../../../models/finance.model';
             class="w-full h-[56px] pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
         </div>
-        <ui-button variant="outline" class="rounded-2xl h-[56px] px-6 border-gray-200 hover:bg-gray-50 font-bold">
+        <ui-button variant="outline">
           <span class="material-icons mr-2 text-gray-400">filter_list</span>
           Filtros Avanzados
         </ui-button>

@@ -69,10 +69,10 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
           
           <div class="flex gap-4">
             @if (routeData()?.status === 'Active' || routeData()?.status === 'Completed') {
+              <!-- TODO: add variant for emerald color -->
               <ui-button 
                 variant="primary"
                 (clicked)="openSettleDialog()"
-                class="!rounded-full !h-12 !px-8 !font-black !bg-emerald-600 shadow-xl shadow-emerald-100 hover:scale-105 transition-all !text-white"
               >
                 <span class="material-icons mr-2">check_circle</span>
                 Liquidar Servicio
@@ -80,17 +80,17 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
             }
 
             @if (routeData()?.status === 'Active' || routeData()?.status === 'Planning') {
+              <!-- TODO: add variant for red cancel button -->
               <ui-button 
                 variant="outline"
                 (clicked)="openCancelDialog()"
-                class="!rounded-full !h-12 !px-8 !font-black !border-red-100 !text-red-600 hover:!bg-red-50 transition-all"
               >
                 <span class="material-icons mr-2">cancel</span>
                 Cancelar
               </ui-button>
             }
             
-            <ui-button variant="primary" class="!rounded-full !h-12 !px-8 !font-black !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all">
+            <ui-button variant="primary">
               Imprimir Factura
             </ui-button>
           </div>
@@ -161,11 +161,12 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <p class="text-gray-400 text-sm font-medium">Registro cronológico de cargues, descargues y maniobras logísticas.</p>
                 </div>
                 <div class="flex items-center gap-4">
-                  <ui-button 
-                    (click)="openOperationDialog()"
-                    [disabled]="hasActiveOperation()"
-                    class="!rounded-2xl !h-12 !px-6 !font-bold !border-indigo-100 !text-indigo-600 hover:!bg-indigo-50 transition-all disabled:!opacity-50 disabled:!bg-gray-50 disabled:!text-gray-400 disabled:!border-gray-100"
-                  >
+                  <!-- TODO: add variant for colored outline button -->
+              <ui-button 
+                (click)="openOperationDialog()"
+                [disabled]="hasActiveOperation()"
+                class="disabled:!opacity-50 disabled:!bg-gray-50 disabled:!text-gray-400 disabled:!border-gray-100"
+              >
                     <span class="material-icons mr-2">{{ hasActiveOperation() ? 'block' : 'add_circle' }}</span>
                     {{ hasActiveOperation() ? 'Operación en Curso' : 'Registrar Operación' }}
                   </ui-button>
@@ -242,17 +243,17 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
 
                           @if (op.status === 'InProcess') {
                             <div class="flex gap-2">
+                              <!-- TODO: add variant for red ghost button -->
                               <ui-button 
                                 variant="ghost"
                                 (clicked)="cancelOperation(op.id)"
-                                class="!rounded-2xl !h-10 !px-4 !text-xs !font-black !text-red-500 hover:!bg-red-50 transition-all"
                               >
                                 Cancelar
                               </ui-button>
+                              <!-- TODO: add variant for emerald success button -->
                               <ui-button 
                                 variant="primary"
                                 (clicked)="finishOperation(op.id)"
-                                class="!rounded-2xl !h-10 !px-5 !text-xs !font-black !bg-emerald-600 !text-white shadow-lg shadow-emerald-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                               >
                                 <span class="material-icons !text-sm !w-4 !h-4">check_circle</span>
                                 Finalizar
@@ -280,9 +281,9 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <p class="text-gray-400 text-sm font-medium">Registro detallado de costos operativos reportados.</p>
                 </div>
                 <div class="flex items-center gap-4">
+                  <!-- TODO: add variant for emerald outline button -->
                   <ui-button 
                     (click)="openExpenseDialog()"
-                    class="!rounded-2xl !h-12 !px-6 !font-bold !border-emerald-100 !text-emerald-600 hover:!bg-emerald-50 transition-all"
                   >
                     <span class="material-icons mr-2">add_circle</span>
                     Registrar Gasto
@@ -346,9 +347,9 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <p class="text-gray-400 text-sm font-medium">Registro de incidencias, cambios de vehículo y eventos relevantes.</p>
                 </div>
                 <div class="flex items-center gap-4">
+                  <!-- TODO: add variant for orange outline button -->
                   <ui-button 
                     (click)="openIncidentDialog()"
-                    class="!rounded-2xl !h-12 !px-6 !font-bold !border-orange-100 !text-orange-600 hover:!bg-orange-50 transition-all"
                   >
                     <span class="material-icons mr-2">report_problem</span>
                     Reportar Novedad
@@ -451,9 +452,10 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
                   <span class="text-lg font-black tabular-nums">- {{ totalExpenses() | currency:'USD':'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="pt-4" *ngIf="routeData()?.status === 'Active' || routeData()?.status === 'Completed'">
+                  <!-- TODO: add variant for indigo outline button -->
                   <ui-button 
                     (click)="openStandbyDialog()"
-                    class="!w-full !rounded-2xl !h-12 !font-black !border-indigo-100 !text-indigo-600 hover:!bg-indigo-50 transition-all"
+                    class="w-full"
                   >
                     <span class="material-icons mr-2">hourglass_empty</span>
                     Agregar Standby
@@ -521,11 +523,11 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
             <div class="p-8 bg-gray-900 rounded-[40px] text-white space-y-6 shadow-xl shadow-gray-200">
               <h3 class="text-lg font-black">Asistencia en Ruta</h3>
               <div class="space-y-4">
-                <ui-button class="!w-full !rounded-2xl !h-14 !bg-white/10 !text-white !font-bold hover:!bg-white/20 transition-all">
+                <ui-button class="w-full"><!-- TODO: add variant for dark background buttons -->
                   <span class="material-icons mr-2">call</span>
                   Llamar a Conductor
                 </ui-button>
-                <ui-button class="!w-full !rounded-2xl !h-14 !bg-white/10 !text-white !font-bold hover:!bg-white/20 transition-all">
+                <ui-button class="w-full"><!-- TODO: add variant for dark background buttons -->
                   <span class="material-icons mr-2">map</span>
                   Ver en Mapa Real
                 </ui-button>

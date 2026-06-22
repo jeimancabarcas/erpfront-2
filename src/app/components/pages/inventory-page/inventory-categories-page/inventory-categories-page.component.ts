@@ -87,10 +87,10 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                   </span>
                 </td>
                 <td class="px-6 py-5 text-right">
-                  <ui-button variant="icon" (clicked)="openCategoryDialog(category)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                  <ui-button variant="icon" (clicked)="openCategoryDialog(category)">
                     <span class="material-icons">edit</span>
                   </ui-button>
-                  <ui-button variant="icon" (clicked)="confirmDelete(category)" class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50">
+                  <ui-button variant="icon" (clicked)="confirmDelete(category)">
                     <span class="material-icons">delete</span>
                   </ui-button>
                 </td>
@@ -102,7 +102,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                     <span class="material-icons text-5xl text-gray-200">category</span>
                     <h3 class="text-lg font-bold text-gray-400">No se encontraron categorías</h3>
                     <p class="text-sm text-gray-300 max-w-xs">Aún no has creado categorías para tus productos o los filtros aplicados no coinciden con ningún registro.</p>
-                    <ui-button variant="primary" (clicked)="openCategoryDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                    <ui-button variant="primary" (clicked)="openCategoryDialog()">
                       <span class="material-icons mr-2">add</span>
                       Crear Primera Categoría
                     </ui-button>

@@ -29,7 +29,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             </p>
           </div>
         </div>
-        <ui-button variant="icon" (clicked)="onClosed()" class="!text-gray-400">
+        <ui-button variant="icon" (clicked)="onClosed()">
           <span class="material-icons">close</span>
         </ui-button>
       </header>
@@ -117,14 +117,13 @@ import { ButtonAtom } from '../../atoms/button/button.component';
       </div>
 
       <footer class="flex justify-end gap-3 mt-8 px-2 pt-4 border-t border-gray-100">
-        <ui-button variant="outline" (clicked)="onClosed()" class="!rounded-full !h-12 !px-6 !font-bold">
+        <ui-button variant="outline" (clicked)="onClosed()">
           Cancelar
         </ui-button>
         <ui-button 
           variant="primary"
           [disabled]="customerForm.invalid || isLoading()"
           (clicked)="save()"
-          class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
         >
           {{ isEditMode() ? 'Actualizar Cliente' : 'Crear Cliente' }}
         </ui-button>

@@ -75,7 +75,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
               </p>
             </div>
           </div>
-          <ui-button variant="icon" (clicked)="closed.emit(false)" class="!text-gray-400">
+          <ui-button variant="icon" (clicked)="closed.emit(false)">
             <span class="material-icons">close</span>
           </ui-button>
         </header>

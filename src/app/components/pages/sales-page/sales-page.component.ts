@@ -40,7 +40,6 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         <ui-button 
           variant="primary"
           (clicked)="openSaleForm()"
-          class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
           <span class="material-icons mr-2">add_shopping_cart</span>
           Nueva Venta
@@ -131,7 +130,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
                   </span>
                 </td>
                 <td class="px-6 py-5 text-right">
-                  <ui-button variant="icon" (clicked)="viewDetail(inv)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                  <ui-button variant="icon" (clicked)="viewDetail(inv)">
                     <span class="material-icons">visibility</span>
                   </ui-button>
                 </td>
@@ -143,7 +142,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
                     <span class="material-icons text-5xl text-gray-200">receipt_long</span>
                     <h3 class="text-lg font-bold text-gray-400">No se encontraron facturas</h3>
                     <p class="text-sm text-gray-300 max-w-xs">No hay registros que coincidan con los filtros seleccionados.</p>
-                    <ui-button variant="primary" (clicked)="openSaleForm()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                    <ui-button variant="primary" (clicked)="openSaleForm()">
                       <span class="material-icons mr-2">add</span>
                       Registrar Primera Venta
                     </ui-button>

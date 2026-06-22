@@ -1,6 +1,7 @@
 :host {
   display: inline-block;
   line-height: 0;
+  vertical-align: middle;
 }
 
 .button {
@@ -11,17 +12,25 @@
   gap: var(--spacing-2);
   font-family: var(--font-sans);
   font-weight: var(--font-medium);
-  border: 1px solid transparent;
+  border: none;
   cursor: pointer;
   transition:
-    background var(--duration-fast) var(--ease-default),
+    background-color var(--duration-fast) var(--ease-default),
     color var(--duration-fast) var(--ease-default),
-    border-color var(--duration-fast) var(--ease-default),
-    box-shadow var(--duration-fast) var(--ease-default);
+    transform var(--duration-fast) var(--ease-default);
   text-decoration: none;
   white-space: nowrap;
   user-select: none;
   line-height: 1;
+  height: 100%;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.03);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--color-accent);
@@ -38,7 +47,6 @@
   &--primary {
     background: var(--color-accent);
     color: white;
-    border-color: transparent;
     box-shadow: var(--shadow-sm);
 
     &:hover:not(:disabled) {
@@ -49,7 +57,6 @@
   &--secondary {
     background: var(--color-interactive-active);
     color: var(--color-text-primary);
-    border-color: transparent;
 
     &:hover:not(:disabled) {
       background: color-mix(in srgb, var(--color-interactive-active) 80%, transparent);
@@ -59,7 +66,7 @@
   &--outline {
     background: transparent;
     color: var(--color-accent);
-    border-color: var(--color-accent);
+    border: 1px solid var(--color-accent);
 
     &:hover:not(:disabled) {
       background: color-mix(in srgb, var(--color-accent) 5%, transparent);
@@ -69,7 +76,6 @@
   &--ghost {
     background: transparent;
     color: var(--color-text-secondary);
-    border-color: transparent;
 
     &:hover:not(:disabled) {
       background: var(--color-interactive-active);
@@ -80,7 +86,6 @@
   &--icon {
     background: transparent;
     color: var(--color-text-secondary);
-    border-color: transparent;
     padding: 0;
     border-radius: 50%;
 
@@ -92,7 +97,7 @@
 
   /* ── Sizes ── */
   &--sm {
-    height: 2rem;
+    min-height: 2rem;
     padding: 0 var(--spacing-3);
     font-size: var(--text-sm);
     border-radius: var(--radius-pill);
@@ -104,7 +109,7 @@
   }
 
   &--md {
-    height: 2.5rem;
+    min-height: 2.5rem;
     padding: 0 var(--spacing-4);
     font-size: var(--text-base);
     border-radius: var(--radius-pill);
@@ -116,7 +121,7 @@
   }
 
   &--lg {
-    height: 3rem;
+    min-height: 3rem;
     padding: 0 var(--spacing-6);
     font-size: var(--text-lg);
     border-radius: var(--radius-pill);

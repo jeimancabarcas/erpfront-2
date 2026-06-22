@@ -38,7 +38,6 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         <ui-button 
           variant="primary"
           (clicked)="openSupplierDialog()"
-          class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
           <span class="material-icons mr-2">add</span>
           Nuevo Proveedor
@@ -103,10 +102,10 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                   </div>
                 </td>
                 <td class="px-6 py-5 text-right">
-                  <ui-button variant="icon" (clicked)="openSupplierDialog(supplier)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                  <ui-button variant="icon" (clicked)="openSupplierDialog(supplier)">
                     <span class="material-icons">edit</span>
                   </ui-button>
-                  <ui-button variant="icon" (clicked)="confirmDelete(supplier)" class="!text-gray-400 hover:!text-red-600 transition-all hover:bg-red-50">
+                  <ui-button variant="icon" (clicked)="confirmDelete(supplier)">
                     <span class="material-icons">delete</span>
                   </ui-button>
                 </td>
@@ -118,7 +117,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                     <span class="material-icons text-5xl text-gray-200">business</span>
                     <h3 class="text-lg font-bold text-gray-400">No se encontraron proveedores</h3>
                     <p class="text-sm text-gray-300 max-w-xs">Aún no has registrado proveedores en tu sistema o los filtros aplicados no coinciden.</p>
-                    <ui-button variant="primary" (clicked)="openSupplierDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                    <ui-button variant="primary" (clicked)="openSupplierDialog()">
                       <span class="material-icons mr-2">add</span>
                       Registrar Primer Proveedor
                     </ui-button>

@@ -46,7 +46,7 @@ describe('ConfirmDialogMolecule', () => {
     let confirmed = false;
     fixture.componentInstance.confirm.subscribe(() => (confirmed = true));
     fixture.componentInstance.onConfirm();
-    expect(confirmed).toBeTrue();
+    expect(confirmed).toBe(true);
   });
 
   it('should emit cancel when cancel button clicked', () => {
@@ -56,7 +56,7 @@ describe('ConfirmDialogMolecule', () => {
     let cancelled = false;
     fixture.componentInstance.cancel.subscribe(() => (cancelled = true));
     fixture.componentInstance.onCancel();
-    expect(cancelled).toBeTrue();
+    expect(cancelled).toBe(true);
   });
 
   it('should emit cancel on escape key', () => {
@@ -66,7 +66,7 @@ describe('ConfirmDialogMolecule', () => {
     let cancelled = false;
     fixture.componentInstance.cancel.subscribe(() => (cancelled = true));
     fixture.componentInstance.onEscape();
-    expect(cancelled).toBeTrue();
+    expect(cancelled).toBe(true);
   });
 
   it('should emit confirm on enter key', () => {
@@ -76,7 +76,7 @@ describe('ConfirmDialogMolecule', () => {
     let confirmed = false;
     fixture.componentInstance.confirm.subscribe(() => (confirmed = true));
     fixture.componentInstance.onEnter();
-    expect(confirmed).toBeTrue();
+    expect(confirmed).toBe(true);
   });
 
   it('should not close when clicking inside the dialog', () => {
@@ -87,6 +87,6 @@ describe('ConfirmDialogMolecule', () => {
     fixture.componentInstance.cancel.subscribe(() => (cancelled = true));
     const card = fixture.nativeElement.querySelector('ui-card');
     card?.dispatchEvent(new MouseEvent('click'));
-    expect(cancelled).toBeFalse();
+    expect(cancelled).toBe(false);
   });
 });

@@ -40,7 +40,6 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         <ui-button 
           variant="primary"
           (clicked)="openPurchaseOrderDialog()"
-          class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
         >
           <span class="material-icons mr-2">add_shopping_cart</span>
           Nueva Orden de Compra
@@ -125,10 +124,10 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                   </span>
                 </td>
                 <td class="px-6 py-5 text-right">
-                  <ui-button variant="icon" (clicked)="openPurchaseOrderDialog(order)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                  <ui-button variant="icon" (clicked)="openPurchaseOrderDialog(order)">
                     <span class="material-icons">edit</span>
                   </ui-button>
-                  <ui-button variant="icon" (clicked)="openOrderDetailDialog(order)" class="!text-gray-400 hover:!text-indigo-600 transition-all hover:bg-indigo-50">
+                  <ui-button variant="icon" (clicked)="openOrderDetailDialog(order)">
                     <span class="material-icons">visibility</span>
                   </ui-button>
                 </td>
@@ -140,7 +139,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
                     <span class="material-icons text-5xl text-gray-200">shopping_cart</span>
                     <h3 class="text-lg font-bold text-gray-400">No se encontraron ordenes</h3>
                     <p class="text-sm text-gray-300 max-w-xs">No hay registros que coincidan con los filtros seleccionados.</p>
-                    <ui-button variant="primary" (clicked)="openPurchaseOrderDialog()" class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-lg shadow-indigo-100">
+                    <ui-button variant="primary" (clicked)="openPurchaseOrderDialog()">
                       <span class="material-icons mr-2">add_shopping_cart</span>
                       Crear Nueva Orden
                     </ui-button>

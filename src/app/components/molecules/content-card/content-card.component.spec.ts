@@ -62,6 +62,6 @@ describe('ContentCardMolecule', () => {
     fixture.componentInstance.clicked.subscribe(() => (emitted = true));
     const article = fixture.nativeElement.querySelector('[role="article"]')!;
     article.dispatchEvent(new MouseEvent('click'));
-    expect(emitted).toBeTrue();
+    expect(emitted).toBe(true);
   });
 });

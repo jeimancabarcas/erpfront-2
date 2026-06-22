@@ -30,14 +30,13 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         </div>
         
         <div class="flex gap-3 animate-in fade-in slide-in-from-right duration-700">
-          <ui-button variant="outline" class="rounded-full h-12 px-6 font-bold border-gray-200">
+          <ui-button variant="outline">
             <span class="material-icons mr-2">file_download</span>
             Exportar RIPS
           </ui-button>
           <ui-button 
             variant="primary" 
             (clicked)="openNewInvoiceDialog()"
-            class="rounded-full h-12 px-8 font-black shadow-xl shadow-indigo-100"
           >
             <span class="material-icons mr-2">add</span>
             Nueva Factura Manual
