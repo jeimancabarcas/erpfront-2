@@ -8,6 +8,7 @@ import { CategoryService, InventoryCategory } from '../../../../services/categor
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { TextInputComponent } from '../../../../components/atoms/text-input/text-input.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
@@ -17,7 +18,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     CommonModule,
     DashboardLayoutComponent,
     BreadcrumbMolecule,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     <app-dashboard-layout>
@@ -46,14 +48,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
       <!-- Barra de Filtros -->
       <div class="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
         <div class="relative flex-1 w-full">
-          <div class="relative">
-            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">search</span>
-            <input 
-              (input)="onNameFilterChange($event)" 
-              placeholder="Buscar categorías..." 
-              class="w-full h-12 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
-            >
-          </div>
+          <ui-text-input icon="search" placeholder="Buscar categorías..." [value]="nameFilter()" (valueChange)="nameFilter.set($event); debouncedFilter()" />
         </div>
       </div>
 
@@ -170,9 +165,7 @@ export class InventoryCategoriesPageComponent implements OnInit {
 
   private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  onNameFilterChange(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.nameFilter.set(value);
+  private debouncedFilter() {
     if (this.filterTimeout) clearTimeout(this.filterTimeout);
     this.filterTimeout = setTimeout(() => {
       this.pageIndex.set(1);

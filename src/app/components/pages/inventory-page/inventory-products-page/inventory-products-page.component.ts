@@ -11,6 +11,7 @@ import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../comp
 import { InventoryBatchDialogOrganism } from '../../../../components/organisms/inventory-batch-dialog/inventory-batch-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { TextInputComponent } from '../../../../components/atoms/text-input/text-input.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
@@ -21,6 +22,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
+    TextInputComponent,
     CurrencyPipe
   ],
   template: `
@@ -50,23 +52,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
       <!-- Barra de Filtros -->
       <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="relative">
-            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">search</span>
-            <input 
-              (input)="onNameFilterChange($event)" 
-              placeholder="Buscar por nombre..."
-              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
-            >
-          </div>
+          <ui-text-input icon="search" placeholder="Buscar por nombre..." [value]="nameFilter()" (valueChange)="nameFilter.set($event); debouncedFilter()" />
 
-          <div class="relative">
-            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">fingerprint</span>
-            <input 
-              (input)="onSkuFilterChange($event)" 
-              placeholder="Buscar por SKU..."
-              class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
-            >
-          </div>
+          <ui-text-input icon="fingerprint" placeholder="Buscar por SKU..." [value]="skuFilter()" (valueChange)="skuFilter.set($event); debouncedFilter()" />
 
           <div class="relative">
             <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">category</span>
@@ -221,16 +209,6 @@ export class InventoryProductsPageComponent implements OnInit {
     if (this.categories().length === 0) {
       this.categoryService.loadCategories({ limit: 100 }).subscribe();
     }
-  }
-
-  onNameFilterChange(event: Event) {
-    this.nameFilter.set((event.target as HTMLInputElement).value);
-    this.debouncedFilter();
-  }
-
-  onSkuFilterChange(event: Event) {
-    this.skuFilter.set((event.target as HTMLInputElement).value);
-    this.debouncedFilter();
   }
 
   onCategoryFilterChange(event: Event) {
