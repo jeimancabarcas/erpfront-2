@@ -1,15 +1,17 @@
 import {
   Component,
+  model,
   input,
-  output,
-  signal,
   computed,
-  inject,
+  signal,
+  ChangeDetectionStrategy,
+  untracked,
   ElementRef,
+  inject,
   HostListener,
-  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export interface SelectOption {
   value: string;
@@ -21,183 +23,170 @@ export interface SelectOption {
   standalone: true,
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './select.component.scss',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: SelectAtom,
+      multi: true,
+    },
+  ],
   template: `
-    <div
-      class="select-wrapper"
-      [class.is-open]="isOpen()"
-      [class.is-disabled]="disabled()"
-      [class.is-error]="!!error()"
-    >
-      <!-- Trigger -->
-      <button
-        type="button"
-        class="select__trigger"
-        role="combobox"
-        [attr.aria-expanded]="isOpen()"
-        [attr.aria-haspopup]="'listbox'"
-        [attr.aria-label]="label() || placeholder()"
-        [disabled]="disabled()"
-        (click)="toggleDropdown()"
-        (keydown)="onTriggerKeydown($event)"
-      >
-        <span class="select__value" [class.select__value--placeholder]="!displayValue()">
-          {{ displayValue() || placeholder() }}
-        </span>
-        <svg class="select__arrow" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-          <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
-      <!-- Label -->
+    <div class="flex flex-col gap-1.5">
       @if (label()) {
-        <label class="select__label">{{ label() }}</label>
+        <label class="text-xs font-black text-gray-500 uppercase tracking-widest">
+          {{ label() }}
+          @if (required()) { <span class="text-red-500">*</span> }
+        </label>
       }
+      <div class="relative">
+        <button
+          type="button"
+          role="combobox"
+          class="w-full h-14 px-4 rounded-2xl border bg-white text-sm font-bold text-gray-900
+                 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400
+                 transition-all flex items-center justify-between
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+          [class.border-red-500]="!!error()"
+          [class.border-gray-200]="!error()"
+          [disabled]="disabled()"
+          [attr.aria-expanded]="open()"
+          [attr.aria-invalid]="!!error() || null"
+          (click)="toggle()"
+        >
+          <span>{{ selectedLabel() || placeholder() }}</span>
+          <span
+            class="material-icons transition-transform"
+            [class.rotate-180]="open()"
+          >expand_more</span>
+        </button>
 
-      <!-- Error -->
-      @if (error()) {
-        <span class="select__error">{{ error() }}</span>
-      }
-
-      <!-- Dropdown panel -->
-      @if (isOpen()) {
-        <div class="select__panel" role="listbox" [attr.aria-label]="label() || 'Opciones'">
-          @if (searchable()) {
-            <input
-              class="select__search"
-              type="text"
-              autofocus
-              [placeholder]="'Buscar…'"
-              (input)="onSearch($event)"
-              (keydown)="onSearchKeydown($event)"
-              (click)="$event.stopPropagation()"
-            />
-          }
-
-          @if (filteredOptions().length === 0) {
-            <div class="select__empty">Sin resultados</div>
-          }
-
-          @for (opt of filteredOptions(); track opt.value; let i = $index) {
-            <div
-              class="select__option"
-              [class.is-selected]="opt.value === value()"
-              [class.is-focused]="focusedIndex() === i"
-              role="option"
-              [attr.aria-selected]="opt.value === value()"
-              (click)="selectOption(opt.value)"
-              (mouseenter)="focusedIndex.set(i)"
-            >
-              {{ opt.label }}
+        @if (open()) {
+          <div
+            class="absolute z-50 mt-2 w-full bg-white rounded-2xl border border-gray-100 shadow-xl max-h-64 overflow-hidden"
+          >
+            @if (searchable()) {
+              <div class="p-3 border-b border-gray-100">
+                <input
+                  (input)="onSearch($event)"
+                  placeholder="Buscar..."
+                  class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm
+                         focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                />
+              </div>
+            }
+            <div class="overflow-y-auto max-h-48">
+              @if (filteredOptions().length === 0) {
+                <div class="px-4 py-6 text-sm text-gray-400 text-center">
+                  Sin resultados
+                </div>
+              }
+              @for (opt of filteredOptions(); track opt.value; let i = $index) {
+                <button
+                  type="button"
+                  role="option"
+                  (click)="selectOption(opt)"
+                  (mouseenter)="highlightedIndex.set(i)"
+                  class="w-full text-left px-4 py-3 text-sm font-medium hover:bg-indigo-50 transition-colors"
+                  [class.bg-indigo-50]="highlightedIndex() === i"
+                  [class.text-indigo-600]="opt.value === value()"
+                >
+                  {{ opt.label }}
+                </button>
+              }
             </div>
-          }
-        </div>
+          </div>
+        }
+      </div>
+      @if (error()) {
+        <span class="text-xs text-red-500 font-medium">{{ error() }}</span>
+      } @else if (helperText()) {
+        <span class="text-xs text-gray-400">{{ helperText() }}</span>
       }
     </div>
-  `
+  `,
 })
-export class SelectAtom {
-  options = input<SelectOption[]>([]);
-  value = input<string>('');
-  searchable = input(false);
+export class SelectAtom implements ControlValueAccessor {
+  // ── Public API (signal inputs) ──
   label = input<string>('');
-  error = input<string>('');
-  disabled = input(false);
   placeholder = input<string>('Seleccionar...');
+  options = input<SelectOption[]>([]);
+  value = model<string>('');
+  required = input(false);
+  disabled = input(false);
+  error = input<string>('');
+  helperText = input<string>('');
+  searchable = input(false);
 
-  valueChange = output<string>();
-
-  // Internal state
-  isOpen = signal(false);
+  // ── Internal state ──
+  open = signal(false);
   searchQuery = signal('');
-  focusedIndex = signal(-1);
+  highlightedIndex = signal(-1);
 
   private elementRef = inject(ElementRef);
 
-  // Computed display value
-  displayValue = computed(() => {
-    const opt = this.options().find(o => o.value === this.value());
+  // ── Computed ──
+  selectedLabel = computed(() => {
+    const opt = this.options().find((o) => o.value === this.value());
     return opt ? opt.label : '';
   });
 
-  // Filtered options
   filteredOptions = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     if (!query) return this.options();
-    return this.options().filter(opt =>
-      opt.label.toLowerCase().includes(query)
+    return this.options().filter((opt) =>
+      opt.label.toLowerCase().includes(query),
     );
   });
 
-  toggleDropdown(): void {
+  // ── ControlValueAccessor ──
+  private onChange: (val: string) => void = () => {};
+  private onTouched: () => void = () => {};
+
+  writeValue(val: string): void {
+    untracked(() => this.value.set(val ?? ''));
+  }
+
+  registerOnChange(fn: (val: string) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    // Consumer controls disabled input; no override needed
+  }
+
+  // ── Event handlers ──
+  toggle(): void {
     if (this.disabled()) return;
-    this.isOpen.update(v => !v);
-    if (this.isOpen()) {
+    this.open.update((v) => !v);
+    if (this.open()) {
       this.searchQuery.set('');
-      this.focusedIndex.set(-1);
+      this.highlightedIndex.set(-1);
     }
   }
 
-  selectOption(val: string): void {
-    this.valueChange.emit(val);
-    this.isOpen.set(false);
+  selectOption(opt: SelectOption): void {
+    this.value.set(opt.value);
+    this.onChange(opt.value);
+    this.onTouched();
+    this.open.set(false);
     this.searchQuery.set('');
   }
 
   onSearch(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.searchQuery.set(target.value);
-    this.focusedIndex.set(-1);
-  }
-
-  onTriggerKeydown(event: KeyboardEvent): void {
-    if (this.disabled()) return;
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      this.toggleDropdown();
-      if (this.isOpen() && this.filteredOptions().length > 0) {
-        this.focusedIndex.set(0);
-      }
-    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (!this.isOpen()) {
-        this.isOpen.set(true);
-      }
-      const len = this.filteredOptions().length;
-      if (len === 0) return;
-      if (event.key === 'ArrowDown') {
-        this.focusedIndex.update(i => (i + 1) % len);
-      } else {
-        this.focusedIndex.update(i => (i - 1 + len) % len);
-      }
-    } else if (event.key === 'Escape') {
-      this.isOpen.set(false);
-    }
-  }
-
-  onSearchKeydown(event: KeyboardEvent): void {
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      if (this.filteredOptions().length > 0) {
-        this.focusedIndex.set(0);
-      }
-    } else if (event.key === 'Escape') {
-      this.isOpen.set(false);
-    } else if (event.key === 'Enter') {
-      event.preventDefault();
-      const idx = this.focusedIndex();
-      if (idx >= 0 && idx < this.filteredOptions().length) {
-        this.selectOption(this.filteredOptions()[idx].value);
-      }
-    }
+    this.highlightedIndex.set(-1);
   }
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: MouseEvent): void {
-    if (!this.isOpen()) return;
+    if (!this.open()) return;
     if (!this.elementRef.nativeElement.contains(event.target)) {
-      this.isOpen.set(false);
+      this.open.set(false);
     }
   }
 }
