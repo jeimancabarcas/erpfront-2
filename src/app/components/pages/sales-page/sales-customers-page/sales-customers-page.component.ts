@@ -208,7 +208,7 @@ export class SalesCustomersPageComponent implements OnInit {
     this.loadData();
   }
 
-  private debouncedFilter() {
+  protected debouncedFilter() {
     if (this.filterTimeout) clearTimeout(this.filterTimeout);
     this.filterTimeout = setTimeout(() => {
       this.pageIndex.set(1);

@@ -165,7 +165,7 @@ export class InventoryCategoriesPageComponent implements OnInit {
 
   private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  private debouncedFilter() {
+  protected debouncedFilter() {
     if (this.filterTimeout) clearTimeout(this.filterTimeout);
     this.filterTimeout = setTimeout(() => {
       this.pageIndex.set(1);
