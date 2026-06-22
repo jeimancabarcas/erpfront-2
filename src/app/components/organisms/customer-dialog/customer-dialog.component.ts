@@ -6,6 +6,7 @@ import { CustomerService } from '../../../services/customer.service';
 import { Customer, CreateCustomerDto } from '../../../models/customer.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface CustomerDialogData {
   customer?: Customer;
@@ -18,7 +19,8 @@ export interface CustomerDialogData {
     CommonModule,
     FormsModule,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -62,33 +64,11 @@ export interface CustomerDialogData {
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Tipo de Documento</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">badge</span>
-                <select [(ngModel)]="customer().documentType" name="documentType" required
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-                  <option value="CC">Cédula de Ciudadanía</option>
-                  <option value="NIT">NIT</option>
-                  <option value="CE">Cédula de Extranjería</option>
-                  <option value="PP">Pasaporte</option>
-                </select>
-              </div>
-            </div>
+            <ui-select label="Tipo de Documento" [options]="documentTypeOptions" [value]="customer().documentType" (valueChange)="updateCustomer('documentType', $event)" [required]="true" />
 
             <ui-text-input label="Número de Documento" icon="fingerprint" [value]="customer().documentNumber ?? ''" (valueChange)="updateCustomer('documentNumber', $event)" name="documentNumber" [required]="true" placeholder="Ej. 123456789" />
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
-              <div class="relative">
-                <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">toggle_on</span>
-                <select [(ngModel)]="customer().status" name="status" required
-                  class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-                  <option value="ACTIVE">Activo</option>
-                  <option value="INACTIVE">Inactivo</option>
-                </select>
-              </div>
-            </div>
+            <ui-select label="Estado" [options]="statusOptions" [value]="customer().status" (valueChange)="updateCustomer('status', $event)" [required]="true" />
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -129,6 +109,18 @@ export class CustomerDialogOrganism implements OnInit {
   private dialogData = inject<CustomerDialogData>(MAT_DIALOG_DATA);
 
   private customerService = inject(CustomerService);
+
+  documentTypeOptions: SelectOption[] = [
+    { value: 'CC', label: 'Cédula de Ciudadanía' },
+    { value: 'NIT', label: 'NIT' },
+    { value: 'CE', label: 'Cédula de Extranjería' },
+    { value: 'PP', label: 'Pasaporte' },
+  ];
+
+  statusOptions: SelectOption[] = [
+    { value: 'ACTIVE', label: 'Activo' },
+    { value: 'INACTIVE', label: 'Inactivo' },
+  ];
 
   customer = signal<Partial<Customer>>({
     name: '',

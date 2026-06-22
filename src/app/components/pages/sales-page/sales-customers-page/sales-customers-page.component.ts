@@ -11,6 +11,7 @@ import { QueryParams } from '../../../../models/pagination.model';
 import { RouterModule } from '@angular/router';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { TextInputComponent } from '../../../../components/atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../../../components/atoms/select/select.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
@@ -22,6 +23,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     BreadcrumbMolecule,
     ButtonAtom,
     TextInputComponent,
+    SelectAtom,
     RouterModule
   ],
   template: `
@@ -54,14 +56,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
 
           <ui-text-input icon="badge" placeholder="Buscar por documento..." [value]="documentFilter()" (valueChange)="documentFilter.set($event); debouncedFilter()" />
 
-          <div class="relative">
-            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">filter_list</span>
-            <select (change)="onStatusFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-              <option value="">Todos los estados</option>
-              <option value="ACTIVE">Activo</option>
-              <option value="INACTIVE">Inactivo</option>
-            </select>
-          </div>
+          <ui-select placeholder="Todos los estados" [options]="statusOptions" [value]="statusFilter()" (valueChange)="onStatusFilterChange($event)" />
         </div>
       </div>
 
@@ -186,6 +181,11 @@ export class SalesCustomersPageComponent implements OnInit {
   documentFilter = signal('');
   statusFilter = signal('');
 
+  statusOptions: SelectOption[] = [
+    { value: 'ACTIVE', label: 'Activo' },
+    { value: 'INACTIVE', label: 'Inactivo' },
+  ];
+
   // Paginación y Orden
   pageSize = signal(10);
   pageIndex = signal(1);
@@ -202,8 +202,8 @@ export class SalesCustomersPageComponent implements OnInit {
     this.loadData();
   }
 
-  onStatusFilterChange(event: Event) {
-    this.statusFilter.set((event.target as HTMLSelectElement).value);
+  onStatusFilterChange(value: string) {
+    this.statusFilter.set(value);
     this.pageIndex.set(1);
     this.loadData();
   }

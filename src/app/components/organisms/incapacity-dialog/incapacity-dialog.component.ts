@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface IncapacityDialogData {
   days: number | null;
@@ -28,7 +29,8 @@ export interface IncapacityDialogResult {
     ReactiveFormsModule,
     MatButtonModule,
     TextInputComponent,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -63,25 +65,10 @@ export interface IncapacityDialogResult {
             [formControl]="form.controls.days"
           />
           
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="type">Tipo de Incapacidad</label>
-            <select formControlName="type" id="type" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-              <option value="Enfermedad General">Enfermedad General</option>
-              <option value="Accidente de Trabajo">Accidente de Trabajo</option>
-              <option value="Enfermedad Profesional">Enfermedad Profesional</option>
-            </select>
-          </div>
+          <ui-select label="Tipo de Incapacidad" [options]="typeOptions" [formControl]="form.controls.type" />
         </div>
 
-        <div class="mb-6">
-          <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="specialLicense">Licencias Especiales</label>
-          <select formControlName="specialLicense" id="specialLicense" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-            <option value="Ninguna">Ninguna</option>
-            <option value="Maternidad">Licencia de Maternidad</option>
-            <option value="Paternidad">Licencia de Paternidad</option>
-            <option value="Luto">Licencia por Luto</option>
-          </select>
-        </div>
+        <ui-select label="Licencias Especiales" [options]="specialLicenseOptions" [formControl]="form.controls.specialLicense" />
 
         <div>
           <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="recommendations">Recomendaciones Médicas</label>
@@ -103,6 +90,19 @@ export class IncapacityDialogComponent implements OnInit {
   readonly data = inject<IncapacityDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<IncapacityDialogComponent, IncapacityDialogResult>);
   private fb = inject(FormBuilder);
+
+  typeOptions: SelectOption[] = [
+    { value: 'Enfermedad General', label: 'Enfermedad General' },
+    { value: 'Accidente de Trabajo', label: 'Accidente de Trabajo' },
+    { value: 'Enfermedad Profesional', label: 'Enfermedad Profesional' },
+  ];
+
+  specialLicenseOptions: SelectOption[] = [
+    { value: 'Ninguna', label: 'Ninguna' },
+    { value: 'Maternidad', label: 'Licencia de Maternidad' },
+    { value: 'Paternidad', label: 'Licencia de Paternidad' },
+    { value: 'Luto', label: 'Licencia por Luto' },
+  ];
 
   form = this.fb.group({
     days: [null as number | null, Validators.required],

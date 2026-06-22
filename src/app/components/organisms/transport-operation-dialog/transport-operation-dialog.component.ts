@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { OperationType } from '../../../models/transport.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface TransportOperationDialogData {
   routeId: string;
@@ -22,7 +23,8 @@ export type TransportOperationResult = boolean | undefined;
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -51,17 +53,7 @@ export type TransportOperationResult = boolean | undefined;
         <form [formGroup]="operationForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Operación</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">settings_suggest</span>
-                <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                  @for (type of operationTypes; track type) {
-                    <option [value]="type">{{ type }}</option>
-                  }
-                </select>
-              </div>
-            </div>
+            <ui-select label="Tipo de Operación" [options]="operationTypeOptions" [formControl]="operationForm.controls.type" />
 
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha de Operación</label>
@@ -76,17 +68,7 @@ export type TransportOperationResult = boolean | undefined;
               </div>
             </div>
 
-            <div class="md:col-span-2">
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Vehículo Responsable</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</span>
-                <select formControlName="vehicleId" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                  @for (v of transportService.vehicles(); track v.id) {
-                    <option [value]="v.id">{{ v.id }} - {{ v.driverName }}</option>
-                  }
-                </select>
-              </div>
-            </div>
+            <ui-select label="Vehículo Responsable" [options]="vehicleOptions()" [formControl]="operationForm.controls.vehicleId" class="md:col-span-2" />
 
             <div class="md:col-span-2">
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción / Observaciones</label>
@@ -147,7 +129,12 @@ export class TransportOperationDialogOrganism implements OnInit {
   public transportService = inject(TransportService);
 
   operationTypes: OperationType[] = ['Cargue', 'Descargue', 'Consolidacion', 'Desconsolidacion'];
+  operationTypeOptions: SelectOption[] = this.operationTypes.map(t => ({ value: t, label: t }));
   selectedFiles: string[] = [];
+
+  vehicleOptions = computed<SelectOption[]>(() =>
+    this.transportService.vehicles().map(v => ({ value: v.id, label: `${v.id} - ${v.driverName}` }))
+  );
 
   operationForm = this.fb.group({
     type: ['', Validators.required],

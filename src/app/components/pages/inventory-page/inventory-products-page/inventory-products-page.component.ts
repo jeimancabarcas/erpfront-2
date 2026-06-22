@@ -12,6 +12,7 @@ import { InventoryBatchDialogOrganism } from '../../../../components/organisms/i
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { TextInputComponent } from '../../../../components/atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../../../components/atoms/select/select.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
@@ -23,6 +24,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     BreadcrumbMolecule,
     ButtonAtom,
     TextInputComponent,
+    SelectAtom,
     CurrencyPipe
   ],
   template: `
@@ -56,15 +58,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
 
           <ui-text-input icon="fingerprint" placeholder="Buscar por SKU..." [value]="skuFilter()" (valueChange)="skuFilter.set($event); debouncedFilter()" />
 
-          <div class="relative">
-            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">category</span>
-            <select (change)="onCategoryFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-              <option value="">Todas las categorías</option>
-              @for (cat of categories(); track cat.id) {
-                <option [value]="cat.id">{{cat.name}}</option>
-              }
-            </select>
-          </div>
+          <ui-select placeholder="Todas las categorías" [options]="categoryOptions()" [value]="categoryFilter()" (valueChange)="onCategoryFilterChange($event)" />
         </div>
       </div>
 
@@ -190,6 +184,10 @@ export class InventoryProductsPageComponent implements OnInit {
   skuFilter = signal('');
   categoryFilter = signal('');
 
+  categoryOptions = computed<SelectOption[]>(() =>
+    this.categories().map(cat => ({ value: cat.id, label: cat.name }))
+  );
+
   // Paginación y Orden
   pageSize = signal(10);
   pageIndex = signal(1);
@@ -211,8 +209,8 @@ export class InventoryProductsPageComponent implements OnInit {
     }
   }
 
-  onCategoryFilterChange(event: Event) {
-    this.categoryFilter.set((event.target as HTMLSelectElement).value);
+  onCategoryFilterChange(value: string) {
+    this.categoryFilter.set(value);
     this.pageIndex.set(1);
     this.loadData();
   }

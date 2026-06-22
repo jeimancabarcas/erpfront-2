@@ -34,21 +34,21 @@ Chain strategy: pending
 
 ## Phase 1: Dogfood SearchFiltersMolecule
 
-- [ ] 1.1 Update `molecules/search-filters/search-filters.component.ts` if binding changed
-- [ ] 1.2 Run search-filters vitest tests → green
+- [x] 1.1 Update `molecules/search-filters/search-filters.component.ts` if binding changed
+- [x] 1.2 Run search-filters vitest tests → green
 
 ## Phase 2: Native `<select>` → `<ui-select>` (15 selects)
 
-- [ ] 2.1 `organisms/customer-dialog` — documentType, status
-- [ ] 2.2 `molecules/product-form` — categoryId
-- [ ] 2.3 `pages/inventory-page/inventory-products-page` — categoryFilter
-- [ ] 2.4 `pages/inventory-page/inventory-purchases-page` — supplierFilter, statusFilter
-- [ ] 2.5 `pages/sales-page` — customerFilter, statusFilter
-- [ ] 2.6 `pages/transport-page/transport-dispatch-view` — customerName, vehicleId
-- [ ] 2.7 `organisms/appointment-confirmation-dialog` — provider
-- [ ] 2.8 `organisms/incapacity-dialog` — type, specialLicense
-- [ ] 2.9 `organisms/orders-dialog` — route
-- [ ] 2.10 Transport dialogs (6): change-vehicle, dispatch, expense, incident, maintenance, operation
+- [x] 2.1 `organisms/customer-dialog` — documentType, status
+- [x] 2.2 `molecules/product-form` — categoryId
+- [x] 2.3 `pages/inventory-page/inventory-products-page` — categoryFilter
+- [x] 2.4 `pages/inventory-page/inventory-purchases-page` — supplierFilter, statusFilter
+- [x] 2.5 `pages/sales-page` — customerFilter, statusFilter
+- [x] 2.6 `pages/transport-page/transport-dispatch-view` — customerName, vehicleId
+- [x] 2.7 `organisms/appointment-confirmation-dialog` — provider
+- [x] 2.8 `organisms/incapacity-dialog` — type, specialLicense
+- [x] 2.9 `organisms/orders-dialog` — route
+- [x] 2.10 Transport dialogs (6): change-vehicle, dispatch, expense, incident, maintenance, operation
 
 ## Phase 3: `<mat-select>` → `<ui-select>` (~20 selects)
 

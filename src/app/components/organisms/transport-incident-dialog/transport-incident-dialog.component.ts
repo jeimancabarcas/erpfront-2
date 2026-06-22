@@ -6,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface TransportIncidentDialogData {
   routeId: string;
@@ -20,7 +21,8 @@ export type TransportIncidentResult = boolean | undefined;
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -47,21 +49,7 @@ export type TransportIncidentResult = boolean | undefined;
 
       <form [formGroup]="incidentForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Novedad</label>
-            <div class="relative">
-              <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">category</span>
-              <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                <option value="Retraso">Retraso</option>
-                <option value="Accidente">Accidente</option>
-                <option value="Clima">Clima</option>
-                <option value="Otros">Otros</option>
-              </select>
-            </div>
-            @if (incidentForm.get('type')?.hasError('required') && incidentForm.get('type')?.touched) {
-              <p class="text-red-500 text-xs mt-1 font-medium">El tipo es obligatorio</p>
-            }
-          </div>
+          <ui-select label="Tipo de Novedad" [options]="incidentTypeOptions" [formControl]="incidentForm.controls.type" />
 
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -115,6 +103,13 @@ export class TransportIncidentDialogOrganism {
   private dialogRef = inject(MatDialogRef<TransportIncidentDialogOrganism, TransportIncidentResult>);
   private fb = inject(FormBuilder);
   private transportService = inject(TransportService);
+
+  incidentTypeOptions: SelectOption[] = [
+    { value: 'Retraso', label: 'Retraso' },
+    { value: 'Accidente', label: 'Accidente' },
+    { value: 'Clima', label: 'Clima' },
+    { value: 'Otros', label: 'Otros' },
+  ];
 
   incidentForm = this.fb.group({
     type: ['', Validators.required],

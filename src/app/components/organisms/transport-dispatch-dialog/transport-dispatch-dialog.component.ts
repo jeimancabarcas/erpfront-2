@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,6 +8,7 @@ import { TextInputComponent } from '../../atoms/text-input/text-input.component'
 import { TransportService } from '../../../services/transport.service';
 import { FinanceService } from '../../../services/finance.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface TransportDispatchDialogData {
   vehicleId: string;
@@ -23,7 +24,8 @@ export type TransportDispatchResult = boolean | undefined;
     ReactiveFormsModule,
     MatButtonModule,
     TextInputComponent,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -51,17 +53,7 @@ export type TransportDispatchResult = boolean | undefined;
           <form [formGroup]="dispatchForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Cliente / Empresa</label>
-                <div class="relative">
-                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">business</span>
-                  <select formControlName="customerName" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                    @for (c of financeService.customers(); track c.id) {
-                      <option [value]="c.name">{{ c.name }}</option>
-                    }
-                  </select>
-                </div>
-              </div>
+              <ui-select label="Cliente / Empresa" [options]="customerOptions()" [formControl]="dispatchForm.controls.customerName" />
 
               <ui-text-input label="Origen" icon="location_on" placeholder="Ej: Bogotá, DC" [formControl]="dispatchForm.controls.origin" />
               <ui-text-input label="Destino" icon="flag" placeholder="Ej: Medellín, ANT" [formControl]="dispatchForm.controls.destination" />
@@ -129,6 +121,10 @@ export class TransportDispatchDialogOrganism implements OnInit {
   private fb = inject(FormBuilder);
   public transportService = inject(TransportService);
   public financeService = inject(FinanceService);
+
+  customerOptions = computed<SelectOption[]>(() =>
+    this.financeService.customers().map(c => ({ value: c.name, label: c.name }))
+  );
 
   dispatchForm = this.fb.group({
     customerName: ['', Validators.required],

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface TransportExpenseDialogData {
   routeId: string;
@@ -22,7 +23,8 @@ export type TransportExpenseResult = boolean | undefined;
     ReactiveFormsModule,
     MatButtonModule,
     TextInputComponent,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -51,17 +53,7 @@ export type TransportExpenseResult = boolean | undefined;
         <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Gasto</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">category</span>
-                <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                  @for (type of expenseTypes; track type) {
-                    <option [value]="type">{{ type }}</option>
-                  }
-                </select>
-              </div>
-            </div>
+            <ui-select label="Tipo de Gasto" [options]="expenseTypeOptions" [formControl]="expenseForm.controls.type" />
 
             <ui-text-input label="Monto" type="number" icon="attach_money" placeholder="0.00" [formControl]="expenseForm.controls.amount" />
 
@@ -124,6 +116,7 @@ export class TransportExpenseDialogOrganism {
   public transportService = inject(TransportService);
 
   expenseTypes = ['Peaje', 'Combustible', 'Viáticos', 'Mantenimiento', 'Otros'];
+  expenseTypeOptions: SelectOption[] = this.expenseTypes.map(t => ({ value: t, label: t }));
   selectedFiles: string[] = [];
 
   expenseForm = this.fb.group({

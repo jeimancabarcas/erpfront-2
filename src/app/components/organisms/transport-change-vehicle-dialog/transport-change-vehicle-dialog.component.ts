@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -6,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface TransportChangeVehicleDialogData {
   routeId: string;
@@ -20,7 +21,8 @@ export type TransportChangeVehicleResult = boolean | undefined;
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -47,22 +49,7 @@ export type TransportChangeVehicleResult = boolean | undefined;
 
       <form [formGroup]="changeForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 gap-6">
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Nuevo Vehículo</label>
-            <div class="relative">
-              <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">local_shipping</span>
-              <select formControlName="newVehicleId" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                @for (v of availableVehicles(); track v.id) {
-                  <option [value]="v.id">
-                    {{ v.id }} - {{ v.type }} - {{ v.driverName }}
-                  </option>
-                }
-              </select>
-            </div>
-            @if (changeForm.get('newVehicleId')?.hasError('required') && changeForm.get('newVehicleId')?.touched) {
-              <p class="text-red-500 text-xs mt-1 font-medium">El vehículo es obligatorio</p>
-            }
-          </div>
+          <ui-select label="Nuevo Vehículo" [options]="vehicleOptions()" [formControl]="changeForm.controls.newVehicleId" />
 
           <div>
             <label class="text-xs font-medium text-gray-500 mb-1.5 block">Motivo del Cambio</label>
@@ -103,6 +90,10 @@ export class TransportChangeVehicleDialogOrganism {
   private transportService = inject(TransportService);
 
   availableVehicles = this.transportService.vehicles;
+
+  vehicleOptions = computed<SelectOption[]>(() =>
+    this.availableVehicles().map(v => ({ value: v.id, label: `${v.id} - ${v.type} - ${v.driverName}` }))
+  );
 
   changeForm = this.fb.group({
     newVehicleId: ['', Validators.required],

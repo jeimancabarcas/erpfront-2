@@ -1,4 +1,4 @@
-import { Component, inject, signal, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, input, output, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,6 +8,7 @@ import { CategoryService } from '../../../services/category.service';
 import { Product } from '../../../models/product.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface ProductFormDialogData {
   product?: Product;
@@ -24,7 +25,8 @@ export type ProductFormResult = boolean | undefined;
     CurrencyPipe,
     MatButtonModule,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -54,16 +56,7 @@ export type ProductFormResult = boolean | undefined;
 
           <ui-text-input label="SKU" icon="qr_code_2" [(value)]="product().sku" name="sku" [required]="true" placeholder="Ej. LAP-123" />
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Categoría</label>
-            <select [(ngModel)]="product().categoryId" name="categoryId" required
-              class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-              <option value="" disabled>Seleccionar categoría</option>
-              @for (cat of categoryList(); track cat.id) {
-                <option [value]="cat.id">{{cat.name}}</option>
-              }
-            </select>
-          </div>
+          <ui-select label="Categoría" placeholder="Seleccionar categoría" [options]="categoryOptions()" [(value)]="product().categoryId" [required]="true" />
 
           <ui-text-input type="number" label="Stock Actual" icon="inventory" [(value)]="product().currentStock" name="currentStock" [required]="true" placeholder="0" />
 
@@ -123,6 +116,10 @@ export class ProductFormMolecule implements OnInit {
 
   isEditMode = false;
   categoryList = this.categoryService.categories;
+
+  categoryOptions = computed<SelectOption[]>(() =>
+    this.categoryList().map(cat => ({ value: cat.id, label: cat.name }))
+  );
 
   originalStock: number | null = null;
   adjustmentReason = '';

@@ -10,6 +10,7 @@ import { SupplierService } from '../../../../services/supplier.service';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../../models/purchase-order.model';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../../../components/atoms/select/select.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
@@ -20,6 +21,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
+    SelectAtom,
     CurrencyPipe,
     DatePipe
   ],
@@ -49,31 +51,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
       <!-- Barra de Filtros -->
       <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Proveedor</label>
-            <div class="relative">
-              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">business</span>
-              <select (change)="onSupplierFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-                <option value="">Todos los proveedores</option>
-                @for (supplier of suppliers(); track supplier.id) {
-                  <option [value]="supplier.id">{{ supplier.name }}</option>
-                }
-              </select>
-            </div>
-          </div>
+          <ui-select label="Proveedor" placeholder="Todos los proveedores" [options]="supplierOptions()" [value]="supplierFilter()" (valueChange)="onSupplierFilterChange($event)" />
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Estado</label>
-            <div class="relative">
-              <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">filter_list</span>
-              <select (change)="onStatusFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-                <option value="">Todos los estados</option>
-                @for (status of statuses; track status.value) {
-                  <option [value]="status.value">{{ status.label }}</option>
-                }
-              </select>
-            </div>
-          </div>
+          <ui-select label="Estado" placeholder="Todos los estados" [options]="statusOptions" [value]="statusFilter()" (valueChange)="onStatusFilterChange($event)" />
         </div>
       </div>
 
@@ -200,14 +180,6 @@ export class InventoryPurchasesPageComponent implements OnInit {
 
   private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  statuses = [
-    { label: 'Borrador', value: 'DRAFT' },
-    { label: 'Enviado', value: 'SENT' },
-    { label: 'En Tránsito', value: 'IN_TRANSIT' },
-    { label: 'Completado', value: 'COMPLETED' },
-    { label: 'Cancelado', value: 'CANCELLED' }
-  ];
-
   statusLabels: any = {
     'DRAFT': 'Borrador',
     'SENT': 'Enviado',
@@ -224,14 +196,26 @@ export class InventoryPurchasesPageComponent implements OnInit {
     }
   }
 
-  onSupplierFilterChange(event: Event) {
-    this.supplierFilter.set((event.target as HTMLSelectElement).value);
+  supplierOptions = computed<SelectOption[]>(() =>
+    this.suppliers().map(s => ({ value: s.id, label: s.name }))
+  );
+
+  statusOptions: SelectOption[] = [
+    { value: 'DRAFT', label: 'Borrador' },
+    { value: 'SENT', label: 'Enviado' },
+    { value: 'IN_TRANSIT', label: 'En Tránsito' },
+    { value: 'COMPLETED', label: 'Completado' },
+    { value: 'CANCELLED', label: 'Cancelado' },
+  ];
+
+  onSupplierFilterChange(value: string) {
+    this.supplierFilter.set(value);
     this.pageIndex.set(1);
     this.loadData();
   }
 
-  onStatusFilterChange(event: Event) {
-    this.statusFilter.set((event.target as HTMLSelectElement).value);
+  onStatusFilterChange(value: string) {
+    this.statusFilter.set(value);
     this.pageIndex.set(1);
     this.loadData();
   }

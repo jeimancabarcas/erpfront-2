@@ -11,6 +11,7 @@ import { SaleFormMolecule } from '../../molecules/sale-form/sale-form.component'
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
@@ -22,6 +23,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     BreadcrumbMolecule,
     ButtonAtom,
     TextInputComponent,
+    SelectAtom,
     CurrencyPipe,
     DatePipe
   ],
@@ -53,25 +55,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ui-text-input icon="search" placeholder="Ej: FAC-0001" [value]="invoiceNumberFilter()" (valueChange)="invoiceNumberFilter.set($event); debouncedFilter()" />
 
-          <div class="relative">
-            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">person</span>
-            <select (change)="onCustomerFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-              <option value="">Todos los clientes</option>
-              @for (customer of customers(); track customer.id) {
-                <option [value]="customer.id">{{ customer.name }}</option>
-              }
-            </select>
-          </div>
+          <ui-select placeholder="Todos los clientes" [options]="customerOptions()" [value]="customerFilter()" (valueChange)="onCustomerFilterChange($event)" />
 
-          <div class="relative">
-            <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600">filter_list</span>
-            <select (change)="onStatusFilterChange($event)" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-              <option value="">Todos los estados</option>
-              @for (status of statuses; track status.value) {
-                <option [value]="status.value">{{ status.label }}</option>
-              }
-            </select>
-          </div>
+          <ui-select placeholder="Todos los estados" [options]="statusOptions" [value]="statusFilter()" (valueChange)="onStatusFilterChange($event)" />
         </div>
       </div>
 
@@ -199,10 +185,14 @@ export class SalesPageComponent implements OnInit {
 
   private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  statuses = [
-    { label: 'Pagada', value: 'PAID' },
-    { label: 'Borrador', value: 'DRAFT' },
-    { label: 'Anulada', value: 'CANCELLED' }
+  customerOptions = computed<SelectOption[]>(() =>
+    this.customers().map(c => ({ value: c.id, label: c.name }))
+  );
+
+  statusOptions: SelectOption[] = [
+    { value: 'PAID', label: 'Pagada' },
+    { value: 'DRAFT', label: 'Borrador' },
+    { value: 'CANCELLED', label: 'Anulada' },
   ];
 
   statusLabels: any = {
@@ -219,14 +209,14 @@ export class SalesPageComponent implements OnInit {
     }
   }
 
-  onCustomerFilterChange(event: Event) {
-    this.customerFilter.set((event.target as HTMLSelectElement).value);
+  onCustomerFilterChange(value: string) {
+    this.customerFilter.set(value);
     this.pageIndex.set(1);
     this.loadData();
   }
 
-  onStatusFilterChange(event: Event) {
-    this.statusFilter.set((event.target as HTMLSelectElement).value);
+  onStatusFilterChange(value: string) {
+    this.statusFilter.set(value);
     this.pageIndex.set(1);
     this.loadData();
   }

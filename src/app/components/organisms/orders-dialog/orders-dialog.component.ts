@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface PrescriptionData {
   code: string;
@@ -38,7 +39,8 @@ export interface OrdersDialogResult {
     ReactiveFormsModule,
     MatButtonModule,
     TextInputComponent,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -92,13 +94,7 @@ export interface OrdersDialogResult {
                   
                   <ui-text-input placeholder="Ej: 5ml" [formControl]="$any(getPrescriptionGroup($index)).controls.dose" class="md:col-span-4" />
                   <ui-text-input placeholder="Ej: Cada 8 horas" [formControl]="$any(getPrescriptionGroup($index)).controls.frequency" class="md:col-span-4" />
-                  <select formControlName="route" class="md:col-span-4 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                    <option value="Oral">Oral</option>
-                    <option value="Intramuscular">Intramuscular</option>
-                    <option value="Intravenosa">Intravenosa</option>
-                    <option value="Tópica">Tópica</option>
-                    <option value="Inhalatoria">Inhalatoria</option>
-                  </select>
+                  <ui-select placeholder="Vía" [options]="routeOptions" [formControl]="$any(getPrescriptionGroup($index)).controls.route" class="md:col-span-4" />
                   
                   <textarea formControlName="observations" rows="2" placeholder="Instrucciones adicionales para el paciente..." class="md:col-span-12 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
                 </div>
@@ -161,6 +157,14 @@ export class OrdersDialogComponent implements OnInit {
   readonly data = inject<OrdersDialogData>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<OrdersDialogComponent, OrdersDialogResult>);
   private fb = inject(FormBuilder);
+
+  routeOptions: SelectOption[] = [
+    { value: 'Oral', label: 'Oral' },
+    { value: 'Intramuscular', label: 'Intramuscular' },
+    { value: 'Intravenosa', label: 'Intravenosa' },
+    { value: 'Tópica', label: 'Tópica' },
+    { value: 'Inhalatoria', label: 'Inhalatoria' },
+  ];
 
   form = this.fb.group({});
 

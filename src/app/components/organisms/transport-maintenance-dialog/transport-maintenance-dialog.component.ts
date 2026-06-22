@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 
 export interface TransportMaintenanceDialogData {
   vehicleId: string;
@@ -22,7 +23,8 @@ export type TransportMaintenanceResult = boolean | undefined;
     ReactiveFormsModule,
     MatButtonModule,
     TextInputComponent,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     @if (loading()) {
@@ -51,18 +53,7 @@ export type TransportMaintenanceResult = boolean | undefined;
         <form [formGroup]="maintenanceForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Tipo de Mantenimiento</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">handyman</span>
-                <select formControlName="type" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                  <option value="Preventivo">Preventivo</option>
-                  <option value="Correctivo">Correctivo</option>
-                  <option value="Inspección">Inspección</option>
-                  <option value="Otros">Otros</option>
-                </select>
-              </div>
-            </div>
+            <ui-select label="Tipo de Mantenimiento" [options]="maintenanceTypeOptions" [formControl]="maintenanceForm.controls.type" />
 
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha Programada</label>
@@ -105,6 +96,13 @@ export class TransportMaintenanceDialogOrganism {
   private dialogRef = inject(MatDialogRef<TransportMaintenanceDialogOrganism, TransportMaintenanceResult>);
   private fb = inject(FormBuilder);
   private transportService = inject(TransportService);
+
+  maintenanceTypeOptions: SelectOption[] = [
+    { value: 'Preventivo', label: 'Preventivo' },
+    { value: 'Correctivo', label: 'Correctivo' },
+    { value: 'Inspección', label: 'Inspección' },
+    { value: 'Otros', label: 'Otros' },
+  ];
 
   maintenanceForm = this.fb.group({
     type: ['Preventivo', Validators.required],

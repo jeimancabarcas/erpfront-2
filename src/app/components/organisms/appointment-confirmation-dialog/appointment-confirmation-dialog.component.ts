@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { BillingService } from '../../../services/billing.service';
 import { Appointment } from '../../../services/pediatrics.service';
 import { startWith } from 'rxjs';
@@ -31,7 +32,8 @@ export interface AppointmentConfirmationResult {
     ReactiveFormsModule,
     MatIconModule,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white">
@@ -78,14 +80,7 @@ export interface AppointmentConfirmationResult {
 
           @if (!isParticular()) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top duration-300">
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Seleccione Prestador</label>
-                <select formControlName="provider" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm bg-white">
-                  @for (p of billingService.providers(); track p.id) {
-                    <option [value]="p.name">{{ p.name }}</option>
-                  }
-                </select>
-              </div>
+              <ui-select label="Prestador" placeholder="Seleccione Prestador" [options]="providerOptions()" [formControl]="confirmForm.controls.provider" />
 
               <div>
                 <label class="text-xs font-medium text-gray-500 mb-1.5 block">Nº Autorización</label>
@@ -156,6 +151,10 @@ export class AppointmentConfirmationDialogOrganism {
   private dialogRef = inject(MatDialogRef<AppointmentConfirmationDialogOrganism, AppointmentConfirmationResult>);
   private fb = inject(FormBuilder);
   public billingService = inject(BillingService);
+
+  providerOptions = computed<SelectOption[]>(() =>
+    this.billingService.providers().map(p => ({ value: p.name, label: p.name }))
+  );
 
   confirmForm = this.fb.group({
     isParticular: [false],

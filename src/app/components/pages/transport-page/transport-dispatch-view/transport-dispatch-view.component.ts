@@ -5,6 +5,7 @@ import { TransportService } from '../../../../services/transport.service';
 import { FinanceService } from '../../../../services/finance.service';
 import { TransportRoute } from '../../../../models/transport.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { SelectAtom, SelectOption } from '../../../../components/atoms/select/select.component';
 
 @Component({
   selector: 'app-transport-dispatch-view',
@@ -12,7 +13,8 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ButtonAtom
+    ButtonAtom,
+    SelectAtom
   ],
   template: `
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -29,18 +31,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               <!-- Customer Selection -->
-              <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Cliente / Empresa</label>
-                <div class="relative">
-                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">business</span>
-                  <select formControlName="customerName" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-                    <option value="" disabled>Seleccionar cliente</option>
-                    @for (c of financeService.customers(); track c.id) {
-                      <option [value]="c.name">{{ c.name }}</option>
-                    }
-                  </select>
-                </div>
-              </div>
+              <ui-select label="Cliente / Empresa" placeholder="Seleccionar cliente" [options]="customerOptions()" [formControl]="dispatchForm.controls.customerName" />
 
               <!-- Origin -->
               <div class="flex flex-col gap-1.5">
@@ -61,18 +52,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
               </div>
 
               <!-- Vehicle Selection -->
-              <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Vehículo Disponible</label>
-                <div class="relative">
-                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">local_shipping</span>
-                  <select formControlName="vehicleId" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none">
-                    <option value="" disabled>Seleccionar vehículo</option>
-                    @for (v of availableVehicles(); track v.id) {
-                      <option [value]="v.id">{{ v.id }} — {{ v.driverName }} (Standby: {{ v.standbyRate | currency:'USD':'symbol':'1.0-0' }}/h)</option>
-                    }
-                  </select>
-                </div>
-              </div>
+              <ui-select label="Vehículo Disponible" placeholder="Seleccionar vehículo" [options]="vehicleOptions()" [formControl]="dispatchForm.controls.vehicleId" />
 
               <!-- Date -->
               <div class="flex flex-col gap-1.5">
@@ -146,6 +126,14 @@ export class TransportDispatchViewComponent {
 
   availableVehicles = computed(() => 
     this.transportService.vehicles().filter(v => v.status === 'Available')
+  );
+
+  customerOptions = computed<SelectOption[]>(() =>
+    this.financeService.customers().map(c => ({ value: c.name, label: c.name }))
+  );
+
+  vehicleOptions = computed<SelectOption[]>(() =>
+    this.availableVehicles().map(v => ({ value: v.id, label: `${v.id} — ${v.driverName} (Standby: $${v.standbyRate}/h)` }))
   );
 
   dispatchForm = this.fb.group({
