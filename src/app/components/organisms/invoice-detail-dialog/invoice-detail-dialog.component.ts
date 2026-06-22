@@ -236,31 +236,35 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
               </button>
             }
 
-            @if (inv.isElectronic || notes().creditNotes.length > 0 || notes().debitNotes.length > 0) {
-              <button 
-                mat-flat-button 
-                (click)="viewPdf(inv)"
-                [disabled]="pdfLoading()"
-                class="!rounded-full !px-8 md:!px-10 !h-12 !bg-red-600 !text-white !font-black shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-              >
-                @if (pdfLoading()) {
+            <button mat-flat-button color="primary" (click)="printPdf(inv)" [disabled]="pdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50">
+              @if (pdfLoading()) {
+                <span class="flex items-center justify-center gap-2">
+                  <span class="w-5 h-5 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></span>
+                  <span>Generando PDF...</span>
+                </span>
+              } @else {
+                <span class="flex items-center justify-center gap-2">
+                  <mat-icon class="mr-2">print</mat-icon>
+                  Imprimir Factura
+                </span>
+              }
+            </button>
+
+            @if (inv.isElectronic) {
+              <button mat-flat-button (click)="downloadDianPdf(inv)" [disabled]="dianPdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-red-600 !text-white !font-black shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50">
+                @if (dianPdfLoading()) {
                   <span class="flex items-center justify-center gap-2">
                     <span class="w-5 h-5 border-2 border-red-100 border-t-red-600 rounded-full animate-spin"></span>
-                    <span>Cargando PDF...</span>
+                    <span>Descargando PDF DIAN...</span>
                   </span>
                 } @else {
                   <span class="flex items-center justify-center gap-2">
                     <mat-icon>picture_as_pdf</mat-icon>
-                    <span>{{ inv.isElectronic ? 'Ver PDF DIAN' : 'Ver PDF Historial' }}</span>
+                    <span>Descargar PDF DIAN</span>
                   </span>
                 }
               </button>
             }
-
-            <button mat-flat-button color="primary" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all">
-              <mat-icon class="mr-2">print</mat-icon>
-              Imprimir Factura
-            </button>
           </footer>
         </div>
       }
@@ -288,6 +292,7 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   loading = signal(true);
   notes = signal<{ creditNotes: CreditNote[], debitNotes: DebitNote[] }>({ creditNotes: [], debitNotes: [] });
   pdfLoading = signal(false);
+  dianPdfLoading = signal(false);
 
   ngOnInit() {
     if (this.data?.invoiceId) {
@@ -342,18 +347,34 @@ export class InvoiceDetailDialogOrganism implements OnInit {
     });
   }
 
-  viewPdf(invoice: Invoice) {
+  printPdf(invoice: Invoice) {
     if (!invoice.id) return;
     this.pdfLoading.set(true);
     this.invoiceService.getInvoicePdf(invoice.id).subscribe({
       next: (res) => {
         this.pdfLoading.set(false);
-        downloadBase64Pdf(res.pdfBase64Encoded, res.fileName);
+        downloadBase64Pdf(res.pdfBase64Encoded);
       },
       error: (err) => {
         this.pdfLoading.set(false);
         console.error('Error fetching PDF:', err);
-        alert('Error al descargar el PDF de la factura.');
+        alert('Error al generar el PDF de la factura.');
+      }
+    });
+  }
+
+  downloadDianPdf(invoice: Invoice) {
+    if (!invoice.id) return;
+    this.dianPdfLoading.set(true);
+    this.invoiceService.getInvoiceDianPdf(invoice.id).subscribe({
+      next: (res) => {
+        this.dianPdfLoading.set(false);
+        downloadBase64Pdf(res.pdfBase64Encoded, res.fileName);
+      },
+      error: (err) => {
+        this.dianPdfLoading.set(false);
+        console.error('Error fetching DIAN PDF:', err);
+        alert('Error al descargar el PDF de la DIAN.');
       }
     });
   }

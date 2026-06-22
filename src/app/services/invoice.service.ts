@@ -72,9 +72,16 @@ export class InvoiceService {
   }
 
   /**
-   * Obtiene el PDF de una factura codificado en Base64 y su nombre de archivo
+   * Obtiene el PDF con historial de una factura (manuales generan historial, electrónicas PDF local con notas)
    */
   getInvoicePdf(id: string): Observable<{ pdfBase64Encoded: string; fileName: string }> {
     return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(`${this.apiUrl}/${id}/pdf`);
+  }
+
+  /**
+   * Obtiene el PDF oficial de la DIAN para facturas electrónicas
+   */
+  getInvoiceDianPdf(id: string): Observable<{ pdfBase64Encoded: string; fileName: string }> {
+    return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(`${this.apiUrl}/${id}/dian-pdf`);
   }
 }
