@@ -13,6 +13,7 @@ import { Invoice } from '../../../models/invoice.model';
 import { MatDialog } from '@angular/material/dialog';
 import { InvoiceService } from '../../../services/invoice.service';
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
+import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 
 @Component({
   selector: 'app-customer-invoices-table-organism',
@@ -87,9 +88,9 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
 
             <!-- Monto Column -->
             <ng-container matColumnDef="amount">
-              <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50 text-right">Monto</th>
+              <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50 text-right">Monto Neto</th>
               <td mat-cell *matCellDef="let inv" class="px-8 !py-6 text-right font-black text-gray-900">
-                {{ inv.totalAmount | currency }}
+                {{ (inv.netTotal ?? inv.totalAmount) | currency }}
               </td>
             </ng-container>
 
@@ -101,7 +102,7 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
                   <button 
                     mat-icon-button 
                     (click)="downloadInvoicePdf(inv)" 
-                    matTooltip="Ver PDF Oficial"
+                    [matTooltip]="inv.isElectronic ? 'Descargar PDF DIAN' : 'Ver PDF Historial'"
                     class="!text-red-600 hover:!bg-red-50 transition-all"
                   >
                     <mat-icon>picture_as_pdf</mat-icon>
@@ -173,23 +174,18 @@ export class CustomerInvoicesTableOrganism {
   }
 
   downloadInvoicePdf(invoice: Invoice) {
-    this.invoiceService.getInvoicePdf(invoice.id).subscribe({
+    const request$ = invoice.isElectronic
+      ? this.invoiceService.getInvoiceDianPdf(invoice.id)
+      : this.invoiceService.getInvoicePdf(invoice.id);
+
+    request$.subscribe({
       next: (res) => {
-        try {
-          const byteCharacters = atob(res.pdfBase64Encoded);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, '_blank');
-        } catch (e) {
-          console.error('Error decoding PDF:', e);
-        }
+        downloadBase64Pdf(res.pdfBase64Encoded, res.fileName);
       },
-      error: (err) => console.error('Error fetching PDF:', err)
+      error: (err) => {
+        console.error('Error fetching PDF:', err);
+        alert('Error al descargar el PDF.');
+      }
     });
   }
 }
