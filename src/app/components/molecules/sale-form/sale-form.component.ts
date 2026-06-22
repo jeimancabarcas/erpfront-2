@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
   FormsModule,
@@ -17,6 +17,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
 import { InvoiceService } from '../../../services/invoice.service';
@@ -27,6 +28,7 @@ import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ProductPriceInfoMolecule } from '../product-price-info/product-price-info.component';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-sale-form',
@@ -47,7 +49,6 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     CurrencyPipe,
     ProductPriceInfoMolecule,
     ButtonAtom,
-    CustomerDialogOrganism,
   ],
   template: `
     <div
@@ -75,7 +76,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
               </p>
             </div>
           </div>
-          <ui-button variant="icon" (clicked)="closed.emit(false)">
+          <ui-button variant="icon" (clicked)="close(false)">
             <span class="material-icons">close</span>
           </ui-button>
         </header>
@@ -434,7 +435,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
           <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100">
             <ui-button
               variant="outline"
-              (clicked)="closed.emit(false)"
+              (clicked)="close(false)"
               class="!rounded-full !px-8 !h-12 !font-bold text-gray-500"
             >
               Descartar
@@ -452,15 +453,6 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         </form>
       </div>
     </div>
-
-    <!-- Inline Customer Create Dialog -->
-    @if (showCreateCustomerDialog()) {
-      <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showCreateCustomerDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[600px]" (click)="$event.stopPropagation()">
-          <app-customer-dialog [data]="{}" (closed)="onCustomerDialogClosed($event)" />
-        </div>
-      </div>
-    }
 
     <!-- Notification -->
     @if (notification(); as notif) {
@@ -505,16 +497,15 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   ],
 })
 export class SaleFormMolecule implements OnInit {
-  closed = output<boolean>();
+  private dialogRef = inject(MatDialogRef<SaleFormMolecule, boolean>);
+  private matDialog = inject(MatDialog);
+  dialogData = inject(MAT_DIALOG_DATA, { optional: true });
   private fb = inject(FormBuilder);
   private productService = inject(ProductService);
   private customerService = inject(CustomerService);
   private invoiceService = inject(InvoiceService);
   notification = signal<{message: string; type: 'success' | 'error'} | null>(null);
   private notifTimeout: ReturnType<typeof setTimeout> | null = null;
-
-  // Inline customer create dialog signals
-  showCreateCustomerDialog = signal(false);
 
   // Local state signals for Customer Autocomplete
   customersList = signal<Customer[]>([]);
@@ -599,6 +590,10 @@ export class SaleFormMolecule implements OnInit {
       });
   }
 
+  close(result: boolean) {
+    this.dialogRef.close(result);
+  }
+
   private _fetchCustomers(searchTerm: string, page: number) {
     this.isLoadingCustomers.set(true);
     this.customerService
@@ -643,19 +638,22 @@ export class SaleFormMolecule implements OnInit {
   openCreateCustomerDialog(event: Event) {
     event.stopPropagation();
     event.preventDefault();
-    this.showCreateCustomerDialog.set(true);
-  }
-
-  onCustomerDialogClosed(result: boolean) {
-    this.showCreateCustomerDialog.set(false);
-    if (result === true) {
-      const newCustomer = this.customerService.customers()[0];
-      if (newCustomer) {
-        this.customersList.update((list) => [newCustomer, ...list]);
-        this.customerSearchControl.setValue(newCustomer);
-        this.onCustomerSelected(newCustomer);
+    const ref = this.matDialog.open(CustomerDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {},
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result === true) {
+        const newCustomer = this.customerService.customers()[0];
+        if (newCustomer) {
+          this.customersList.update((list) => [newCustomer, ...list]);
+          this.customerSearchControl.setValue(newCustomer);
+          this.onCustomerSelected(newCustomer);
+        }
       }
-    }
+    });
   }
 
   displayCustomerFn(customer: Customer | string | null): string {
@@ -780,7 +778,7 @@ export class SaleFormMolecule implements OnInit {
         next: () => {
           this.isManual.set(false);
           this.showNotification('Factura generada exitosamente');
-          this.closed.emit(true);
+          this.dialogRef.close(true);
         },
         error: (err) => {
           this.isSubmitting.set(false);

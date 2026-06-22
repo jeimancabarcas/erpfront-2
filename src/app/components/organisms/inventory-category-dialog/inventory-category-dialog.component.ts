@@ -1,6 +1,7 @@
-import { Component, inject, signal, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { CategoryService, InventoryCategory } from '../../../services/category.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 
@@ -68,8 +69,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   `]
 })
 export class InventoryCategoryDialogOrganism implements OnInit {
-  data = input<{ category?: InventoryCategory }>({});
-  closed = output<boolean>();
+  private dialogRef = inject(MatDialogRef<InventoryCategoryDialogOrganism, boolean>);
+  private dialogData = inject<{ category?: InventoryCategory }>(MAT_DIALOG_DATA);
 
   private categoryService = inject(CategoryService);
 
@@ -80,15 +81,14 @@ export class InventoryCategoryDialogOrganism implements OnInit {
   });
 
   ngOnInit() {
-    const incoming = this.data();
-    if (incoming.category) {
+    if (this.dialogData?.category) {
       this.isEditMode = true;
-      this.category.set({ ...incoming.category });
+      this.category.set({ ...this.dialogData.category });
     }
   }
 
   onClose() {
-    this.closed.emit(false);
+    this.dialogRef.close(false);
   }
 
   saveCategory() {
@@ -98,12 +98,12 @@ export class InventoryCategoryDialogOrganism implements OnInit {
       this.categoryService.updateCategory(categoryData.id, {
         name: categoryData.name,
         description: categoryData.description
-      }).subscribe(() => this.closed.emit(true));
+      }).subscribe(() => this.dialogRef.close(true));
     } else {
       this.categoryService.createCategory({
         name: categoryData.name!,
         description: categoryData.description
-      }).subscribe(() => this.closed.emit(true));
+      }).subscribe(() => this.dialogRef.close(true));
     }
   }
 }

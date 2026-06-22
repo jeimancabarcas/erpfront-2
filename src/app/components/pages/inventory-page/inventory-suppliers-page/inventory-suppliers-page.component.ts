@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { SupplierService } from '../../../../services/supplier.service';
@@ -8,6 +9,7 @@ import { SupplierDialogOrganism } from '../../../../components/organisms/supplie
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-inventory-suppliers-page',
@@ -16,9 +18,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
     CommonModule,
     DashboardLayoutComponent,
     BreadcrumbMolecule,
-    ButtonAtom,
-    SupplierDialogOrganism,
-    ConfirmDeleteDialogOrganism
+    ButtonAtom
   ],
   template: `
     <app-dashboard-layout>
@@ -149,29 +149,13 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         </div>
       </div>
     </app-dashboard-layout>
-
-    <!-- Inline Dialogs -->
-    @if (showSupplierDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showSupplierDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[600px]" (click)="$event.stopPropagation()">
-          <app-supplier-dialog [data]="{ supplier: supplierDialogData() }" (closed)="onSupplierDialogClosed($event)" />
-        </div>
-      </div>
-    }
-
-    @if (showDeleteDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDeleteDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[400px]" (click)="$event.stopPropagation()">
-          <app-confirm-delete-dialog [data]="deleteDialogData()" (closed)="onDeleteDialogClosed($event)" />
-        </div>
-      </div>
-    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class InventorySuppliersPageComponent implements OnInit {
+  private dialog = inject(MatDialog);
   private supplierService = inject(SupplierService);
 
   suppliers = this.supplierService.suppliers;
@@ -189,12 +173,7 @@ export class InventorySuppliersPageComponent implements OnInit {
 
   private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  // Dialog signals
-  showSupplierDialog = signal(false);
-  supplierDialogData = signal<Supplier | undefined>(undefined);
-  showDeleteDialog = signal(false);
-  deleteDialogData = signal<ConfirmDeleteData>({} as ConfirmDeleteData);
-  pendingDeleteSupplierId = signal<string | null>(null);
+  private pendingDeleteSupplierId: string | null = null;
 
   ngOnInit() {
     this.loadData();
@@ -250,32 +229,36 @@ export class InventorySuppliersPageComponent implements OnInit {
   }
 
   openSupplierDialog(supplier?: Supplier) {
-    this.supplierDialogData.set(supplier);
-    this.showSupplierDialog.set(true);
-  }
-
-  onSupplierDialogClosed(result: boolean) {
-    this.showSupplierDialog.set(false);
-    if (result) this.loadData();
+    const ref = this.dialog.open(SupplierDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { supplier },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadData();
+    });
   }
 
   confirmDelete(supplier: Supplier) {
-    this.pendingDeleteSupplierId.set(supplier.id);
-    this.deleteDialogData.set({ 
-      title: '¿Eliminar proveedor?',
-      message: 'Estás a punto de eliminar al proveedor',
-      itemName: supplier.name,
-      confirmText: 'Sí, eliminar definitivamente'
-    } as ConfirmDeleteData);
-    this.showDeleteDialog.set(true);
-  }
-
-  onDeleteDialogClosed(result: boolean) {
-    this.showDeleteDialog.set(false);
-    const id = this.pendingDeleteSupplierId();
-    this.pendingDeleteSupplierId.set(null);
-    if (result && id) {
-      this.supplierService.deleteSupplier(id).subscribe(() => this.loadData());
-    }
+    this.pendingDeleteSupplierId = supplier.id;
+    const ref = this.dialog.open(ConfirmDeleteDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        title: '¿Eliminar proveedor?',
+        message: 'Estás a punto de eliminar al proveedor',
+        itemName: supplier.name,
+        confirmText: 'Sí, eliminar definitivamente'
+      } as ConfirmDeleteData,
+    });
+    ref.afterClosed().subscribe((result) => {
+      const id = this.pendingDeleteSupplierId;
+      this.pendingDeleteSupplierId = null;
+      if (result && id) {
+        this.supplierService.deleteSupplier(id).subscribe(() => this.loadData());
+      }
+    });
   }
 }

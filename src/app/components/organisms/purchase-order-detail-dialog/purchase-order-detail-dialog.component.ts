@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../models/purchase-order.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
@@ -255,8 +256,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   `]
 })
 export class PurchaseOrderDetailDialogOrganism implements OnInit {
-  data = input.required<{ order: PurchaseOrder }>();
-  closed = output<boolean>();
+  private dialogRef = inject(MatDialogRef<PurchaseOrderDetailDialogOrganism, boolean>);
+  private dialogData = inject<{ order: PurchaseOrder }>(MAT_DIALOG_DATA);
 
   private purchaseOrderService = inject(PurchaseOrderService);
 
@@ -285,18 +286,18 @@ export class PurchaseOrderDetailDialogOrganism implements OnInit {
   };
 
   ngOnInit() {
-    this.order.set(this.data().order);
+    this.order.set(this.dialogData.order);
   }
 
   onClose() {
-    this.closed.emit(false);
+    this.dialogRef.close(false);
   }
 
   updateStatus(status: PurchaseOrderStatus) {
     this.purchaseOrderService.updateStatus(this.order().id, status).subscribe((updated: PurchaseOrder) => {
       this.order.set(updated);
       if (status === 'CANCELLED' || status === 'COMPLETED') {
-        this.closed.emit(true);
+        this.dialogRef.close(true);
       }
     });
   }
@@ -313,7 +314,7 @@ export class PurchaseOrderDetailDialogOrganism implements OnInit {
     
     this.purchaseOrderService.updateStatus(this.order().id, 'COMPLETED', mockReceiptUrl).subscribe((updated: PurchaseOrder) => {
       this.order.set(updated);
-      this.closed.emit(true);
+      this.dialogRef.close(true);
     });
   }
 }

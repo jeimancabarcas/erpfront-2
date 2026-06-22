@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { PurchaseOrderDialogOrganism } from '../../../../components/organisms/purchase-order-dialog/purchase-order-dialog.component';
@@ -9,6 +10,7 @@ import { SupplierService } from '../../../../services/supplier.service';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../../models/purchase-order.model';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-inventory-purchases-page',
@@ -19,9 +21,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
     BreadcrumbMolecule,
     ButtonAtom,
     CurrencyPipe,
-    DatePipe,
-    PurchaseOrderDialogOrganism,
-    PurchaseOrderDetailDialogOrganism
+    DatePipe
   ],
   template: `
     <app-dashboard-layout>
@@ -171,29 +171,13 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         </div>
       </div>
     </app-dashboard-layout>
-
-    <!-- Inline Dialogs -->
-    @if (showOrderDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showOrderDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-          <app-purchase-order-dialog [data]="{ order: orderDialogData() }" (closed)="onOrderDialogClosed($event)" />
-        </div>
-      </div>
-    }
-
-    @if (showDetailDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDetailDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[1000px] max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-          <app-purchase-order-detail-dialog [data]="{ order: detailDialogOrder() }" (closed)="onDetailDialogClosed($event)" />
-        </div>
-      </div>
-    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class InventoryPurchasesPageComponent implements OnInit {
+  private dialog = inject(MatDialog);
   private purchaseOrderService = inject(PurchaseOrderService);
   private supplierService = inject(SupplierService);
 
@@ -283,30 +267,28 @@ export class InventoryPurchasesPageComponent implements OnInit {
     this.loadData();
   }
 
-  // Dialog signals
-  showOrderDialog = signal(false);
-  orderDialogData = signal<{ order?: PurchaseOrder }>({});
-  showDetailDialog = signal(false);
-  detailDialogOrder = signal<PurchaseOrder>({} as PurchaseOrder);
-
   openPurchaseOrderDialog(order?: PurchaseOrder) {
-    this.orderDialogData.set({ order });
-    this.showOrderDialog.set(true);
-  }
-
-  onOrderDialogClosed(result: any) {
-    this.showOrderDialog.set(false);
-    if (result) this.loadData();
+    const ref = this.dialog.open(PurchaseOrderDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { order },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadData();
+    });
   }
 
   openOrderDetailDialog(order: PurchaseOrder) {
-    this.detailDialogOrder.set(order);
-    this.showDetailDialog.set(true);
-  }
-
-  onDetailDialogClosed(result: boolean) {
-    this.showDetailDialog.set(false);
-    if (result) this.loadData();
+    const ref = this.dialog.open(PurchaseOrderDetailDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.xl,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { order },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadData();
+    });
   }
 }
 

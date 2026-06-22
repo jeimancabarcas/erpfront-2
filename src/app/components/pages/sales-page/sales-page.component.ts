@@ -1,14 +1,16 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../molecules/breadcrumb/breadcrumb.component';
 import { InvoiceService } from '../../../services/invoice.service';
 import { CustomerService } from '../../../services/customer.service';
-import { Invoice, InvoiceStatus } from '../../../models/invoice.model';
+import { Invoice } from '../../../models/invoice.model';
 import { QueryParams } from '../../../models/pagination.model';
 import { SaleFormMolecule } from '../../molecules/sale-form/sale-form.component';
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-sales-page',
@@ -19,9 +21,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     BreadcrumbMolecule,
     ButtonAtom,
     CurrencyPipe,
-    DatePipe,
-    SaleFormMolecule,
-    InvoiceDetailDialogOrganism
+    DatePipe
   ],
   template: `
     <app-dashboard-layout>
@@ -174,29 +174,13 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         </div>
       </div>
     </app-dashboard-layout>
-
-    <!-- Inline Dialogs -->
-    @if (showSaleForm()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showSaleForm.set(false)">
-        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-[900px] max-h-[95vh] overflow-y-auto" (click)="$event.stopPropagation()">
-          <app-sale-form (closed)="onSaleFormClosed($event)" />
-        </div>
-      </div>
-    }
-
-    @if (showDetailDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDetailDialog.set(false)">
-        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-[950px] max-h-[95vh] overflow-y-auto" (click)="$event.stopPropagation()">
-          <app-invoice-detail-dialog [data]="{ invoiceId: detailInvoiceId() }" (closed)="showDetailDialog.set(false)" />
-        </div>
-      </div>
-    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class SalesPageComponent implements OnInit {
+  private dialog = inject(MatDialog);
   private invoiceService = inject(InvoiceService);
   private customerService = inject(CustomerService);
 
@@ -297,23 +281,27 @@ export class SalesPageComponent implements OnInit {
     this.loadData();
   }
 
-  // Dialog signals
-  showSaleForm = signal(false);
-  showDetailDialog = signal(false);
-  detailInvoiceId = signal<string | null>(null);
-
   openSaleForm() {
-    this.showSaleForm.set(true);
-  }
-
-  onSaleFormClosed(result: boolean) {
-    this.showSaleForm.set(false);
-    if (result) this.loadData();
+    const ref = this.dialog.open(SaleFormMolecule, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS,
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadData();
+    });
   }
 
   viewDetail(invoice: Invoice) {
-    this.detailInvoiceId.set(invoice.id);
-    this.showDetailDialog.set(true);
+    const ref = this.dialog.open(InvoiceDetailDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.xl,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { invoiceId: invoice.id },
+    });
+    ref.afterClosed().subscribe(() => {
+      this.loadData();
+    });
   }
 
 }

@@ -1,5 +1,6 @@
-import { Component, inject, signal, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
 import { Product } from '../../../models/product.model';
 import { InventoryBatch } from '../../../models/inventory-batch.model';
@@ -27,7 +28,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
               Trazabilidad por Lotes
             </h2>
             <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
-              {{ product().name }} • {{ product().sku }}
+              {{ dialogData.product.name }} • {{ dialogData.product.sku }}
             </p>
           </div>
         </div>
@@ -41,13 +42,13 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         <div class="bg-gray-50 p-6 rounded-[28px] border border-gray-100">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Precio Medio Ponderado (PMP)</p>
           <p class="text-3xl font-black text-indigo-600 tracking-tighter">
-            {{ product().averagePurchasePrice | currency }}
+            {{ dialogData.product.averagePurchasePrice | currency }}
           </p>
         </div>
         <div class="bg-gray-50 p-6 rounded-[28px] border border-gray-100">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual Total</p>
           <p class="text-3xl font-black text-gray-900 tracking-tighter">
-            {{ product().currentStock }} <span class="text-sm font-bold text-gray-400 ml-1 uppercase">unidades</span>
+            {{ dialogData.product.currentStock }} <span class="text-sm font-bold text-gray-400 ml-1 uppercase">unidades</span>
           </p>
         </div>
       </div>
@@ -127,8 +128,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   `]
 })
 export class InventoryBatchDialogOrganism implements OnInit {
-  product = input.required<Product>();
-  closed = output<void>();
+  private dialogRef = inject(MatDialogRef<InventoryBatchDialogOrganism>);
+  dialogData = inject<{ product: Product }>(MAT_DIALOG_DATA);
 
   private productService = inject(ProductService);
 
@@ -136,7 +137,7 @@ export class InventoryBatchDialogOrganism implements OnInit {
   isLoading = signal(true);
 
   ngOnInit() {
-    this.productService.getProductBatches(this.product().id).subscribe({
+    this.productService.getProductBatches(this.dialogData.product.id).subscribe({
       next: (data: InventoryBatch[]) => {
         this.batches.set(data);
         this.isLoading.set(false);
@@ -148,6 +149,6 @@ export class InventoryBatchDialogOrganism implements OnInit {
   }
 
   onClose() {
-    this.closed.emit();
+    this.dialogRef.close();
   }
 }

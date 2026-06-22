@@ -1,4 +1,4 @@
-import { Component, inject, signal, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { InvoiceService } from '../../../services/invoice.service';
@@ -286,10 +286,8 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
   `]
 })
 export class InvoiceDetailDialogOrganism implements OnInit {
-  data = input<any>({});
-  closed = output<void>();
-  private dialogRef = inject(MatDialogRef<InvoiceDetailDialogOrganism>, { optional: true });
-  private dialogData = inject(MAT_DIALOG_DATA, { optional: true });
+  private dialogRef = inject(MatDialogRef<InvoiceDetailDialogOrganism>);
+  private dialogData = inject(MAT_DIALOG_DATA);
   private invoiceService = inject(InvoiceService);
   private salesNoteService = inject(SalesNoteService);
 
@@ -301,10 +299,9 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   dianPdfLoading = signal(false);
 
   ngOnInit() {
-    // Merge both data sources: inline [data] binding + MatDialog MAT_DIALOG_DATA
-    const merged = { ...(this.dialogData || {}), ...this.data() };
-    if (merged?.invoiceId) {
-      this.invoiceService.getInvoiceById(merged.invoiceId).subscribe({
+    const data = this.dialogData;
+    if (data?.invoiceId) {
+      this.invoiceService.getInvoiceById(data.invoiceId).subscribe({
         next: (inv) => {
           this.invoice.set(inv);
           this.loading.set(false);
@@ -316,8 +313,8 @@ export class InvoiceDetailDialogOrganism implements OnInit {
           setTimeout(() => this.close(), 3000);
         }
       });
-    } else if (merged?.invoice) {
-      const inv = merged.invoice;
+    } else if (data?.invoice) {
+      const inv = data.invoice;
       this.invoice.set(inv);
       this.loading.set(false);
       this.loadNotes(inv.id);
@@ -325,10 +322,7 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   }
 
   close() {
-    if (this.dialogRef) {
-      this.dialogRef.close();
-    }
-    this.closed.emit();
+    this.dialogRef.close();
   }
 
   loadNotes(invoiceId: string) {

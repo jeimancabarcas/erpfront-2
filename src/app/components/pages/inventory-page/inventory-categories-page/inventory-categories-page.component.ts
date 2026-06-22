@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { InventoryCategoryDialogOrganism } from '../../../../components/organisms/inventory-category-dialog/inventory-category-dialog.component';
@@ -7,6 +8,7 @@ import { CategoryService, InventoryCategory } from '../../../../services/categor
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-inventory-categories-page',
@@ -15,9 +17,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
     CommonModule,
     DashboardLayoutComponent,
     BreadcrumbMolecule,
-    ButtonAtom,
-    InventoryCategoryDialogOrganism,
-    ConfirmDeleteDialogOrganism
+    ButtonAtom
   ],
   template: `
     <app-dashboard-layout>
@@ -37,7 +37,6 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         <ui-button 
           variant="primary"
           (clicked)="openCategoryDialog()"
-          class="!rounded-full !h-12 !px-6 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
         >
           <span class="material-icons mr-2">add</span>
           Nueva Categoría
@@ -139,29 +138,13 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         </div>
       </div>
     </app-dashboard-layout>
-
-    <!-- Inline Dialogs -->
-    @if (showCategoryDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showCategoryDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[500px]" (click)="$event.stopPropagation()">
-          <app-inventory-category-dialog [data]="{ category: categoryDialogData() }" (closed)="onCategoryDialogClosed($event)" />
-        </div>
-      </div>
-    }
-
-    @if (showDeleteDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDeleteDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[400px]" (click)="$event.stopPropagation()">
-          <app-confirm-delete-dialog [data]="deleteDialogData()" (closed)="onDeleteDialogClosed($event)" />
-        </div>
-      </div>
-    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class InventoryCategoriesPageComponent implements OnInit {
+  private dialog = inject(MatDialog);
   private categoryService = inject(CategoryService);
   
   // Señales de datos y meta
@@ -179,12 +162,7 @@ export class InventoryCategoriesPageComponent implements OnInit {
 
   totalPages = computed(() => Math.max(1, Math.ceil((this.meta()?.total || 0) / this.pageSize())));
 
-  // Dialog signals
-  showCategoryDialog = signal(false);
-  categoryDialogData = signal<InventoryCategory | undefined>(undefined);
-  showDeleteDialog = signal(false);
-  deleteDialogData = signal<ConfirmDeleteData>({} as ConfirmDeleteData);
-  pendingDeleteCategoryId = signal<string | null>(null);
+  private pendingDeleteCategoryId: string | null = null;
 
   ngOnInit() {
     this.loadData();
@@ -233,32 +211,36 @@ export class InventoryCategoriesPageComponent implements OnInit {
   }
 
   openCategoryDialog(category?: InventoryCategory) {
-    this.categoryDialogData.set(category);
-    this.showCategoryDialog.set(true);
-  }
-
-  onCategoryDialogClosed(result: boolean) {
-    this.showCategoryDialog.set(false);
-    if (result) this.loadData();
+    const ref = this.dialog.open(InventoryCategoryDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { category },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadData();
+    });
   }
 
   confirmDelete(category: InventoryCategory) {
-    this.pendingDeleteCategoryId.set(category.id);
-    this.deleteDialogData.set({ 
-      title: '¿Eliminar categoría?',
-      message: 'Estás a punto de eliminar la categoría',
-      itemName: category.name,
-      confirmText: 'Sí, eliminar definitivamente'
-    } as ConfirmDeleteData);
-    this.showDeleteDialog.set(true);
-  }
-
-  onDeleteDialogClosed(result: boolean) {
-    this.showDeleteDialog.set(false);
-    const id = this.pendingDeleteCategoryId();
-    this.pendingDeleteCategoryId.set(null);
-    if (result && id) {
-      this.categoryService.deleteCategory(id).subscribe(() => this.loadData());
-    }
+    this.pendingDeleteCategoryId = category.id;
+    const ref = this.dialog.open(ConfirmDeleteDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        title: '¿Eliminar categoría?',
+        message: 'Estás a punto de eliminar la categoría',
+        itemName: category.name,
+        confirmText: 'Sí, eliminar definitivamente'
+      } as ConfirmDeleteData,
+    });
+    ref.afterClosed().subscribe((result) => {
+      const id = this.pendingDeleteCategoryId;
+      this.pendingDeleteCategoryId = null;
+      if (result && id) {
+        this.categoryService.deleteCategory(id).subscribe(() => this.loadData());
+      }
+    });
   }
 }

@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { ProductService } from '../../../../services/product.service';
@@ -10,6 +11,7 @@ import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../comp
 import { InventoryBatchDialogOrganism } from '../../../../components/organisms/inventory-batch-dialog/inventory-batch-dialog.component';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-inventory-products-page',
@@ -19,10 +21,7 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
     DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
-    CurrencyPipe,
-    ProductFormMolecule,
-    ConfirmDeleteDialogOrganism,
-    InventoryBatchDialogOrganism
+    CurrencyPipe
   ],
   template: `
     <app-dashboard-layout>
@@ -183,37 +182,13 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
         </div>
       </div>
     </app-dashboard-layout>
-
-    <!-- Inline Dialogs -->
-    @if (showProductDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showProductDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[600px]" (click)="$event.stopPropagation()">
-          <app-product-form [data]="{ product: productDialogData() }" (closed)="onProductDialogClosed($event)" />
-        </div>
-      </div>
-    }
-
-    @if (showBatchDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showBatchDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[800px]" (click)="$event.stopPropagation()">
-          <app-inventory-batch-dialog [product]="batchDialogProduct()" (closed)="showBatchDialog.set(false)" />
-        </div>
-      </div>
-    }
-
-    @if (showDeleteDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" (click)="showDeleteDialog.set(false)">
-        <div class="bg-white rounded-[40px] p-8 shadow-2xl w-full max-w-[400px]" (click)="$event.stopPropagation()">
-          <app-confirm-delete-dialog [data]="deleteDialogData()" (closed)="onDeleteDialogClosed($event)" />
-        </div>
-      </div>
-    }
   `,
   styles: [`
     :host { display: block; }
   `]
 })
 export class InventoryProductsPageComponent implements OnInit {
+  private dialog = inject(MatDialog);
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
 
@@ -237,14 +212,7 @@ export class InventoryProductsPageComponent implements OnInit {
 
   private filterTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  // Dialog signals
-  showProductDialog = signal(false);
-  productDialogData = signal<Product | undefined>(undefined);
-  showBatchDialog = signal(false);
-  batchDialogProduct = signal<Product>({} as Product);
-  showDeleteDialog = signal(false);
-  deleteDialogData = signal<ConfirmDeleteData>({} as ConfirmDeleteData);
-  pendingDeleteProductId = signal<string | null>(null);
+  private pendingDeleteProductId: string | null = null;
 
   ngOnInit() {
     this.loadData();
@@ -318,38 +286,46 @@ export class InventoryProductsPageComponent implements OnInit {
   }
 
   openProductDialog(product?: Product) {
-    this.productDialogData.set(product);
-    this.showProductDialog.set(true);
-  }
-
-  onProductDialogClosed(result: boolean) {
-    this.showProductDialog.set(false);
-    if (result) this.loadData();
+    const ref = this.dialog.open(ProductFormMolecule, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { product },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadData();
+    });
   }
 
   openBatchesDialog(product: Product) {
-    this.batchDialogProduct.set(product);
-    this.showBatchDialog.set(true);
+    this.dialog.open(InventoryBatchDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { product },
+    });
   }
 
   confirmDelete(product: Product) {
-    this.pendingDeleteProductId.set(product.id);
-    this.deleteDialogData.set({ 
-      title: '¿Eliminar producto?',
-      message: 'Estás a punto de eliminar el producto',
-      itemName: product.name,
-      confirmText: 'Sí, eliminar definitivamente'
-    } as ConfirmDeleteData);
-    this.showDeleteDialog.set(true);
-  }
-
-  onDeleteDialogClosed(result: boolean) {
-    this.showDeleteDialog.set(false);
-    const id = this.pendingDeleteProductId();
-    this.pendingDeleteProductId.set(null);
-    if (result && id) {
-      this.productService.deleteProduct(id).subscribe(() => this.loadData());
-    }
+    this.pendingDeleteProductId = product.id;
+    const ref = this.dialog.open(ConfirmDeleteDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        title: '¿Eliminar producto?',
+        message: 'Estás a punto de eliminar el producto',
+        itemName: product.name,
+        confirmText: 'Sí, eliminar definitivamente'
+      } as ConfirmDeleteData,
+    });
+    ref.afterClosed().subscribe((result) => {
+      const id = this.pendingDeleteProductId;
+      this.pendingDeleteProductId = null;
+      if (result && id) {
+        this.productService.deleteProduct(id).subscribe(() => this.loadData());
+      }
+    });
   }
 }
 

@@ -1,7 +1,7 @@
-import { Component, inject, signal, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { CustomerService } from '../../../services/customer.service';
 import { Customer, CreateCustomerDto } from '../../../models/customer.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
@@ -158,12 +158,8 @@ export interface CustomerDialogData {
 export class CustomerDialogOrganism implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
-  /** Input for inline usage via template binding */
-  data = input<{ customer?: Customer }>({});
-  /** Output for inline usage */
-  closed = output<boolean>();
-  /** MAT_DIALOG_DATA for MatDialog.open path */
-  private dialogData = inject<CustomerDialogData>(MAT_DIALOG_DATA, { optional: true });
+  private dialogRef = inject(MatDialogRef<CustomerDialogOrganism, boolean>);
+  private dialogData = inject<CustomerDialogData>(MAT_DIALOG_DATA);
 
   private customerService = inject(CustomerService);
 
@@ -181,8 +177,7 @@ export class CustomerDialogOrganism implements OnInit {
   isLoading = signal(false);
 
   ngOnInit() {
-    // Use MAT_DIALOG_DATA if available (MatDialog path), otherwise input() (inline path)
-    const incoming = this.dialogData ?? this.data();
+    const incoming = this.dialogData;
     if (incoming?.customer) {
       this.isEditMode.set(true);
       this.customer.set({ ...incoming.customer });
@@ -190,7 +185,7 @@ export class CustomerDialogOrganism implements OnInit {
   }
 
   onClosed() {
-    this.closed.emit(false);
+    this.dialogRef.close(false);
   }
 
   save() {
@@ -207,7 +202,7 @@ export class CustomerDialogOrganism implements OnInit {
     obs.subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.closed.emit(true);
+        this.dialogRef.close(true);
       },
       error: () => {
         this.isLoading.set(false);
