@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 
 @Component({
   selector: 'app-appointment-filters',
@@ -19,15 +20,12 @@ import { MatButtonModule } from '@angular/material/button';
     MatSelectModule,
     MatDatepickerModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    TextInputComponent
   ],
   template: `
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm">
-      <mat-form-field appearance="outline" class="!m-0 w-full">
-        <mat-label>Buscar Paciente</mat-label>
-        <input matInput placeholder="Nombre del paciente..." [(ngModel)]="searchQuery">
-        <mat-icon matPrefix class="mr-2 text-gray-400">search</mat-icon>
-      </mat-form-field>
+      <ui-text-input icon="search" placeholder="Nombre del paciente..." [(value)]="searchQuery" />
 
       <mat-form-field appearance="outline" class="!m-0 w-full">
         <mat-label>Fecha</mat-label>

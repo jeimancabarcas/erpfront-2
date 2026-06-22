@@ -15,6 +15,7 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dialog/invoice-detail-dialog.component';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dialog.config';
 
 @Component({
@@ -24,15 +25,14 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dia
     CommonModule,
     MatTableModule,
     MatPaginatorModule,
-    MatInputModule,
-    MatFormFieldModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
     ReactiveFormsModule,
     CurrencyPipe,
     DatePipe,
-    ButtonAtom
+    ButtonAtom,
+    TextInputComponent
   ],
   template: `
     <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
@@ -48,11 +48,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dia
         </div>
         
         <div class="flex items-center gap-4 flex-1 max-w-md">
-          <mat-form-field appearance="outline" class="w-full !mb-[-22px]">
-            <mat-label>Filtrar por No. Factura</mat-label>
-            <input matInput [formControl]="invoiceFilter" placeholder="Ej: FAC-0001">
-            <mat-icon matPrefix class="!text-indigo-600 mr-2">search</mat-icon>
-          </mat-form-field>
+          <ui-text-input icon="search" [formControl]="invoiceFilter" placeholder="Filtrar por No. Factura" />
         </div>
       </header>
 

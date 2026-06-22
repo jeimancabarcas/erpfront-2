@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
+import { TextInputComponent } from '../../../components/atoms/text-input/text-input.component';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { InventoryService } from '../../../services/inventory.service';
 
@@ -21,9 +22,9 @@ import { InventoryService } from '../../../services/inventory.service';
     MatIconModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
     FormsModule,
+    TextInputComponent,
   ],
   template: `
     <div class="flex flex-col">
@@ -39,15 +40,14 @@ import { InventoryService } from '../../../services/inventory.service';
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="!w-[200px]" subscriptSizing="dynamic">
-            <mat-label>Usuario</mat-label>
-            <input matInput [(ngModel)]="filterUser" (input)="onUserInput($any($event.target).value)" placeholder="Filtrar por usuario">
+          <div class="flex items-center gap-2">
+            <ui-text-input icon="search" [value]="filterUser()" (valueChange)="onUserInput($event)" placeholder="Filtrar por usuario" class="!w-[200px]" />
             @if (filterUser()) {
-              <button matSuffix mat-icon-button (click)="clearUserFilter()">
-                <mat-icon class="!text-[18px]">close</mat-icon>
+              <button (click)="clearUserFilter()" class="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors !bg-white !shadow-none" type="button">
+                <mat-icon class="!text-[18px] !w-auto !h-auto text-gray-500">close</mat-icon>
               </button>
             }
-          </mat-form-field>
+          </div>
         </div>
 
         <span class="sm:ml-auto text-xs text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">
