@@ -7,7 +7,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { LogoComponent } from '../../atoms/logo/logo.component';
 import { ThemeService } from '../../../services/theme.service';
 import { AuthService } from '../../../services/auth.service';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -18,8 +18,7 @@ import { Router, RouterLink } from '@angular/router';
     MatIconModule, 
     MatMenuModule, 
     MatBadgeModule,
-    LogoComponent,
-    RouterLink
+    LogoComponent
   ],
   template: `
     <mat-toolbar class="!bg-white dark:!bg-gray-900 !border-b !border-gray-100 dark:!border-gray-800 !px-4 md:!px-6 flex justify-between items-center !h-[64px] shadow-sm sticky top-0 z-50">
@@ -65,10 +64,6 @@ import { Router, RouterLink } from '@angular/router';
           <button mat-menu-item class="!py-2 dark:!text-gray-200">
             <mat-icon>person</mat-icon>
             <span>Mi Perfil</span>
-          </button>
-          <button mat-menu-item class="!py-2 dark:!text-gray-200">
-            <mat-icon>settings</mat-icon>
-            <span>Configuración</span>
           </button>
           <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
           <button mat-menu-item class="!text-red-600 !py-2" (click)="logout()">

@@ -9,6 +9,8 @@ export interface Product {
   maxStock: number;
   categoryId: string | null;
   category: InventoryCategory; // Objeto de la categoría relacionada
+  taxIds: string[];
+  taxes?: { id: string; name: string; code: string; percentage: number; type: string; }[];
   averagePurchasePrice: number;
   sellingPrice: number;
   createdAt: string;
@@ -22,6 +24,7 @@ export interface CreateProductDto {
   minStock: number;
   maxStock: number;
   categoryId?: string | null;
+  taxIds?: string[];
 }
 
 export interface UpdateProductDto {
@@ -31,5 +34,6 @@ export interface UpdateProductDto {
   minStock?: number;
   maxStock?: number;
   categoryId?: string | null;
+  taxIds?: string[];
   adjustmentReason?: string;
 }

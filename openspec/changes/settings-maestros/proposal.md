@@ -9,10 +9,10 @@ No settings UI or persisted master data. Navbar "Configuración" button is decor
 ### In Scope
 - Wire navbar "Configuración" → `/settings`
 - `/settings` card grid (3 cards) + sub-routes per entity
-- Full CRUD: Tax (name, code, percentage, type, isPurchase, isSell, isActive, sortOrder), PaymentMethod (name, code, description, isActive, sortOrder), PaymentType (name, code, description, isActive, sortOrder)
-- Backend: single `settings` module — 3 services, 3 controllers, 3 entities, DTOs
-- Frontend: 1 page, 3 CRUD pages, 3 dialog organisms, 3 services, 3 models
-- Tests: frontend Vitest + backend Jest
+- Full CRUD each: Tax (name, code, percentage, type, isPurchase, isSell, isActive, sortOrder); PaymentMethod, PaymentType (name, code, description, isActive, sortOrder)
+- Backend: single `settings` module (3 services, 3 controllers, 3 entities, DTOs)
+- Frontend: 1 page + 3 CRUD pages + 3 dialog organisms + 3 services + 3 models
+- Unit tests: frontend Vitest + backend Jest
 
 ### Out of Scope
 - Sidebar settings entry
@@ -25,9 +25,9 @@ No settings UI or persisted master data. Navbar "Configuración" button is decor
 
 ### New Capabilities
 - `settings-page`: `/settings` card grid + navbar wiring + route + guards
-- `tax-crud`: Tax CRUD — name, code, percentage, type, isPurchase, isSell, isActive, sortOrder
-- `payment-method-crud`: PaymentMethod CRUD — name, code, description, isActive, sortOrder
-- `payment-type-crud`: PaymentType CRUD — name, code, description, isActive, sortOrder
+- `tax-crud`: Tax CRUD
+- `payment-method-crud`: PaymentMethod CRUD
+- `payment-type-crud`: PaymentType CRUD
 
 ### Modified Capabilities
 - None
@@ -36,9 +36,9 @@ No settings UI or persisted master data. Navbar "Configuración" button is decor
 
 Card grid → sub-route per CRUD → single `settings` backend module.
 
-**Frontend**: Reuse CustomerDialogOrganism pattern (MatDialog CRUD, signals, debounced filter, pagination per page), data table, confirm-delete, DashboardLayout.
+**Frontend**: Reuse CustomerDialogOrganism (MatDialog CRUD, signals, debounced filter, pagination), data table, confirm-delete, DashboardLayout.
 
-**Backend**: `TypeOrmModule.forFeature([Tax, PaymentMethod, PaymentType])` under one module. Controllers at `/api/settings/`. UUID PKs, snake_case, JWT guards — existing conventions.
+**Backend**: `TypeOrmModule.forFeature(...)` under one module. Controllers at `/api/settings/`. UUID PKs, snake_case, JWT guards.
 
 ## Affected Areas
 
@@ -57,7 +57,7 @@ Card grid → sub-route per CRUD → single `settings` backend module.
 
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
-| Navbar change breaks layout | Low | Existing test suite catches regressions |
+| Navbar change breaks layout | Low | Existing tests catch regressions |
 | Strict TDD slows delivery | Med | Proven test patterns to copy |
 | `synchronize: true` vs. missing prod migration | Low | Generate migration before deploy |
 

@@ -66,7 +66,8 @@ export interface SelectOption {
 
         @if (open()) {
           <div
-            class="absolute z-50 mt-2 w-full bg-white rounded-2xl border border-gray-100 shadow-xl max-h-64 overflow-hidden"
+            class="z-50 mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl max-h-64 overflow-hidden"
+            [style]="panelStyle()"
           >
             @if (searchable()) {
               <div class="p-3 border-b border-gray-100">
@@ -157,6 +158,7 @@ export class SelectAtom implements ControlValueAccessor {
   open = signal(false);
   searchQuery = signal('');
   highlightedIndex = signal(-1);
+  panelStyle = signal<Record<string, string>>({});
 
   // Reset highlightedIndex when options change while panel is open
   private optionsEffectRef = effect(() => {
@@ -211,6 +213,32 @@ export class SelectAtom implements ControlValueAccessor {
     if (this.open()) {
       this.searchQuery.set('');
       this.highlightedIndex.set(-1);
+      // Calculate fixed position: open up if not enough space below
+      const btn = this.elementRef.nativeElement.querySelector('button');
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const dropdownHeight = 300; // estimate: max-h-64 (256px) + search + padding
+        if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+          // Open upward
+          this.panelStyle.set({
+            position: 'fixed',
+            bottom: `${window.innerHeight - rect.top + 8}px`,
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+          });
+        } else {
+          // Open downward (default)
+          this.panelStyle.set({
+            position: 'fixed',
+            top: `${rect.bottom + 8}px`,
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+          });
+        }
+      }
+    } else {
+      this.panelStyle.set({});
     }
   }
 

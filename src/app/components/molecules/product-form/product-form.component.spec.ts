@@ -3,6 +3,7 @@ import { ProductFormMolecule } from './product-form.component';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
+import { TaxesService } from '../../../services/taxes.service';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -13,6 +14,7 @@ describe('ProductFormMolecule', () => {
   let fixture: ComponentFixture<ProductFormMolecule>;
   let mockProductService: any;
   let mockCategoryService: any;
+  let mockTaxesService: any;
   let mockDialogRef: any;
 
   const mockProductData = {
@@ -22,6 +24,7 @@ describe('ProductFormMolecule', () => {
     currentStock: 10,
     minStock: 2,
     maxStock: 20,
+    taxIds: [],
     sellingPrice: 15,
     averagePurchasePrice: 10,
   };
@@ -37,6 +40,12 @@ describe('ProductFormMolecule', () => {
       loadCategories: vi.fn().mockReturnValue(of([])),
     };
 
+    mockTaxesService = {
+      data: signal([]),
+      loading: signal(false),
+      loadData: vi.fn().mockReturnValue(of({ data: [], meta: null })),
+    };
+
     mockDialogRef = {
       close: vi.fn(),
     };
@@ -50,6 +59,7 @@ describe('ProductFormMolecule', () => {
         { provide: MAT_DIALOG_DATA, useValue: data },
         { provide: ProductService, useValue: mockProductService },
         { provide: CategoryService, useValue: mockCategoryService },
+        { provide: TaxesService, useValue: mockTaxesService },
       ],
     }).compileComponents();
 

@@ -139,5 +139,5 @@ export const routes: Routes = [
     canActivate: [authGuard, profileGuard],
     loadComponent: () => import('./components/pages/transport-page/service-detail-page/service-detail-page.component').then(m => m.TransportServiceDetailPageComponent)
   },
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];
