@@ -21,7 +21,6 @@ import { Product } from '../../../models/product.model';
 import { Customer } from '../../../models/customer.model';
 import { CreateInvoiceDto } from '../../../models/invoice.model';
 import { Subject, debounceTime, Subscription } from 'rxjs';
-import { ProductPriceInfoMolecule } from '../product-price-info/product-price-info.component';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
@@ -41,7 +40,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     MatTooltipModule,
     MatSlideToggleModule,
     CurrencyPipe,
-    ProductPriceInfoMolecule,
     ButtonAtom,
     TextInputComponent,
     SelectAtom,
@@ -134,8 +132,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
               </h3>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-              <div class="md:col-span-7">
+            <div class="grid grid-cols-1 gap-4 items-start">
+              <div>
                 <ui-select
                   label="Producto"
                   placeholder="Escriba el nombre del producto..."
@@ -146,43 +144,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                   (valueChange)="onProductSelected($event)"
                 />
               </div>
-
-              <div class="md:col-span-3">
-                <ui-text-input
-                  type="number"
-                  label="Cantidad"
-                  icon="inventory_2"
-                  [formControl]="quantityControl"
-                />
-              </div>
-
-              <button
-                type="button"
-                mat-flat-button
-                color="primary"
-                class="md:col-span-2 !h-[56px] !rounded-2xl !bg-indigo-600 shadow-lg shadow-indigo-100"
-                [disabled]="
-                  !selectedProduct() ||
-                  quantityControl.invalid ||
-                  quantityControl.value! > selectedProduct()!.currentStock
-                "
-                (click)="addProduct()"
-              >
-                <mat-icon>add</mat-icon>
-              </button>
             </div>
-
-            @if (selectedProduct(); as product) {
-              <div
-                class="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-left duration-300"
-              >
-                <app-product-price-info
-                  [sellingPrice]="product.sellingPrice"
-                  [averagePurchasePrice]="product.averagePurchasePrice"
-                  [currentStock]="product.currentStock"
-                />
-              </div>
-            }
           </div>
 
           <!-- Added Products Table -->
@@ -470,12 +432,10 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   // Local state signals
   customers = this.customerService.customers;
   allProducts = this.productService.products;
-  selectedProduct = signal<Product | null>(null);
   isSubmitting = signal(false);
   isManual = signal(false);
 
   productSearchControl = new FormControl<string>('');
-  quantityControl = new FormControl(1, [Validators.required, Validators.min(1)]);
 
   saleForm = this.fb.group({
     customerId: ['', Validators.required],
@@ -568,14 +528,12 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   onProductSelected(productId: string) {
     const product = this.allProducts().find(p => p.id === productId);
     if (product) {
-      this.selectedProduct.set(product);
-      this.quantityControl.setValue(1);
+      this.addProduct(product);
     }
   }
 
-  addProduct() {
-    const product = this.selectedProduct();
-    const qty = this.quantityControl.value || 0;
+  addProduct(product: Product) {
+    const qty = 1;
 
     if (product && qty > 0) {
       const existingIndex = this.items.controls.findIndex((c) => c.value.productId === product.id);
@@ -602,9 +560,7 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
         );
       }
 
-      this.selectedProduct.set(null);
       this.productSearchControl.setValue('');
-      this.quantityControl.setValue(1);
       this.itemsTrigger.update((v) => v + 1);
     }
   }
