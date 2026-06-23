@@ -1,14 +1,11 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule, formatDate, CurrencyPipe } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 import { SupplierService } from '../../../services/supplier.service';
 import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
@@ -31,11 +28,7 @@ interface PurchaseOrderItemForm {
   standalone: true,
   imports: [
     CommonModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
     ReactiveFormsModule,
     CurrencyPipe,
     ButtonAtom,
@@ -89,12 +82,7 @@ interface PurchaseOrderItemForm {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ui-select label="Proveedor" [options]="supplierOptions()" [formControl]="form.controls.supplierId" />
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Fecha de Pedido</mat-label>
-                <input matInput [matDatepicker]="picker" formControlName="orderDate">
-                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
-              </mat-form-field>
+              <ui-datepicker label="Fecha de Pedido" [formControl]="form.controls.orderDate" />
 
               <ui-textarea formControlName="observations" label="Observaciones / Notas" placeholder="Detalles adicionales sobre el pedido..." [rows]="3" class="md:col-span-2" />
             </div>

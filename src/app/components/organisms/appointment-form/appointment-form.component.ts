@@ -4,11 +4,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTimepickerModule } from '@angular/material/timepicker';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 import { PediatricsService, Appointment, Patient } from '../../../services/pediatrics.service';
 import { PatientSearchMolecule } from '../../molecules/patient-search/patient-search.component';
 
@@ -21,12 +21,12 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatDatepickerModule,
     MatTimepickerModule,
     MatButtonModule,
     MatIconModule,
     PatientSearchMolecule,
-    SelectAtom
+    SelectAtom,
+    DatepickerComponent
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white">
@@ -56,14 +56,7 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Date -->
-            <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Fecha de Atención</label>
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <input matInput [matDatepicker]="picker" formControlName="date" required placeholder="DD/MM/AAAA">
-                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
-              </mat-form-field>
-            </div>
+            <ui-datepicker label="Fecha de Atención" placeholder="DD/MM/AAAA" [formControl]="appointmentForm.controls.date" />
 
             <!-- Time -->
             <div class="space-y-2">

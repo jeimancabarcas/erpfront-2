@@ -1,13 +1,11 @@
 import { Component, model, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 
 @Component({
   selector: 'app-appointment-filters',
@@ -15,24 +13,17 @@ import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
   imports: [
     CommonModule,
     FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
     MatIconModule,
     MatButtonModule,
     TextInputComponent,
-    SelectAtom
+    SelectAtom,
+    DatepickerComponent
   ],
   template: `
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm">
       <ui-text-input icon="search" placeholder="Nombre del paciente..." [(value)]="searchQuery" />
 
-      <mat-form-field appearance="outline" class="!m-0 w-full">
-        <mat-label>Fecha</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="dateFilter">
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-      </mat-form-field>
+      <ui-datepicker label="Fecha" [(value)]="dateFilter" />
 
       <ui-select placeholder="Todos los estados" [options]="statusOptions" [(value)]="statusFilter" />
 
@@ -44,9 +35,7 @@ import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
       </div>
     </div>
   `,
-  styles: [`
-    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
-  `]
+  styles: [``]
 })
 export class AppointmentFiltersMolecule {
   searchQuery = model<string>('');

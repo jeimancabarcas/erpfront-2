@@ -2,15 +2,13 @@ import { Component, inject, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 
 @Component({
@@ -20,15 +18,13 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
     CommonModule,
     ReactiveFormsModule,
     MatStepperModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
-    MatDatepickerModule,
     MatIconModule,
     MatDialogModule,
     TextInputComponent,
     SelectAtom,
-    TextareaComponent
+    TextareaComponent,
+    DatepickerComponent
   ],
   template: `
     <div class="p-2 max-w-4xl mx-auto">
@@ -56,12 +52,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
               <ui-text-input label="Nombres" icon="person" placeholder="Ej. Juan Andrés" [required]="true" [formControl]="personalForm.controls.firstNames" />
               <ui-text-input label="Apellidos" icon="person" placeholder="Ej. Pérez Gómez" [required]="true" [formControl]="personalForm.controls.lastNames" />
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Fecha de Nacimiento</mat-label>
-                <input matInput [matDatepicker]="picker" formControlName="birthDate" required>
-                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
-              </mat-form-field>
+              <ui-datepicker label="Fecha de Nacimiento" [formControl]="personalForm.controls.birthDate" />
 
               <ui-select label="Sexo" [options]="genderOptions" [formControl]="personalForm.controls.gender" />
 
