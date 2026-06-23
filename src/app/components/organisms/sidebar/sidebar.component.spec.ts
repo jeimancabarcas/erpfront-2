@@ -57,16 +57,16 @@ describe('SidebarComponent', () => {
     expect(foundTexts).toEqual(expectedOrder);
   });
 
-  it('should have Ventas and Compras as root-level entries', () => {
-    const ventasLink = fixture.debugElement.query(By.css('a[routerLink="/sales"]'));
-    const comprasLink = fixture.debugElement.query(By.css('a[routerLink="/inventory/purchases"]'));
+  it('should have Ventas and Compras nested inside their accordion panels', () => {
+    const ventasLink = fixture.debugElement.query(By.css('a[routerLink="/comercial/sales"]'));
+    const comprasLink = fixture.debugElement.query(By.css('a[routerLink="/abastecimiento/purchases"]'));
 
     expect(ventasLink).toBeTruthy();
     expect(comprasLink).toBeTruthy();
 
-    // Verify they are not nested inside a mat-expansion-panel
-    expect(ventasLink.nativeElement.closest('mat-expansion-panel')).toBeNull();
-    expect(comprasLink.nativeElement.closest('mat-expansion-panel')).toBeNull();
+    // They are now nested inside expansion panels (Gestión Comercial, Abastecimiento)
+    expect(ventasLink.nativeElement.closest('mat-expansion-panel')).not.toBeNull();
+    expect(comprasLink.nativeElement.closest('mat-expansion-panel')).not.toBeNull();
   });
 
   it('should collapse the Inventario accordion by default', () => {
@@ -81,10 +81,9 @@ describe('SidebarComponent', () => {
       '/inventory',
       '/inventory/categories',
       '/inventory/products',
-      '/inventory/suppliers',
       '/inventory/categories/123',
     ];
-    const inactiveUrls = ['/inventory/purchases', '/sales', '/dashboard'];
+    const inactiveUrls = ['/abastecimiento/purchases', '/comercial/sales', '/dashboard'];
 
     for (const url of activeUrls) {
       urlMock = url;

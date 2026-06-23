@@ -16,7 +16,7 @@ describe('AppSidebarOrganism', () => {
     {
       label: 'Ventas',
       items: [
-        { icon: 'payments', label: 'Ventas', routerLink: '/sales' },
+        { icon: 'payments', label: 'Ventas', routerLink: '/comercial/sales' },
       ],
     },
   ];

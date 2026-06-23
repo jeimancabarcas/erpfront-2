@@ -37,23 +37,34 @@ export const routes: Routes = [
       {
         path: 'products',
         loadComponent: () => import('./components/pages/inventory-page/inventory-products-page/inventory-products-page.component').then(m => m.InventoryProductsPageComponent)
+      }
+    ]
+  },
+  // Backward-compat redirects: old inventory paths moved to abastecimiento
+  { path: 'inventory/suppliers', redirectTo: 'abastecimiento/suppliers' },
+  { path: 'inventory/purchases', redirectTo: 'abastecimiento/purchases' },
+  {
+    path: 'abastecimiento',
+    canActivate: [authGuard, profileGuard],
+    children: [
+      { path: '', redirectTo: 'purchases', pathMatch: 'full' },
+      {
+        path: 'purchases',
+        loadComponent: () => import('./components/pages/inventory-page/inventory-purchases-page/inventory-purchases-page.component').then(m => m.InventoryPurchasesPageComponent)
       },
       {
         path: 'suppliers',
         loadComponent: () => import('./components/pages/inventory-page/inventory-suppliers-page/inventory-suppliers-page.component').then(m => m.InventorySuppliersPageComponent)
-      },
-      {
-        path: 'purchases',
-        loadComponent: () => import('./components/pages/inventory-page/inventory-purchases-page/inventory-purchases-page.component').then(m => m.InventoryPurchasesPageComponent)
       }
     ]
   },
-  { 
-    path: 'sales', 
+  {
+    path: 'comercial',
     canActivate: [authGuard, profileGuard],
     children: [
+      { path: '', redirectTo: 'sales', pathMatch: 'full' },
       {
-        path: '',
+        path: 'sales',
         loadComponent: () => import('./components/pages/sales-page/sales-page.component').then(m => m.SalesPageComponent)
       },
       {
@@ -66,6 +77,10 @@ export const routes: Routes = [
       }
     ]
   },
+  // Backward-compat redirects: old /sales paths
+  { path: 'sales', redirectTo: 'comercial/sales' },
+  { path: 'sales/customers', redirectTo: 'comercial/customers' },
+  { path: 'sales/customers/:id', redirectTo: 'comercial/customers/:id' },
   { 
     path: 'finance',
     canActivate: [authGuard, profileGuard],

@@ -50,22 +50,16 @@ export class SidebarService {
       '/inventory',
       '/inventory/categories',
       '/inventory/products',
-      '/inventory/suppliers',
     ];
-    return (
-      paths.some((path) => url === path || url.startsWith(path + '/')) &&
-      !url.includes('/inventory/purchases') &&
-      !url.includes('/inventory/suppliers')
-    );
+    return paths.some((path) => url === path || url.startsWith(path + '/'));
   }
 
   isAbastecimientoActive(): boolean {
-    const url = this.router.url;
-    return url.startsWith('/inventory/purchases') || url.startsWith('/inventory/suppliers');
+    return this.router.url.startsWith('/abastecimiento');
   }
 
   isComercialActive(): boolean {
-    return this.router.url.startsWith('/sales');
+    return this.router.url.startsWith('/comercial');
   }
 
   private isPediatricsActive(): boolean {

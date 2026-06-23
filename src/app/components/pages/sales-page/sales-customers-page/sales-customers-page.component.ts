@@ -30,7 +30,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     <app-dashboard-layout>
       <app-breadcrumb 
         [items]="[
-          { label: 'Ventas', link: '/sales' },
+          { label: 'Ventas', link: '/comercial/sales' },
           { label: 'Clientes' }
         ]" 
       />
@@ -112,7 +112,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
                   </span>
                 </td>
                 <td class="px-6 py-5 text-right">
-                  <a [routerLink]="['/sales/customers', customer.id]">
+                  <a [routerLink]="['/comercial/customers', customer.id]">
                     <ui-button variant="icon"><!-- TODO: add variant for colored icon button -->
                       <span class="material-icons">visibility</span>
                     </ui-button>

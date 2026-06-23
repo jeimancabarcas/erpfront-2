@@ -63,7 +63,7 @@ import { SidebarService } from '../../../services/sidebar.service';
               <div class="flex flex-col gap-1 pl-2 pr-1 pt-1">
                 <a
                   mat-list-item
-                  routerLink="/sales"
+                  routerLink="/comercial/sales"
                   routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
                   [routerLinkActiveOptions]="{ exact: true }"
                   class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
@@ -77,7 +77,7 @@ import { SidebarService } from '../../../services/sidebar.service';
                 </a>
                 <a
                   mat-list-item
-                  routerLink="/sales/customers"
+                  routerLink="/comercial/customers"
                   routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
                   class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
                 >
@@ -117,7 +117,7 @@ import { SidebarService } from '../../../services/sidebar.service';
               <div class="flex flex-col gap-1 pl-2 pr-1 pt-1">
                 <a
                   mat-list-item
-                  routerLink="/inventory/purchases"
+                  routerLink="/abastecimiento/purchases"
                   routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
                   class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
                 >
@@ -130,7 +130,7 @@ import { SidebarService } from '../../../services/sidebar.service';
                 </a>
                 <a
                   mat-list-item
-                  routerLink="/inventory/suppliers"
+                  routerLink="/abastecimiento/suppliers"
                   routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
                   class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
                 >
@@ -384,12 +384,8 @@ export class SidebarComponent {
       '/inventory',
       '/inventory/categories',
       '/inventory/products',
-      '/inventory/suppliers',
     ];
-    return (
-      paths.some((path) => url === path || url.startsWith(path + '/')) &&
-      !url.includes('/inventory/purchases')
-    );
+    return paths.some((path) => url === path || url.startsWith(path + '/'));
   }
 
   isPediatricsActive(): boolean {

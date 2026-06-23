@@ -292,11 +292,11 @@ El menú lateral usa grupos colapsables (`mat-expansion-panel`) para módulos co
 📋 Menú Principal
 ├── 🏠 Inicio                    → /dashboard
 ├── 🏪 Gestión Comercial ▾       → sidebarService.comercialExpanded
-│   ├── 💳 Ventas                → /sales
-│   └── 👥 Clientes              → /sales/customers
+│   ├── 💳 Ventas                → /comercial/sales
+│   └── 👥 Clientes              → /comercial/customers
 ├── 🚚 Abastecimiento ▾          → sidebarService.abastecimientoExpanded
-│   ├── 🛒 Compras               → /inventory/purchases
-│   └── 🏢 Proveedores           → /inventory/suppliers
+│   ├── 🛒 Compras               → /abastecimiento/purchases
+│   └── 🏢 Proveedores           → /abastecimiento/suppliers
 ├── 📦 Inventario ▾              → sidebarService.inventoryExpanded
 │   ├── 📊 Resumen               → /inventory
 │   ├── 📂 Categorías            → /inventory/categories

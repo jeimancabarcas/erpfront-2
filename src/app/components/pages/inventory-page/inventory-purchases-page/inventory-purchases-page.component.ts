@@ -29,7 +29,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     <app-dashboard-layout>
       <app-breadcrumb 
         [items]="[
-          { label: 'Inventario', link: '/inventory' },
+          { label: 'Abastecimiento', link: '/abastecimiento' },
           { label: 'Compras' }
         ]" 
       />
