@@ -46,6 +46,7 @@ interface PurchaseOrderItemForm {
     TextInputComponent,
     SelectAtom,
     TextareaComponent,
+    DatepickerComponent,
   ],
   template: `
     <div class="flex flex-col h-full max-h-[90vh] p-8">
