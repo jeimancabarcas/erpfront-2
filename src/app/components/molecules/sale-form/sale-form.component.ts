@@ -137,6 +137,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
               <div class="md:col-span-7">
                 <ui-select
+                  label="Producto"
                   placeholder="Escriba el nombre del producto..."
                   [searchable]="true"
                   [options]="productOptions()"
