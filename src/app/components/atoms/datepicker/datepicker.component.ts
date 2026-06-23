@@ -2,95 +2,56 @@ import {
   Component,
   model,
   input,
-  computed,
   signal,
   ChangeDetectionStrategy,
   untracked,
-  ElementRef,
-  inject,
-  HostListener,
-  forwardRef,
 } from '@angular/core';
-import { CommonModule, formatDate } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { OverlayModule } from '@angular/cdk/overlay';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatCalendar } from '@angular/material/datepicker';
 
 let nextId = 0;
 
 @Component({
   selector: 'ui-datepicker',
   standalone: true,
-  imports: [CommonModule, OverlayModule, MatNativeDateModule, MatCalendar],
+  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => DatepickerComponent),
+      useExisting: DatepickerComponent,
       multi: true,
     },
   ],
-  styleUrl: './datepicker.component.scss',
   template: `
     <div class="flex flex-col gap-1.5">
       @if (label()) {
         <label [for]="inputId()" class="text-xs font-black text-gray-500 uppercase tracking-widest">
           {{ label() }}
-          @if (required()) {
-            <span class="text-red-500">*</span>
-          }
+          @if (required()) { <span class="text-red-500">*</span> }
         </label>
       }
 
-      <div class="relative" #triggerContainer>
-        <button
-          type="button"
-          data-testid="datepicker-trigger"
+      <div class="relative">
+        <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none">calendar_today</span>
+        <input
+          type="date"
           [id]="inputId()"
+          [value]="displayValue()"
+          [required]="required()"
           [disabled]="disabled()"
+          [min]="minValue()"
+          [max]="maxValue()"
           [attr.aria-invalid]="!!error() || null"
-          [attr.aria-describedby]="
-            error() ? inputId() + '-error' : helperText() ? inputId() + '-helper' : null
-          "
+          class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           [class.border-red-500]="!!error()"
-          [class.border-gray-200]="!error()"
-          [class.opacity-50]="disabled()"
-          [class.cursor-not-allowed]="disabled()"
-          class="w-full h-14 pl-12 pr-4 rounded-2xl border bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all text-left flex items-center"
-          (click)="toggle()"
-        >
-          <span
-            class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 text-lg pointer-events-none"
-            >calendar_today</span
-          >
-          <span class="truncate" [class.text-gray-400]="!formattedValue()">
-            {{ formattedValue() || placeholder() }}
-          </span>
-        </button>
-
-        <ng-template
-          cdkConnectedOverlay
-          [cdkConnectedOverlayOpen]="isOpen()"
-          [cdkConnectedOverlayOrigin]="triggerContainer"
-          [cdkConnectedOverlayPositions]="overlayPositions"
-          (overlayOutsideClick)="close()"
-        >
-          <div class="datepicker-calendar-panel">
-            <mat-calendar
-              [(selected)]="selectedDate"
-              [minDate]="min() || undefined"
-              [maxDate]="max() || undefined"
-              (selectedChange)="onDateSelected($event)"
-            />
-          </div>
-        </ng-template>
+          (input)="onInput($event)"
+          (blur)="onBlur()"
+        />
       </div>
 
       @if (error()) {
-        <span [id]="inputId() + '-error'" class="text-xs text-red-500 font-medium">{{
-          error()
-        }}</span>
+        <span [id]="inputId() + '-error'" class="text-xs text-red-500 font-medium">{{ error() }}</span>
       } @else if (helperText()) {
         <span [id]="inputId() + '-helper'" class="text-xs text-gray-400">{{ helperText() }}</span>
       }
@@ -98,61 +59,36 @@ let nextId = 0;
   `,
 })
 export class DatepickerComponent implements ControlValueAccessor {
-  // ── Public API (signal inputs) ──
   label = input<string>('');
-  placeholder = input<string>('');
-  value = model<Date | null>(null);
   error = input<string>('');
   helperText = input<string>('');
   required = input(false);
   disabled = input(false);
-  min = input<Date | null>(null);
-  max = input<Date | null>(null);
 
-  // ── Outputs ──
-  valueChange = this.value;
+  // Internal model as YYYY-MM-DD string for native date input
+  value = model<string>('');
 
-  // ── Internal state ──
   protected inputId = signal(`ui-datepicker-${nextId++}`);
-  isOpen = signal(false);
-  selectedDate = signal<Date | null>(null);
 
-  // ── Overlay positions ──
-  protected overlayPositions = [
-    {
-      originX: 'start' as const,
-      originY: 'bottom' as const,
-      overlayX: 'start' as const,
-      overlayY: 'top' as const,
-      offsetY: 4,
-    },
-    {
-      originX: 'start' as const,
-      originY: 'top' as const,
-      overlayX: 'start' as const,
-      overlayY: 'bottom' as const,
-      offsetY: -4,
-    },
-  ];
+  // Computed display value: convert internal string to YYYY-MM-DD for native input
+  protected displayValue = this.value.asReadonly();
 
-  private elementRef = inject(ElementRef);
-
-  // ── Computed ──
-  protected formattedValue = computed(() => {
-    const val = this.value();
-    if (!val) return '';
-    return formatDate(val, 'dd/MM/yyyy', 'en-US');
-  });
+  // Min/max as YYYY-MM-DD strings
+  private _min = signal<string>('');
+  private _max = signal<string>('');
+  protected minValue = this._min.asReadonly();
+  protected maxValue = this._max.asReadonly();
 
   // ── ControlValueAccessor ──
-  private onChange: (val: Date | null) => void = () => {};
+  private onChange: (val: string) => void = () => {};
   private onTouched: () => void = () => {};
 
-  writeValue(val: Date | null): void {
-    untracked(() => this.value.set(val));
+  writeValue(val: string | Date | null): void {
+    const str = this.toDateString(val);
+    untracked(() => this.value.set(str));
   }
 
-  registerOnChange(fn: (val: Date | null) => void): void {
+  registerOnChange(fn: (val: string) => void): void {
     this.onChange = fn;
   }
 
@@ -161,31 +97,37 @@ export class DatepickerComponent implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    // Consumer controls disabled input; no override needed
+    // handled by disabled input
   }
 
   // ── Event handlers ──
-  toggle(): void {
-    if (this.disabled()) return;
-    this.isOpen.update((v) => !v);
+  onInput(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.value.set(val);
+    this.onChange(val);
   }
 
-  close(): void {
-    this.isOpen.set(false);
-  }
-
-  onDateSelected(date: Date): void {
-    this.value.set(date);
-    this.onChange(date);
+  onBlur(): void {
     this.onTouched();
-    this.close();
   }
 
-  @HostListener('document:click', ['$event'])
-  onClickOutside(event: MouseEvent): void {
-    if (!this.isOpen()) return;
-    if (!this.elementRef.nativeElement.contains(event.target)) {
-      this.close();
+  // ── Helpers ──
+  private toDateString(val: string | Date | null): string {
+    if (!val) return '';
+    if (typeof val === 'string') {
+      // Already a string — could be YYYY-MM-DD or ISO
+      if (val.includes('T')) {
+        return val.substring(0, 10);
+      }
+      return val.length === 10 ? val : '';
     }
+    // Date object → YYYY-MM-DD
+    if (val instanceof Date && !isNaN(val.getTime())) {
+      const y = val.getFullYear();
+      const m = String(val.getMonth() + 1).padStart(2, '0');
+      const d = String(val.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return '';
   }
 }
