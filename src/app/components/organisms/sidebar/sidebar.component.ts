@@ -92,19 +92,58 @@ import { SidebarService } from '../../../services/sidebar.service';
             </mat-expansion-panel>
           </mat-accordion>
 
-          <a
-            mat-list-item
-            routerLink="/inventory/purchases"
-            routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
-            class="!rounded-full !h-14 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-1"
-          >
-            <div class="flex items-center gap-4 px-4">
-              <mat-icon class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[24px]"
-                >shopping_cart</mat-icon
-              >
-              <span class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200">Compras</span>
-            </div>
-          </a>
+          <!-- Abastecimiento Collapsible -->
+          <mat-accordion class="sidebar-accordion" multi>
+            <mat-expansion-panel
+              class="!shadow-none !bg-transparent !border-none mb-1"
+              [expanded]="sidebarService.abastecimientoExpanded"
+              (opened)="sidebarService.abastecimientoExpanded = true"
+              (closed)="sidebarService.abastecimientoExpanded = false"
+            >
+              <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 dark:hover:!bg-gray-800 !rounded-full group">
+                <mat-panel-title class="flex items-center gap-4">
+                  <mat-icon
+                    class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 !text-[24px]"
+                    [class.!text-indigo-900]="sidebarService.isAbastecimientoActive()"
+                    >local_shipping</mat-icon
+                  >
+                  <span
+                    class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200"
+                    [class.!text-indigo-900]="sidebarService.isAbastecimientoActive()"
+                    >Abastecimiento</span
+                  >
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="flex flex-col gap-1 pl-2 pr-1 pt-1">
+                <a
+                  mat-list-item
+                  routerLink="/inventory/purchases"
+                  routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
+                  class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
+                >
+                  <div class="flex items-center gap-4 px-4">
+                    <mat-icon class="!text-gray-400 dark:!text-gray-500 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[20px]"
+                      >shopping_cart</mat-icon
+                    >
+                    <span class="text-sm font-bold tracking-wide text-gray-600 dark:text-gray-300 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200">Compras</span>
+                  </div>
+                </a>
+                <a
+                  mat-list-item
+                  routerLink="/inventory/suppliers"
+                  routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
+                  class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
+                >
+                  <div class="flex items-center gap-4 px-4">
+                    <mat-icon class="!text-gray-400 dark:!text-gray-500 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[20px]"
+                      >business</mat-icon
+                    >
+                    <span class="text-sm font-bold tracking-wide text-gray-600 dark:text-gray-300 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200">Proveedores</span>
+                  </div>
+                </a>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
 
         <!-- Inventory Module Collapsible -->
         <mat-accordion class="sidebar-accordion" multi>
@@ -164,18 +203,6 @@ import { SidebarService } from '../../../services/sidebar.service';
                 <div class="flex items-center gap-3 px-4">
                   <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">inventory_2</mat-icon>
                   <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Productos</span>
-                </div>
-              </a>
-
-              <a
-                mat-list-item
-                routerLink="/inventory/suppliers"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">business</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Proveedores</span>
                 </div>
               </a>
             </nav>

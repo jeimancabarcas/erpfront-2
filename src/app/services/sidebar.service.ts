@@ -12,6 +12,7 @@ export class SidebarService {
   financeExpanded = false;
   pediatricsExpanded = false;
   comercialExpanded = false;
+  abastecimientoExpanded = false;
 
   constructor() {
     // Listen to router events to auto-expand the section corresponding to the active route
@@ -38,6 +39,9 @@ export class SidebarService {
     if (this.isComercialActive()) {
       this.comercialExpanded = true;
     }
+    if (this.isAbastecimientoActive()) {
+      this.abastecimientoExpanded = true;
+    }
   }
 
   private isInventoryActive(): boolean {
@@ -50,8 +54,14 @@ export class SidebarService {
     ];
     return (
       paths.some((path) => url === path || url.startsWith(path + '/')) &&
-      !url.includes('/inventory/purchases')
+      !url.includes('/inventory/purchases') &&
+      !url.includes('/inventory/suppliers')
     );
+  }
+
+  isAbastecimientoActive(): boolean {
+    const url = this.router.url;
+    return url.startsWith('/inventory/purchases') || url.startsWith('/inventory/suppliers');
   }
 
   isComercialActive(): boolean {
