@@ -40,8 +40,8 @@ let nextId = 0;
           [value]="displayValue()"
           [required]="required()"
           [disabled]="disabled()"
-          [min]="minValue()"
-          [max]="maxValue()"
+          [attr.min]="min() || null"
+          [attr.max]="max() || null"
           [attr.aria-invalid]="!!error() || null"
           class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           [class.border-red-500]="!!error()"
@@ -60,10 +60,13 @@ let nextId = 0;
 })
 export class DatepickerComponent implements ControlValueAccessor {
   label = input<string>('');
+  placeholder = input<string>('');
   error = input<string>('');
   helperText = input<string>('');
   required = input(false);
   disabled = input(false);
+  min = input<string>('');
+  max = input<string>('');
 
   // Internal model as YYYY-MM-DD string for native date input
   value = model<string>('');
@@ -72,12 +75,6 @@ export class DatepickerComponent implements ControlValueAccessor {
 
   // Computed display value: convert internal string to YYYY-MM-DD for native input
   protected displayValue = this.value.asReadonly();
-
-  // Min/max as YYYY-MM-DD strings
-  private _min = signal<string>('');
-  private _max = signal<string>('');
-  protected minValue = this._min.asReadonly();
-  protected maxValue = this._max.asReadonly();
 
   // ── ControlValueAccessor ──
   private onChange: (val: string) => void = () => {};
