@@ -8,14 +8,11 @@ import {
   FormArray,
   FormControl,
 } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -23,10 +20,12 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { Product } from '../../../models/product.model';
 import { Customer } from '../../../models/customer.model';
 import { CreateInvoiceDto } from '../../../models/invoice.model';
-import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs';
+import { startWith, map } from 'rxjs';
 import { ProductPriceInfoMolecule } from '../product-price-info/product-price-info.component';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
@@ -36,10 +35,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
-    MatAutocompleteModule,
     MatIconModule,
     MatTableModule,
     MatTooltipModule,
@@ -47,6 +43,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     CurrencyPipe,
     ProductPriceInfoMolecule,
     ButtonAtom,
+    TextInputComponent,
+    SelectAtom,
   ],
   template: `
     <div
@@ -104,65 +102,27 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Customer Selection -->
             <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1"
-                >Cliente</label
-              >
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <mat-label>Seleccione un cliente</mat-label>
-                <input
-                  type="text"
-                  matInput
-                  [formControl]="customerSearchControl"
-                  [matAutocomplete]="customerAuto"
-                  placeholder="Escriba el nombre o documento del cliente..."
-                />
-                <mat-icon matPrefix class="mr-2 text-gray-400">person</mat-icon>
-                <mat-autocomplete
-                  #customerAuto="matAutocomplete"
-                  [displayWith]="displayCustomerFn"
-                  (optionSelected)="onCustomerSelected($event.option.value)"
-                >
-                  @for (customer of customersList(); track customer.id) {
-                    <mat-option [value]="customer">
-                      {{ customer.name }} ({{ customer.documentNumber }})
-                    </mat-option>
-                  }
-                  @if (hasMore()) {
-                    <mat-option class="cargar-mas-option" (click)="loadMoreCustomers($event)">
-                      <div
-                        class="flex justify-between items-center w-full text-indigo-600 font-bold"
-                      >
-                        <span>Cargar más...</span>
-                        @if (isLoadingCustomers()) {
-                          <span class="text-xs text-gray-400">Cargando...</span>
-                        }
-                      </div>
-                    </mat-option>
-                  }
-                  @if (customersList().length === 0 && !isLoadingCustomers() && currentSearchTerm) {
-                    <mat-option
-                      class="crear-nuevo-option"
-                      (click)="openCreateCustomerDialog($event)"
-                    >
-                      <span class="text-indigo-600 font-bold"
-                        >No se encontraron clientes. ¿Crear nuevo?</span
-                      >
-                    </mat-option>
-                  }
-                </mat-autocomplete>
-              </mat-form-field>
+              <ui-select
+                label="Cliente"
+                placeholder="Escriba el nombre o documento del cliente..."
+                [searchable]="true"
+                [loading]="isLoadingCustomers()"
+                [options]="customerOptions()"
+                [formControl]="customerSearchControl"
+                (searchChange)="onCustomerSearch($event)"
+                footerLabel="+ Crear nuevo cliente"
+                (footerAction)="openCreateCustomerDialog()"
+                emptyText="No se encontraron clientes"
+              />
             </div>
 
             <!-- Notes -->
-            <div class="space-y-2">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1"
-                >Notas (Opcional)</label
-              >
-              <mat-form-field appearance="outline" class="w-full !m-0">
-                <input matInput formControlName="notes" placeholder="Ej: Pago a 30 días" />
-                <mat-icon matPrefix class="mr-2 text-gray-400">description</mat-icon>
-              </mat-form-field>
-            </div>
+            <ui-text-input
+              label="Notas (Opcional)"
+              icon="description"
+              placeholder="Ej: Pago a 30 días"
+              [formControl]="saleForm.controls.notes"
+            />
           </div>
 
           <!-- Product Selection Area -->
@@ -175,46 +135,25 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-              <mat-form-field appearance="outline" class="md:col-span-7 !mb-0">
-                <mat-label>Buscar Producto</mat-label>
-                <input
-                  type="text"
-                  matInput
-                  [formControl]="productSearchControl"
-                  [matAutocomplete]="auto"
+              <div class="md:col-span-7">
+                <ui-select
                   placeholder="Escriba el nombre del producto..."
+                  [searchable]="true"
+                  [options]="productOptions()"
+                  [showSubtitle]="true"
+                  [formControl]="productSearchControl"
+                  (valueChange)="onProductSelected($event)"
                 />
-                <mat-icon matPrefix class="mr-2 text-gray-400">search</mat-icon>
-                <mat-autocomplete
-                  #auto="matAutocomplete"
-                  [displayWith]="displayFn"
-                  (optionSelected)="onProductSelected($event.option.value)"
-                >
-                  @for (product of filteredProducts(); track product.id) {
-                    <mat-option [value]="product">
-                      <div class="flex justify-between items-center w-full">
-                        <span class="font-bold">{{ product.name }}</span>
-                        <span
-                          class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black uppercase"
-                          >Stock: {{ product.currentStock }}</span
-                        >
-                      </div>
-                    </mat-option>
-                  }
-                </mat-autocomplete>
-              </mat-form-field>
+              </div>
 
-              <mat-form-field appearance="outline" class="md:col-span-3 !mb-0">
-                <mat-label>Cantidad</mat-label>
-                <input
-                  matInput
+              <div class="md:col-span-3">
+                <ui-text-input
                   type="number"
+                  label="Cantidad"
+                  icon="inventory_2"
                   [formControl]="quantityControl"
-                  min="1"
-                  [max]="selectedProduct()?.currentStock || 999"
                 />
-                <mat-icon matPrefix class="mr-2 text-gray-400">inventory_2</mat-icon>
-              </mat-form-field>
+              </div>
 
               <button
                 type="button"
@@ -507,11 +446,21 @@ export class SaleFormMolecule implements OnInit {
 
   // Local state signals for Customer Autocomplete
   customersList = signal<Customer[]>([]);
-  currentPage = 1;
-  hasMore = signal(false);
-  currentSearchTerm = '';
   isLoadingCustomers = signal(false);
-  customerSearchControl = new FormControl<string | Customer | null>('');
+  customerSearchControl = new FormControl<string>('');
+
+  // Computed options for ui-select
+  customerOptions = computed<SelectOption[]>(() =>
+    this.customersList().map(c => ({ value: c.id, label: `${c.name} (${c.documentNumber})` }))
+  );
+
+  productOptions = computed<SelectOption[]>(() =>
+    this.filteredProducts().map(p => ({
+      value: p.id,
+      label: p.name,
+      subtitle: `Stock: ${p.currentStock}`
+    }))
+  );
 
   // Local state signals
   customers = this.customerService.customers;
@@ -520,7 +469,7 @@ export class SaleFormMolecule implements OnInit {
   isSubmitting = signal(false);
   isManual = signal(false);
 
-  productSearchControl = new FormControl('');
+  productSearchControl = new FormControl<string>('');
   quantityControl = new FormControl(1, [Validators.required, Validators.min(1)]);
 
   saleForm = this.fb.group({
@@ -547,15 +496,14 @@ export class SaleFormMolecule implements OnInit {
   }
 
   ngOnInit() {
-    // Load data if not available
     if (this.allProducts().length === 0) {
       this.productService.loadProducts({ limit: 100 }).subscribe();
     }
 
-    // Load initial 10 customers
-    this._fetchCustomers('', 1);
+    // Initial customer load
+    this._fetchCustomers('');
 
-    // Setup product autocomplete search
+    // Product search filters locally from allProducts
     this.productSearchControl.valueChanges
       .pipe(
         startWith(''),
@@ -565,77 +513,36 @@ export class SaleFormMolecule implements OnInit {
         }),
       )
       .subscribe((products) => this.filteredProducts.set(products));
+  }
 
-    // Setup customer autocomplete search
-    this.customerSearchControl.valueChanges
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged(),
-        map((value) => {
-          if (typeof value === 'string') {
-            this.saleForm.patchValue({ customerId: '' });
-            return value;
-          } else if (value && typeof value === 'object') {
-            return value.name;
-          }
-          return '';
-        }),
-      )
-      .subscribe((searchTerm) => {
-        this.currentSearchTerm = searchTerm;
-        this.currentPage = 1;
-        this._fetchCustomers(searchTerm, 1);
-      });
+  onCustomerSearch(query: string) {
+    this._fetchCustomers(query);
   }
 
   close(result: boolean) {
     this.dialogRef.close(result);
   }
 
-  private _fetchCustomers(searchTerm: string, page: number) {
+  private _fetchCustomers(searchTerm: string) {
     this.isLoadingCustomers.set(true);
     this.customerService
       .loadCustomers({
         search: searchTerm || undefined,
-        page,
-        limit: 10,
+        limit: 20,
       })
       .subscribe({
         next: (res: any) => {
           this.isLoadingCustomers.set(false);
           const data = res.data || res.items || (Array.isArray(res) ? res : []);
-          const meta = res.meta || null;
-          if (page === 1) {
-            this.customersList.set(data);
-          } else {
-            this.customersList.update((list) => [...list, ...data]);
-          }
-          if (meta) {
-            this.hasMore.set(meta.page < meta.lastPage);
-          } else {
-            this.hasMore.set(false);
-          }
+          this.customersList.set(data);
         },
         error: () => {
           this.isLoadingCustomers.set(false);
-          this.hasMore.set(false);
         },
       });
   }
 
-  loadMoreCustomers(event: Event) {
-    event.stopPropagation();
-    event.preventDefault();
-    if (this.isLoadingCustomers() || !this.hasMore()) {
-      return;
-    }
-    this.currentPage++;
-    this._fetchCustomers(this.currentSearchTerm, this.currentPage);
-  }
-
-  openCreateCustomerDialog(event: Event) {
-    event.stopPropagation();
-    event.preventDefault();
+  openCreateCustomerDialog() {
     const ref = this.matDialog.open(CustomerDialogOrganism, {
       ...DIALOG_DEFAULTS,
       width: DIALOG_WIDTHS.md,
@@ -647,22 +554,22 @@ export class SaleFormMolecule implements OnInit {
         const newCustomer = this.customerService.customers()[0];
         if (newCustomer) {
           this.customersList.update((list) => [newCustomer, ...list]);
-          this.customerSearchControl.setValue(newCustomer);
-          this.onCustomerSelected(newCustomer);
         }
       }
     });
   }
 
-  displayCustomerFn(customer: Customer | string | null): string {
-    if (!customer) return '';
-    if (typeof customer === 'string') return customer;
-    return customer.name;
+  onCustomerSelected(customerId: string) {
+    if (customerId) {
+      this.saleForm.patchValue({ customerId });
+    }
   }
 
-  onCustomerSelected(customer: Customer) {
-    if (customer && customer.id) {
-      this.saleForm.patchValue({ customerId: customer.id });
+  onProductSelected(productId: string) {
+    const product = this.allProducts().find(p => p.id === productId);
+    if (product) {
+      this.selectedProduct.set(product);
+      this.quantityControl.setValue(1);
     }
   }
 
@@ -671,15 +578,6 @@ export class SaleFormMolecule implements OnInit {
       (product) =>
         product.name.toLowerCase().includes(filterValue.toLowerCase()) && product.currentStock > 0,
     );
-  }
-
-  displayFn(product: Product): string {
-    return product ? product.name : '';
-  }
-
-  onProductSelected(product: Product) {
-    this.selectedProduct.set(product);
-    this.quantityControl.setValue(1);
   }
 
   addProduct() {

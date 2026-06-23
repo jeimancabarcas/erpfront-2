@@ -56,7 +56,7 @@ export interface GeneralInvoiceFormResult {
                   (searchChange)="onCustomerSearch($event)"
                   footerLabel="+ Crear nuevo cliente"
                   (footerAction)="openNewCustomerDialog()"
-                  showSubtitle="true"
+                  [showSubtitle]="true"
                 />
               </div>
             } @else {

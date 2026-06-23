@@ -110,7 +110,7 @@ export interface AdjustmentFormData {
                   placeholder="Buscar factura por número o cliente..."
                   [formControl]="adjustmentForm.controls.invoiceSearch"
                   (searchChange)="onInvoiceSearch($event)"
-                  showSubtitle="true"
+                  [showSubtitle]="true"
                 />
               </div>
             } @else {
