@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { CategoryService, InventoryCategory } from '../../../services/category.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 @Component({
   selector: 'app-inventory-category-dialog',
@@ -13,7 +14,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     CommonModule,
     FormsModule,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    TextareaComponent
   ],
   template: `
     <div class="p-8">
@@ -38,16 +40,13 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             placeholder="Ej. Medicamentos"
           />
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Descripción (Opcional)</label>
-            <textarea
-              [(ngModel)]="category().description"
-              name="description"
-              rows="3"
-              placeholder="Añade una breve descripción..."
-              class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all resize-none"
-            ></textarea>
-          </div>
+          <ui-textarea
+            label="Descripción (Opcional)"
+            [value]="category().description ?? ''"
+            (valueChange)="category().description = $event"
+            rows="3"
+            placeholder="Añade una breve descripción..."
+          />
         </div>
 
         <div class="flex justify-end gap-3 pt-6">

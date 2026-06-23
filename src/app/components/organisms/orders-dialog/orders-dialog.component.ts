@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface PrescriptionData {
   code: string;
@@ -40,7 +41,8 @@ export interface OrdersDialogResult {
     MatButtonModule,
     TextInputComponent,
     ButtonAtom,
-    SelectAtom
+    SelectAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -96,7 +98,7 @@ export interface OrdersDialogResult {
                   <ui-text-input placeholder="Ej: Cada 8 horas" [formControl]="$any(getPrescriptionGroup($index)).controls.frequency" class="md:col-span-4" />
                   <ui-select placeholder="Vía" [options]="routeOptions" [formControl]="$any(getPrescriptionGroup($index)).controls.route" class="md:col-span-4" />
                   
-                  <textarea formControlName="observations" rows="2" placeholder="Instrucciones adicionales para el paciente..." class="md:col-span-12 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
+                  <ui-textarea formControlName="observations" rows="2" placeholder="Instrucciones adicionales para el paciente..." class="md:col-span-12" />
                 </div>
               </div>
             }

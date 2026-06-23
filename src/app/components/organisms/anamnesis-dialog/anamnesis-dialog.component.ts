@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { MatButtonModule } from '@angular/material/button';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface AnamnesisDialogData {
   reason: string;
@@ -23,7 +24,8 @@ export interface AnamnesisDialogResult {
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -49,15 +51,9 @@ export interface AnamnesisDialogResult {
       </div>
       
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="relative">
-          <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="reason">Motivo de Consulta</label>
-          <textarea formControlName="reason" id="reason" rows="3" placeholder="Describa el motivo principal de la consulta..." class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-        </div>
+        <ui-textarea formControlName="reason" label="Motivo de Consulta" placeholder="Describa el motivo principal de la consulta..." rows="3" />
         
-        <div class="relative">
-          <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="currentIllness">Enfermedad Actual</label>
-          <textarea formControlName="currentIllness" id="currentIllness" rows="6" placeholder="Evolución detallada de los síntomas y signos..." class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-        </div>
+        <ui-textarea formControlName="currentIllness" label="Enfermedad Actual" placeholder="Evolución detallada de los síntomas y signos..." rows="6" />
       
         <div class="flex justify-end mt-10 gap-3">
           <button type="button" (click)="close()" class="!rounded-full !px-8 h-12 font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>

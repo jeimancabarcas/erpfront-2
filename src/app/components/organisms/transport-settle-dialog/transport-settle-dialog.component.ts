@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface TransportSettleDialogData {
   route: TransportRoute;
@@ -21,7 +22,8 @@ export type TransportSettleResult = boolean | undefined;
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -62,13 +64,7 @@ export type TransportSettleResult = boolean | undefined;
           </div>
 
           <form [formGroup]="settleForm" (ngSubmit)="onSubmit()" class="space-y-6">
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Observaciones de Liquidación</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">rate_review</span>
-                <textarea formControlName="notes" placeholder="Agregue comentarios sobre el cierre del servicio..." rows="4" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-              </div>
-            </div>
+            <ui-textarea formControlName="notes" label="Observaciones de Liquidación" placeholder="Agregue comentarios sobre el cierre del servicio..." rows="4" />
 
             <div class="flex gap-4 pt-4">
               <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">

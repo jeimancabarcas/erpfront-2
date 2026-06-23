@@ -6,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface PhysicalExamDialogData {
   weight: number | null;
@@ -29,7 +30,8 @@ export interface PhysicalExamDialogResult {
     ReactiveFormsModule,
     MatButtonModule,
     TextInputComponent,
-    ButtonAtom
+    ButtonAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -78,10 +80,7 @@ export interface PhysicalExamDialogResult {
           />
         </div>
 
-        <div>
-          <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="findings">Hallazgos Clínicos Detallados</label>
-          <textarea formControlName="findings" id="findings" rows="6" placeholder="Descripción detallada de los hallazgos por sistemas..." class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-        </div>
+        <ui-textarea formControlName="findings" label="Hallazgos Clínicos Detallados" placeholder="Descripción detallada de los hallazgos por sistemas..." rows="6" />
 
         <div class="flex justify-end mt-10 gap-3">
           <button type="button" (click)="close()" class="!rounded-full !px-8 h-12 font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>

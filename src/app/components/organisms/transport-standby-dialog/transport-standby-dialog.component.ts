@@ -8,6 +8,7 @@ import { TextInputComponent } from '../../atoms/text-input/text-input.component'
 import { TransportService } from '../../../services/transport.service';
 import { TransportRoute } from '../../../models/transport.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface TransportStandbyDialogData {
   route: TransportRoute;
@@ -23,7 +24,8 @@ export type TransportStandbyResult = boolean | undefined;
     ReactiveFormsModule,
     MatButtonModule,
     TextInputComponent,
-    ButtonAtom
+    ButtonAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -55,16 +57,10 @@ export type TransportStandbyResult = boolean | undefined;
             <ui-text-input label="Valor Adicional" type="number" icon="attach_money" placeholder="0" [formControl]="standbyForm.controls.amount" />
           </div>
 
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Observaciones / Justificación</label>
-            <div class="relative">
-              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">notes</span>
-              <textarea formControlName="notes" placeholder="Describa el motivo de la espera..." rows="4" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-            </div>
-            @if (standbyForm.get('notes')?.hasError('required') && standbyForm.get('notes')?.touched) {
-              <p class="text-red-500 text-xs mt-1 font-medium">Las observaciones son obligatorias</p>
-            }
-          </div>
+          <ui-textarea formControlName="notes" label="Observaciones / Justificación" placeholder="Describa el motivo de la espera..." rows="4" />
+          @if (standbyForm.get('notes')?.hasError('required') && standbyForm.get('notes')?.touched) {
+            <p class="text-red-500 text-xs mt-1 font-medium">Las observaciones son obligatorias</p>
+          }
 
           <div class="flex gap-4 pt-4">
             <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">

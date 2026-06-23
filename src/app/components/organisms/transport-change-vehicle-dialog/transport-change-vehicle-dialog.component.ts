@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface TransportChangeVehicleDialogData {
   routeId: string;
@@ -22,7 +23,8 @@ export type TransportChangeVehicleResult = boolean | undefined;
     ReactiveFormsModule,
     MatButtonModule,
     ButtonAtom,
-    SelectAtom
+    SelectAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -51,19 +53,13 @@ export type TransportChangeVehicleResult = boolean | undefined;
         <div class="grid grid-cols-1 gap-6">
           <ui-select label="Nuevo Vehículo" [options]="vehicleOptions()" [formControl]="changeForm.controls.newVehicleId" />
 
-          <div>
-            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Motivo del Cambio</label>
-            <div class="relative">
-              <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">comment</span>
-              <textarea formControlName="reason" rows="4" placeholder="Ej: Falla mecánica en la unidad anterior, solicitud del cliente..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-            </div>
-            @if (changeForm.get('reason')?.hasError('required') && changeForm.get('reason')?.touched) {
-              <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio</p>
-            }
-            @if (changeForm.get('reason')?.hasError('minlength') && changeForm.get('reason')?.touched) {
-              <p class="text-red-500 text-xs mt-1 font-medium">Debe tener al menos 10 caracteres</p>
-            }
-          </div>
+          <ui-textarea formControlName="reason" label="Motivo del Cambio" placeholder="Ej: Falla mecánica en la unidad anterior, solicitud del cliente..." rows="4" />
+          @if (changeForm.get('reason')?.hasError('required') && changeForm.get('reason')?.touched) {
+            <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio</p>
+          }
+          @if (changeForm.get('reason')?.hasError('minlength') && changeForm.get('reason')?.touched) {
+            <p class="text-red-500 text-xs mt-1 font-medium">Debe tener al menos 10 caracteres</p>
+          }
         </div>
 
         <div class="flex justify-end gap-3 pt-4">

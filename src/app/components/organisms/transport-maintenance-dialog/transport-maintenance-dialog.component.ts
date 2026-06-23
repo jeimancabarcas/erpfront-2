@@ -8,6 +8,7 @@ import { TextInputComponent } from '../../atoms/text-input/text-input.component'
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface TransportMaintenanceDialogData {
   vehicleId: string;
@@ -24,7 +25,8 @@ export type TransportMaintenanceResult = boolean | undefined;
     MatButtonModule,
     TextInputComponent,
     ButtonAtom,
-    SelectAtom
+    SelectAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -61,13 +63,7 @@ export type TransportMaintenanceResult = boolean | undefined;
             </div>
 
             <div class="md:col-span-2">
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Descripción Detallada</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">description</span>
-                <textarea formControlName="description" rows="4" 
-                          placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..."
-                          class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-              </div>
+              <ui-textarea formControlName="description" label="Descripción Detallada" placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..." rows="4" />
             </div>
 
             <ui-text-input label="Costo Estimado (Opcional)" type="number" icon="attach_money" [formControl]="maintenanceForm.controls.cost" />

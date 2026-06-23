@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface IncapacityDialogData {
   days: number | null;
@@ -30,7 +31,8 @@ export interface IncapacityDialogResult {
     MatButtonModule,
     TextInputComponent,
     ButtonAtom,
-    SelectAtom
+    SelectAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -70,10 +72,7 @@ export interface IncapacityDialogResult {
 
         <ui-select label="Licencias Especiales" [options]="specialLicenseOptions" [formControl]="form.controls.specialLicense" />
 
-        <div>
-          <label class="text-xs font-medium text-gray-500 mb-1.5 block" for="recommendations">Recomendaciones Médicas</label>
-          <textarea formControlName="recommendations" id="recommendations" rows="5" placeholder="Instrucciones para el reposo y cuidados del paciente..." class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-        </div>
+        <ui-textarea formControlName="recommendations" label="Recomendaciones Médicas" placeholder="Instrucciones para el reposo y cuidados del paciente..." rows="5" />
 
         <div class="flex justify-end mt-10 gap-3">
           <button type="button" (click)="close()" class="!rounded-full !px-8 h-12 font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>

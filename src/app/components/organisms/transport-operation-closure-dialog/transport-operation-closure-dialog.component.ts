@@ -6,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface TransportOperationClosureDialogData {
   routeId: string;
@@ -22,7 +23,8 @@ export type TransportOperationClosureResult = boolean | undefined;
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    ButtonAtom
+    ButtonAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -52,21 +54,15 @@ export type TransportOperationClosureResult = boolean | undefined;
       </header>
 
       <form [formGroup]="closureForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div>
-          <label class="text-xs font-medium text-gray-500 mb-1.5 block">Observaciones / Motivo</label>
-          <div class="relative">
-            <span class="material-icons absolute left-3 top-4 text-gray-400 text-sm">comment</span>
-            <textarea formControlName="notes" rows="4" 
-                      [placeholder]="data.status === 'Completed' ? 'Ej: Todo salió según lo planeado...' : 'Ej: El vehículo presentó fallas técnicas...'"
-                      class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"></textarea>
-          </div>
-          @if (closureForm.get('notes')?.hasError('required') && closureForm.get('notes')?.touched) {
-            <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio para cancelar</p>
-          }
-          @if (closureForm.get('notes')?.hasError('minlength') && closureForm.get('notes')?.touched) {
-            <p class="text-red-500 text-xs mt-1 font-medium">Debe tener al menos 10 caracteres</p>
-          }
-        </div>
+        <ui-textarea formControlName="notes" label="Observaciones / Motivo"
+          [placeholder]="data.status === 'Completed' ? 'Ej: Todo salió según lo planeado...' : 'Ej: El vehículo presentó fallas técnicas...'"
+          rows="4" />
+        @if (closureForm.get('notes')?.hasError('required') && closureForm.get('notes')?.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio para cancelar</p>
+        }
+        @if (closureForm.get('notes')?.hasError('minlength') && closureForm.get('notes')?.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">Debe tener al menos 10 caracteres</p>
+        }
 
         <div class="flex justify-end gap-3 pt-4">
           <button type="button" (click)="close()" class="!rounded-xl !h-12 !px-6 !font-bold text-gray-500 hover:bg-gray-50 transition-colors">
