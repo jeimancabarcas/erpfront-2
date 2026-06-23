@@ -20,7 +20,7 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { Product } from '../../../models/product.model';
 import { Customer } from '../../../models/customer.model';
 import { CreateInvoiceDto } from '../../../models/invoice.model';
-import { startWith, map, Subject, debounceTime, Subscription } from 'rxjs';
+import { Subject, debounceTime, Subscription } from 'rxjs';
 import { ProductPriceInfoMolecule } from '../product-price-info/product-price-info.component';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
@@ -457,11 +457,13 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   );
 
   productOptions = computed<SelectOption[]>(() =>
-    this.filteredProducts().map(p => ({
-      value: p.id,
-      label: p.name,
-      subtitle: `Stock: ${p.currentStock}`
-    }))
+    this.allProducts()
+      .filter(p => p.currentStock > 0)
+      .map(p => ({
+        value: p.id,
+        label: p.name,
+        subtitle: `Stock: ${p.currentStock}`
+      }))
   );
 
   // Local state signals
@@ -480,8 +482,7 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
     items: this.fb.array([]),
   });
 
-  // Reactive Autocomplete Search results
-  filteredProducts = signal<Product[]>([]);
+  // Reactive Autocomplete Search results - ui-select handles local filtering
 
   // Trigger for total computation
   private itemsTrigger = signal(0);
@@ -510,16 +511,7 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
       this._fetchCustomers(query);
     });
 
-    // Product search filters locally from allProducts
-    this.productSearchControl.valueChanges
-      .pipe(
-        startWith(''),
-        map((value) => {
-          const name = typeof value === 'string' ? value : (value as any)?.name || '';
-          return this._filterProducts(name);
-        }),
-      )
-      .subscribe((products) => this.filteredProducts.set(products));
+    // Product search filters locally via ui-select's built-in searchable
   }
 
   onCustomerSearch(query: string) {
@@ -578,13 +570,6 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
       this.selectedProduct.set(product);
       this.quantityControl.setValue(1);
     }
-  }
-
-  private _filterProducts(filterValue: string): Product[] {
-    return this.allProducts().filter(
-      (product) =>
-        product.name.toLowerCase().includes(filterValue.toLowerCase()) && product.currentStock > 0,
-    );
   }
 
   addProduct() {
