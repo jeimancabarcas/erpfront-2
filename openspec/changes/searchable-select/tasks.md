@@ -35,7 +35,7 @@ Chain strategy: size-exception
 - [x] 1.4 Update template: loading spinner replaces options when `loading()` is true
 - [x] 1.5 Update template: footer section with icon + button when `footerLabel()` is set; click emits `footerAction` (panel stays open)
 - [x] 1.6 Update template: render `subtitle` and `icon` in option buttons when `showSubtitle()` is true
-- [ ] 1.7 Reset `highlightedIndex` to -1 when `options()` changes while `open()` is true
+- [x] 1.7 Reset `highlightedIndex` to -1 when `options()` changes while `open()` is true
 - [x] 1.8 Write test: `searchChange` emits on keystroke in searchable mode
 - [x] 1.9 Write test: loading spinner visible/hidden via `loading` input
 - [x] 1.10 Write test: footer button renders and emits `footerAction` without closing panel

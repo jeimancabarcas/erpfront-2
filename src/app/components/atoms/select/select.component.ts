@@ -5,6 +5,7 @@ import {
   computed,
   signal,
   output,
+  effect,
   ChangeDetectionStrategy,
   untracked,
   ElementRef,
@@ -156,6 +157,16 @@ export class SelectAtom implements ControlValueAccessor {
   open = signal(false);
   searchQuery = signal('');
   highlightedIndex = signal(-1);
+
+  // Reset highlightedIndex when options change while panel is open
+  private optionsEffectRef = effect(() => {
+    const opts = this.options();
+    const isOpen = this.open();
+    if (isOpen) {
+      // Defer to next microtask to let the new options settle
+      setTimeout(() => this.highlightedIndex.set(-1));
+    }
+  });
 
   private elementRef = inject(ElementRef);
 
