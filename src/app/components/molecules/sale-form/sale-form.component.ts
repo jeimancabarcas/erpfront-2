@@ -23,7 +23,7 @@ import { CreateInvoiceDto } from '../../../models/invoice.model';
 import { Subject, debounceTime, Subscription } from 'rxjs';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
-import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
@@ -41,7 +41,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     MatSlideToggleModule,
     CurrencyPipe,
     ButtonAtom,
-    TextInputComponent,
+    TextareaComponent,
     SelectAtom,
   ],
   template: `
@@ -115,11 +115,11 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             </div>
 
             <!-- Notes -->
-            <ui-text-input
+            <ui-textarea
               label="Notas (Opcional)"
-              icon="description"
               placeholder="Ej: Pago a 30 días"
               [formControl]="saleForm.controls.notes"
+              [rows]="3"
             />
           </div>
 
