@@ -26,7 +26,7 @@ export type TransportIncidentResult = boolean | undefined;
     ButtonAtom,
     SelectAtom,
     TextareaComponent,
-    DatepickerComponent
+    DatepickerComponent,
   ],
   template: `
     @if (loading()) {
@@ -37,67 +37,105 @@ export type TransportIncidentResult = boolean | undefined;
       <div class="flex flex-col items-center gap-2 text-red-500 py-12">
         <span class="material-icons text-5xl">error_outline</span>
         <p>{{ error() }}</p>
-        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+        <button
+          (click)="close()"
+          class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4"
+        >
+          Cerrar
+        </button>
       </div>
     } @else {
-    <div class="p-8">
-      <header class="flex justify-between items-center mb-8">
-        <div>
-          <h2 class="text-2xl font-black text-gray-900">Reportar Novedad</h2>
-          <p class="text-gray-400 text-sm font-medium italic">Registro de incidencias o eventos relevantes en ruta.</p>
-        </div>
-        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
-          <span class="material-icons">close</span>
-        </ui-button>
-      </header>
+      <div class="p-8">
+        <header class="flex justify-between items-center mb-8">
+          <div>
+            <h2 class="text-2xl font-black text-gray-900">Reportar Novedad</h2>
+            <p class="text-gray-400 text-sm font-medium italic">
+              Registro de incidencias o eventos relevantes en ruta.
+            </p>
+          </div>
+          <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
+            <span class="material-icons">close</span>
+          </ui-button>
+        </header>
 
-      <form [formGroup]="incidentForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ui-select label="Tipo de Novedad" [options]="incidentTypeOptions" [formControl]="incidentForm.controls.type" />
+        <form [formGroup]="incidentForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ui-select
+              label="Tipo de Novedad"
+              [options]="incidentTypeOptions"
+              [formControl]="incidentForm.controls.type"
+            />
 
-          <div class="grid grid-cols-2 gap-4">
-            <ui-datepicker label="Fecha" [formControl]="incidentForm.controls.timestamp" />
+            <div class="grid grid-cols-2 gap-4">
+              <ui-datepicker label="Fecha" [formControl]="incidentForm.controls.timestamp" />
 
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora</label>
-              <div class="relative">
-                <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm">schedule</span>
-                <input type="time" formControlName="incidentTime" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm">
+              <div>
+                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-3.5 text-gray-400 text-sm"
+                    >schedule</span
+                  >
+                  <input
+                    type="time"
+                    formControlName="incidentTime"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm"
+                  />
+                </div>
               </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <ui-textarea
+                formControlName="description"
+                label="Descripción de la Novedad"
+                placeholder="Describa lo sucedido detalladamente..."
+                [rows]="4"
+              />
+              @if (
+                incidentForm.get('description')?.hasError('required') &&
+                incidentForm.get('description')?.touched
+              ) {
+                <p class="text-red-500 text-xs mt-1 font-medium">La descripción es obligatoria</p>
+              }
+              @if (
+                incidentForm.get('description')?.hasError('minlength') &&
+                incidentForm.get('description')?.touched
+              ) {
+                <p class="text-red-500 text-xs mt-1 font-medium">
+                  Debe tener al menos 10 caracteres
+                </p>
+              }
             </div>
           </div>
 
-          <div class="md:col-span-2">
-            <ui-textarea formControlName="description" label="Descripción de la Novedad" placeholder="Describa lo sucedido detalladamente..." [rows]="4" />
-            @if (incidentForm.get('description')?.hasError('required') && incidentForm.get('description')?.touched) {
-              <p class="text-red-500 text-xs mt-1 font-medium">La descripción es obligatoria</p>
-            }
-            @if (incidentForm.get('description')?.hasError('minlength') && incidentForm.get('description')?.touched) {
-              <p class="text-red-500 text-xs mt-1 font-medium">Debe tener al menos 10 caracteres</p>
-            }
+          <div class="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              (click)="close()"
+              class="!rounded-xl !h-12 !px-6 !font-bold text-gray-500 hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              [disabled]="incidentForm.invalid"
+              class="!rounded-xl !h-12 !px-8 !font-black !bg-red-600 text-white shadow-lg shadow-red-100 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+            >
+              Reportar Novedad
+            </button>
           </div>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-4">
-          <button type="button" (click)="close()" class="!rounded-xl !h-12 !px-6 !font-bold text-gray-500 hover:bg-gray-50 transition-colors">
-            Cancelar
-          </button>
-          <button type="submit" 
-                  [disabled]="incidentForm.invalid"
-                  class="!rounded-xl !h-12 !px-8 !font-black !bg-red-600 text-white shadow-lg shadow-red-100 transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
-            Reportar Novedad
-          </button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
     }
-  `
+  `,
 })
 export class TransportIncidentDialogOrganism {
   loading = signal(false);
   error = signal<string | null>(null);
   readonly data = inject<TransportIncidentDialogData>(MAT_DIALOG_DATA);
-  private dialogRef = inject(MatDialogRef<TransportIncidentDialogOrganism, TransportIncidentResult>);
+  private dialogRef = inject(
+    MatDialogRef<TransportIncidentDialogOrganism, TransportIncidentResult>,
+  );
   private fb = inject(FormBuilder);
   private transportService = inject(TransportService);
 
@@ -112,7 +150,10 @@ export class TransportIncidentDialogOrganism {
     type: ['', Validators.required],
     description: ['', [Validators.required, Validators.minLength(10)]],
     timestamp: [new Date(), Validators.required],
-    incidentTime: [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), Validators.required]
+    incidentTime: [
+      new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      Validators.required,
+    ],
   });
 
   close(result?: TransportIncidentResult) {
@@ -122,8 +163,8 @@ export class TransportIncidentDialogOrganism {
   onSubmit() {
     if (this.incidentForm.valid) {
       const val = this.incidentForm.value;
-      
-      const date = new Date(val.timestamp as string);
+
+      const date = new Date(val.timestamp!);
       const [hours, minutes] = (val.incidentTime as string).split(':');
       date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
@@ -131,7 +172,7 @@ export class TransportIncidentDialogOrganism {
         type: val.type as any,
         description: val.description!,
         reportedBy: 'Operaciones',
-        timestamp: date.toISOString()
+        timestamp: date.toISOString(),
       } as any);
       this.dialogRef.close(true);
     }

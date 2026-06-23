@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { DatepickerComponent } from './datepicker.component';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatCalendarModule } from '@angular/material/datepicker';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Component } from '@angular/core';
@@ -12,7 +12,7 @@ import { By } from '@angular/platform-browser';
 @Component({
   standalone: true,
   imports: [DatepickerComponent, FormsModule],
-  template: `<ui-datepicker label="Fecha" [(ngModel)]="myDate" />`
+  template: `<ui-datepicker label="Fecha" [(ngModel)]="myDate" />`,
 })
 class NgModelHost {
   myDate: Date | null = null;
@@ -22,7 +22,7 @@ class NgModelHost {
 @Component({
   standalone: true,
   imports: [DatepickerComponent, ReactiveFormsModule],
-  template: `<ui-datepicker label="Fecha" [formControl]="dateCtrl" />`
+  template: `<ui-datepicker label="Fecha" [formControl]="dateCtrl" />`,
 })
 class FormControlHost {
   dateCtrl = new FormControl<Date | null>(null);
@@ -35,9 +35,9 @@ describe('DatepickerComponent', () => {
         DatepickerComponent,
         OverlayModule,
         MatNativeDateModule,
-        MatCalendarModule,
+        MatDatepickerModule,
         NoopAnimationsModule,
-      ]
+      ],
     }).compileComponents();
   });
 
@@ -77,7 +77,9 @@ describe('DatepickerComponent', () => {
   it('opens overlay when trigger is clicked', () => {
     const fixture = TestBed.createComponent(DatepickerComponent);
     fixture.detectChanges();
-    const trigger = fixture.nativeElement.querySelector('[data-testid="datepicker-trigger"]') as HTMLElement;
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-testid="datepicker-trigger"]',
+    ) as HTMLElement;
     trigger.click();
     fixture.detectChanges();
     // After click, the overlay panel should be present with mat-calendar
@@ -88,7 +90,9 @@ describe('DatepickerComponent', () => {
   it('closes overlay on date selection', () => {
     const fixture = TestBed.createComponent(DatepickerComponent);
     fixture.detectChanges();
-    const trigger = fixture.nativeElement.querySelector('[data-testid="datepicker-trigger"]') as HTMLElement;
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-testid="datepicker-trigger"]',
+    ) as HTMLElement;
     trigger.click();
     fixture.detectChanges();
 
@@ -107,10 +111,12 @@ describe('DatepickerComponent', () => {
     const fixture = TestBed.createComponent(DatepickerComponent);
     const component = fixture.componentInstance;
     let emitted: Date | null = null;
-    component.valueChange.subscribe((v: Date | null) => emitted = v);
+    component.valueChange.subscribe((v: Date | null) => (emitted = v));
     fixture.detectChanges();
 
-    const trigger = fixture.nativeElement.querySelector('[data-testid="datepicker-trigger"]') as HTMLElement;
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-testid="datepicker-trigger"]',
+    ) as HTMLElement;
     trigger.click();
     fixture.detectChanges();
 
@@ -125,7 +131,9 @@ describe('DatepickerComponent', () => {
   it('closes overlay on click-outside', () => {
     const fixture = TestBed.createComponent(DatepickerComponent);
     fixture.detectChanges();
-    const trigger = fixture.nativeElement.querySelector('[data-testid="datepicker-trigger"]') as HTMLElement;
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-testid="datepicker-trigger"]',
+    ) as HTMLElement;
     trigger.click();
     fixture.detectChanges();
 
@@ -167,7 +175,9 @@ describe('DatepickerComponent', () => {
     const fixture = TestBed.createComponent(DatepickerComponent);
     fixture.componentRef.setInput('disabled', true);
     fixture.detectChanges();
-    const trigger = fixture.nativeElement.querySelector('[data-testid="datepicker-trigger"]') as HTMLElement;
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-testid="datepicker-trigger"]',
+    ) as HTMLElement;
     trigger.click();
     fixture.detectChanges();
     const calendar = document.querySelector('.mat-calendar');
@@ -178,7 +188,9 @@ describe('DatepickerComponent', () => {
     const fixture = TestBed.createComponent(DatepickerComponent);
     fixture.componentRef.setInput('disabled', true);
     fixture.detectChanges();
-    const trigger = fixture.nativeElement.querySelector('[data-testid="datepicker-trigger"]') as HTMLElement;
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-testid="datepicker-trigger"]',
+    ) as HTMLElement;
     expect(trigger.classList.contains('opacity-50')).toBe(true);
     expect(trigger.classList.contains('cursor-not-allowed')).toBe(true);
   });
@@ -213,7 +225,8 @@ describe('DatepickerComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const component = fixture.debugElement.query(By.directive(DatepickerComponent)).componentInstance as DatepickerComponent;
+    const component = fixture.debugElement.query(By.directive(DatepickerComponent))
+      .componentInstance as DatepickerComponent;
     const date = new Date(2025, 2, 15);
     component.writeValue(date);
     fixture.detectChanges();

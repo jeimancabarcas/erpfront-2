@@ -15,35 +15,31 @@ import { CommonModule, formatDate } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatCalendarModule, MatCalendar } from '@angular/material/datepicker';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 
 let nextId = 0;
 
 @Component({
   selector: 'ui-datepicker',
   standalone: true,
-  imports: [
-    CommonModule,
-    OverlayModule,
-    MatNativeDateModule,
-    MatCalendarModule,
-  ],
+  imports: [CommonModule, OverlayModule, MatNativeDateModule, MatDatepickerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: DatepickerComponent,
-    multi: true,
-  }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: DatepickerComponent,
+      multi: true,
+    },
+  ],
   styleUrl: './datepicker.component.scss',
   template: `
     <div class="flex flex-col gap-1.5">
       @if (label()) {
-        <label
-          [for]="inputId()"
-          class="text-xs font-black text-gray-500 uppercase tracking-widest"
-        >
+        <label [for]="inputId()" class="text-xs font-black text-gray-500 uppercase tracking-widest">
           {{ label() }}
-          @if (required()) { <span class="text-red-500">*</span> }
+          @if (required()) {
+            <span class="text-red-500">*</span>
+          }
         </label>
       }
 
@@ -54,7 +50,9 @@ let nextId = 0;
           [id]="inputId()"
           [disabled]="disabled()"
           [attr.aria-invalid]="!!error() || null"
-          [attr.aria-describedby]="error() ? inputId() + '-error' : (helperText() ? inputId() + '-helper' : null)"
+          [attr.aria-describedby]="
+            error() ? inputId() + '-error' : helperText() ? inputId() + '-helper' : null
+          "
           [class.border-red-500]="!!error()"
           [class.border-gray-200]="!error()"
           [class.opacity-50]="disabled()"
@@ -64,7 +62,8 @@ let nextId = 0;
         >
           <span
             class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 text-lg pointer-events-none"
-          >calendar_today</span>
+            >calendar_today</span
+          >
           <span class="truncate" [class.text-gray-400]="!formattedValue()">
             {{ formattedValue() || placeholder() }}
           </span>
@@ -89,7 +88,9 @@ let nextId = 0;
       </div>
 
       @if (error()) {
-        <span [id]="inputId() + '-error'" class="text-xs text-red-500 font-medium">{{ error() }}</span>
+        <span [id]="inputId() + '-error'" class="text-xs text-red-500 font-medium">{{
+          error()
+        }}</span>
       } @else if (helperText()) {
         <span [id]="inputId() + '-helper'" class="text-xs text-gray-400">{{ helperText() }}</span>
       }
@@ -166,7 +167,7 @@ export class DatepickerComponent implements ControlValueAccessor {
   // ── Event handlers ──
   toggle(): void {
     if (this.disabled()) return;
-    this.isOpen.update(v => !v);
+    this.isOpen.update((v) => !v);
   }
 
   close(): void {
