@@ -78,7 +78,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
           <div class="space-y-2">
             <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Información del Paciente</label>
             <app-patient-search 
-              (selectedPatientChange)="onPatientSelected($event)"
+              (selectedPatientIdChange)="onPatientSelected($event)"
             />
           </div>
 
@@ -254,7 +254,10 @@ export class InvoiceFormDialogOrganism {
     return Math.max(0, total - patient);
   });
 
-  onPatientSelected(patient: Patient | null) {
+  private pediatricsService = inject(PediatricsService);
+
+  onPatientSelected(patientId: string) {
+    const patient = patientId ? this.pediatricsService.patients().find(p => p.id === patientId) : null;
     this.invoiceForm.patchValue({ patient });
   }
 

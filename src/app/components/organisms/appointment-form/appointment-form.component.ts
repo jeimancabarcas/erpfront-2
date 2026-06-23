@@ -50,7 +50,7 @@ import { PatientSearchMolecule } from '../../molecules/patient-search/patient-se
             <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Paciente</label>
             <app-patient-search 
               label="Seleccione el paciente"
-              (selectedPatientChange)="onPatientSelected($event)"
+              (selectedPatientIdChange)="onPatientSelected($event)"
             />
           </div>
 
@@ -126,7 +126,8 @@ export class AppointmentFormOrganism {
     type: ['Control', Validators.required]
   });
 
-  onPatientSelected(patient: Patient | null) {
+  onPatientSelected(patientId: string) {
+    const patient = patientId ? this.pediatricsService.patients().find(p => p.id === patientId) : null;
     this.appointmentForm.patchValue({ patient });
   }
 

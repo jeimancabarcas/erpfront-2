@@ -16,7 +16,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
       [loading]="loading()"
       [options]="patientOptions()"
       [(value)]="selectedPatientId"
-      showSubtitle="true"
+      [showSubtitle]="true"
       (searchChange)="onPatientSearch($event)"
       [placeholder]="placeholder()"
       [emptyText]="emptyText()"
