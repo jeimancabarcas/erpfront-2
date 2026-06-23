@@ -293,4 +293,117 @@ describe('SelectAtom', () => {
     expect(el.textContent).toContain('Required');
     expect(el.textContent).not.toContain('Some help');
   });
+
+  // ── NEW TESTS: Searchable Select + Footer + Async ──
+
+  it('emits searchChange on search input when searchable', () => {
+    const fixture = TestBed.createComponent(SelectAtom);
+    fixture.componentRef.setInput('options', testOptions);
+    fixture.componentRef.setInput('searchable', true);
+    fixture.detectChanges();
+
+    // Open dropdown to show search input
+    const trigger = fixture.nativeElement.querySelector('button[role="combobox"]') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    // Subscribe to searchChange
+    let emitted = '';
+    fixture.componentInstance.searchChange.subscribe((q: string) => (emitted = q));
+
+    const searchInput = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    searchInput.value = 'Opción';
+    searchInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(emitted).toBe('Opción');
+  });
+
+  it('shows loading spinner when loading is true', () => {
+    const fixture = TestBed.createComponent(SelectAtom);
+    fixture.componentRef.setInput('options', testOptions);
+    fixture.componentRef.setInput('loading', true);
+    fixture.detectChanges();
+
+    // Open dropdown
+    const trigger = fixture.nativeElement.querySelector('button[role="combobox"]') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    // Spinner should replace options — look for animation class
+    const spinner = fixture.nativeElement.querySelector('.animate-spin');
+    expect(spinner).toBeTruthy();
+
+    // Options should NOT be rendered while loading
+    const options = fixture.nativeElement.querySelectorAll('button[role="option"]');
+    expect(options.length).toBe(0);
+  });
+
+  it('renders footer button when footerLabel is set and emits footerAction on click', () => {
+    const fixture = TestBed.createComponent(SelectAtom);
+    fixture.componentRef.setInput('options', testOptions);
+    fixture.componentRef.setInput('footerLabel', 'Crear nuevo');
+    fixture.detectChanges();
+
+    // Open dropdown
+    const trigger = fixture.nativeElement.querySelector('button[role="combobox"]') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    // Footer button should exist
+    const footerBtn = fixture.nativeElement.querySelector('[data-testid="select-footer"]') as HTMLButtonElement;
+    expect(footerBtn).toBeTruthy();
+    expect(footerBtn.textContent).toContain('Crear nuevo');
+
+    // Subscribe to footerAction
+    let emitted = false;
+    fixture.componentInstance.footerAction.subscribe(() => (emitted = true));
+
+    footerBtn.click();
+    fixture.detectChanges();
+
+    expect(emitted).toBe(true);
+
+    // Panel should remain open after footer click
+    const optionsAfter = fixture.nativeElement.querySelectorAll('button[role="option"]');
+    expect(optionsAfter.length).toBe(3);
+  });
+
+  it('shows custom emptyText when no options and not loading', () => {
+    const fixture = TestBed.createComponent(SelectAtom);
+    fixture.componentRef.setInput('options', []);
+    fixture.componentRef.setInput('emptyText', 'Custom empty message');
+    fixture.detectChanges();
+
+    // Open dropdown
+    const trigger = fixture.nativeElement.querySelector('button[role="combobox"]') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Custom empty message');
+    expect(fixture.nativeElement.textContent).not.toContain('Sin resultados');
+  });
+
+  it('renders subtitle below label when showSubtitle is true', () => {
+    const fixture = TestBed.createComponent(SelectAtom);
+    const optionsWithSubtitle: SelectOption[] = [
+      { value: '1', label: 'Cliente 1', subtitle: 'NIT: 123' },
+      { value: '2', label: 'Cliente 2', subtitle: 'NIT: 456' },
+    ];
+    fixture.componentRef.setInput('options', optionsWithSubtitle);
+    fixture.componentRef.setInput('showSubtitle', true);
+    fixture.detectChanges();
+
+    // Open dropdown
+    const trigger = fixture.nativeElement.querySelector('button[role="combobox"]') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    const optionButtons = fixture.nativeElement.querySelectorAll('button[role="option"]');
+    expect(optionButtons.length).toBe(2);
+    expect(optionButtons[0].textContent).toContain('Cliente 1');
+    expect(optionButtons[0].textContent).toContain('NIT: 123');
+    expect(optionButtons[1].textContent).toContain('Cliente 2');
+    expect(optionButtons[1].textContent).toContain('NIT: 456');
+  });
 });

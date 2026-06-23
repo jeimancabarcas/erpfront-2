@@ -4,6 +4,7 @@ import {
   input,
   computed,
   signal,
+  output,
   ChangeDetectionStrategy,
   untracked,
   ElementRef,
@@ -16,6 +17,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 export interface SelectOption {
   value: string;
   label: string;
+  subtitle?: string;
+  icon?: string;
 }
 
 @Component({
@@ -75,25 +78,49 @@ export interface SelectOption {
               </div>
             }
             <div class="overflow-y-auto max-h-48">
-              @if (filteredOptions().length === 0) {
-                <div class="px-4 py-6 text-sm text-gray-400 text-center">
-                  Sin resultados
+              @if (loading()) {
+                <div class="flex justify-center items-center py-6">
+                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
                 </div>
-              }
-              @for (opt of filteredOptions(); track opt.value; let i = $index) {
-                <button
-                  type="button"
-                  role="option"
-                  (click)="selectOption(opt)"
-                  (mouseenter)="highlightedIndex.set(i)"
-                  class="w-full text-left px-4 py-3 text-sm font-medium hover:bg-indigo-50 transition-colors"
-                  [class.bg-indigo-50]="highlightedIndex() === i"
-                  [class.text-indigo-600]="opt.value === value()"
-                >
-                  {{ opt.label }}
-                </button>
+              } @else if (filteredOptions().length === 0) {
+                <div class="px-4 py-6 text-sm text-gray-400 text-center">
+                  {{ emptyText() }}
+                </div>
+              } @else {
+                @for (opt of filteredOptions(); track opt.value; let i = $index) {
+                  <button
+                    type="button"
+                    role="option"
+                    (click)="selectOption(opt)"
+                    (mouseenter)="highlightedIndex.set(i)"
+                    class="w-full text-left px-4 py-3 text-sm font-medium hover:bg-indigo-50 transition-colors"
+                    [class.bg-indigo-50]="highlightedIndex() === i"
+                    [class.text-indigo-600]="opt.value === value()"
+                  >
+                    @if (opt.icon && showSubtitle()) {
+                      <span class="material-icons text-sm align-text-bottom mr-1.5 text-gray-400">{{ opt.icon }}</span>
+                    }
+                    <span>{{ opt.label }}</span>
+                    @if (opt.subtitle && showSubtitle()) {
+                      <span class="block text-[10px] text-gray-400 font-medium mt-0.5">{{ opt.subtitle }}</span>
+                    }
+                  </button>
+                }
               }
             </div>
+            @if (footerLabel()) {
+              <div class="border-t border-gray-100">
+                <button
+                  type="button"
+                  data-testid="select-footer"
+                  (click)="onFooterClick($event)"
+                  class="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition-colors"
+                >
+                  <span class="material-icons text-base">add</span>
+                  {{ footerLabel() }}
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
@@ -116,6 +143,14 @@ export class SelectAtom implements ControlValueAccessor {
   error = input<string>('');
   helperText = input<string>('');
   searchable = input(false);
+  loading = input(false);
+  emptyText = input('Sin resultados');
+  footerLabel = input<string>('');
+  showSubtitle = input(false);
+
+  // ── Outputs ──
+  searchChange = output<string>();
+  footerAction = output<void>();
 
   // ── Internal state ──
   open = signal(false);
@@ -180,6 +215,12 @@ export class SelectAtom implements ControlValueAccessor {
     const target = event.target as HTMLInputElement;
     this.searchQuery.set(target.value);
     this.highlightedIndex.set(-1);
+    this.searchChange.emit(target.value);
+  }
+
+  onFooterClick(event: Event): void {
+    event.stopPropagation();
+    this.footerAction.emit();
   }
 
   @HostListener('document:click', ['$event'])
