@@ -73,7 +73,7 @@ export type TransportOperationResult = boolean | undefined;
             <ui-select label="Vehículo Responsable" [options]="vehicleOptions()" [formControl]="operationForm.controls.vehicleId" class="md:col-span-2" />
 
             <div class="md:col-span-2">
-              <ui-textarea formControlName="description" label="Descripción / Observaciones" placeholder="Ej: Cargue de contenedor de 40 pies..." rows="3" />
+              <ui-textarea formControlName="description" label="Descripción / Observaciones" placeholder="Ej: Cargue de contenedor de 40 pies..." [rows]="3" />
             </div>
 
             <div class="md:col-span-2 space-y-4">

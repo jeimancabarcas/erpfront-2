@@ -57,7 +57,7 @@ export type TransportStandbyResult = boolean | undefined;
             <ui-text-input label="Valor Adicional" type="number" icon="attach_money" placeholder="0" [formControl]="standbyForm.controls.amount" />
           </div>
 
-          <ui-textarea formControlName="notes" label="Observaciones / Justificación" placeholder="Describa el motivo de la espera..." rows="4" />
+          <ui-textarea formControlName="notes" label="Observaciones / Justificación" placeholder="Describa el motivo de la espera..." [rows]="4" />
           @if (standbyForm.get('notes')?.hasError('required') && standbyForm.get('notes')?.touched) {
             <p class="text-red-500 text-xs mt-1 font-medium">Las observaciones son obligatorias</p>
           }

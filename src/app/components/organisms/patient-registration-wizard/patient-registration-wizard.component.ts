@@ -118,7 +118,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
 
               <ui-text-input label="Clínica o Lugar donde nació" icon="local_hospital" placeholder="Ej. Clínica del Country" [required]="true" [formControl]="healthForm.controls.birthPlace" class="md:col-span-2" />
 
-              <ui-textarea formControlName="observations" label="Observaciones" placeholder="Cualquier información relevante..." rows="3" class="md:col-span-2" />
+              <ui-textarea formControlName="observations" label="Observaciones" placeholder="Cualquier información relevante..." [rows]="3" class="md:col-span-2" />
             </div>
 
             <div class="flex justify-between mt-8">

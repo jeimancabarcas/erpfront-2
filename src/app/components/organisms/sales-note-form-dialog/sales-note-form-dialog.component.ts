@@ -93,7 +93,7 @@ export interface SalesNoteDialogData {
           </div>
 
           <!-- Observation -->
-          <ui-textarea formControlName="observation" label="Observación / Justificación" placeholder="Indique la justificación de este ajuste..." rows="3" />
+          <ui-textarea formControlName="observation" label="Observación / Justificación" placeholder="Indique la justificación de este ajuste..." [rows]="3" />
 
           <!-- Advanced Testing Config -->
           <div class="p-5 bg-slate-50/80 rounded-[24px] border border-slate-100 space-y-4">

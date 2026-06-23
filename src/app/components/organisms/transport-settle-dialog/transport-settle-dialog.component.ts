@@ -64,7 +64,7 @@ export type TransportSettleResult = boolean | undefined;
           </div>
 
           <form [formGroup]="settleForm" (ngSubmit)="onSubmit()" class="space-y-6">
-            <ui-textarea formControlName="notes" label="Observaciones de Liquidación" placeholder="Agregue comentarios sobre el cierre del servicio..." rows="4" />
+            <ui-textarea formControlName="notes" label="Observaciones de Liquidación" placeholder="Agregue comentarios sobre el cierre del servicio..." [rows]="4" />
 
             <div class="flex gap-4 pt-4">
               <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">

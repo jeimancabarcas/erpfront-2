@@ -63,7 +63,7 @@ export type TransportMaintenanceResult = boolean | undefined;
             </div>
 
             <div class="md:col-span-2">
-              <ui-textarea formControlName="description" label="Descripción Detallada" placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..." rows="4" />
+              <ui-textarea formControlName="description" label="Descripción Detallada" placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..." [rows]="4" />
             </div>
 
             <ui-text-input label="Costo Estimado (Opcional)" type="number" icon="attach_money" [formControl]="maintenanceForm.controls.cost" />

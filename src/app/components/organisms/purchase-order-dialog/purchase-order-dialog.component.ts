@@ -96,7 +96,7 @@ interface PurchaseOrderItemForm {
                 <mat-datepicker #picker></mat-datepicker>
               </mat-form-field>
 
-              <ui-textarea formControlName="observations" label="Observaciones / Notas" placeholder="Detalles adicionales sobre el pedido..." rows="3" class="md:col-span-2" />
+              <ui-textarea formControlName="observations" label="Observaciones / Notas" placeholder="Detalles adicionales sobre el pedido..." [rows]="3" class="md:col-span-2" />
             </div>
 
             <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100">

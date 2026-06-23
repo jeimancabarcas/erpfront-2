@@ -72,7 +72,7 @@ export interface IncapacityDialogResult {
 
         <ui-select label="Licencias Especiales" [options]="specialLicenseOptions" [formControl]="form.controls.specialLicense" />
 
-        <ui-textarea formControlName="recommendations" label="Recomendaciones Médicas" placeholder="Instrucciones para el reposo y cuidados del paciente..." rows="5" />
+        <ui-textarea formControlName="recommendations" label="Recomendaciones Médicas" placeholder="Instrucciones para el reposo y cuidados del paciente..." [rows]="5" />
 
         <div class="flex justify-end mt-10 gap-3">
           <button type="button" (click)="close()" class="!rounded-full !px-8 h-12 font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>

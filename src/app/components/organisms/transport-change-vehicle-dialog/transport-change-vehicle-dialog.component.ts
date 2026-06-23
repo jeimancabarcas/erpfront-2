@@ -53,7 +53,7 @@ export type TransportChangeVehicleResult = boolean | undefined;
         <div class="grid grid-cols-1 gap-6">
           <ui-select label="Nuevo Vehículo" [options]="vehicleOptions()" [formControl]="changeForm.controls.newVehicleId" />
 
-          <ui-textarea formControlName="reason" label="Motivo del Cambio" placeholder="Ej: Falla mecánica en la unidad anterior, solicitud del cliente..." rows="4" />
+          <ui-textarea formControlName="reason" label="Motivo del Cambio" placeholder="Ej: Falla mecánica en la unidad anterior, solicitud del cliente..." [rows]="4" />
           @if (changeForm.get('reason')?.hasError('required') && changeForm.get('reason')?.touched) {
             <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio</p>
           }

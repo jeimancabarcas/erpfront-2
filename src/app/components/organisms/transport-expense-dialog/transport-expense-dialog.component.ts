@@ -60,7 +60,7 @@ export type TransportExpenseResult = boolean | undefined;
             <ui-text-input label="Monto" type="number" icon="attach_money" placeholder="0.00" [formControl]="expenseForm.controls.amount" />
 
             <div class="md:col-span-2">
-              <ui-textarea formControlName="description" label="Descripción / Observaciones" placeholder="Ej: Pago de peaje en Guaduas..." rows="3" />
+              <ui-textarea formControlName="description" label="Descripción / Observaciones" placeholder="Ej: Pago de peaje en Guaduas..." [rows]="3" />
             </div>
 
             <div class="md:col-span-2 space-y-4">

@@ -51,9 +51,9 @@ export interface AnamnesisDialogResult {
       </div>
       
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
-        <ui-textarea formControlName="reason" label="Motivo de Consulta" placeholder="Describa el motivo principal de la consulta..." rows="3" />
+        <ui-textarea formControlName="reason" label="Motivo de Consulta" placeholder="Describa el motivo principal de la consulta..." [rows]="3" />
         
-        <ui-textarea formControlName="currentIllness" label="Enfermedad Actual" placeholder="Evolución detallada de los síntomas y signos..." rows="6" />
+        <ui-textarea formControlName="currentIllness" label="Enfermedad Actual" placeholder="Evolución detallada de los síntomas y signos..." [rows]="6" />
       
         <div class="flex justify-end mt-10 gap-3">
           <button type="button" (click)="close()" class="!rounded-full !px-8 h-12 font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>

@@ -80,7 +80,7 @@ export interface PhysicalExamDialogResult {
           />
         </div>
 
-        <ui-textarea formControlName="findings" label="Hallazgos Clínicos Detallados" placeholder="Descripción detallada de los hallazgos por sistemas..." rows="6" />
+        <ui-textarea formControlName="findings" label="Hallazgos Clínicos Detallados" placeholder="Descripción detallada de los hallazgos por sistemas..." [rows]="6" />
 
         <div class="flex justify-end mt-10 gap-3">
           <button type="button" (click)="close()" class="!rounded-full !px-8 h-12 font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>

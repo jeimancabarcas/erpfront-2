@@ -98,7 +98,7 @@ export interface OrdersDialogResult {
                   <ui-text-input placeholder="Ej: Cada 8 horas" [formControl]="$any(getPrescriptionGroup($index)).controls.frequency" class="md:col-span-4" />
                   <ui-select placeholder="Vía" [options]="routeOptions" [formControl]="$any(getPrescriptionGroup($index)).controls.route" class="md:col-span-4" />
                   
-                  <ui-textarea formControlName="observations" rows="2" placeholder="Instrucciones adicionales para el paciente..." class="md:col-span-12" />
+                  <ui-textarea formControlName="observations" [rows]="2" placeholder="Instrucciones adicionales para el paciente..." class="md:col-span-12" />
                 </div>
               </div>
             }

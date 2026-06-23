@@ -73,7 +73,7 @@ export type TransportCancelResult = boolean | undefined;
         </div>
 
         <form [formGroup]="cancelForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <ui-textarea formControlName="notes" label="Motivo de Cancelación" placeholder="Explique por qué se cancela el servicio..." rows="4" />
+          <ui-textarea formControlName="notes" label="Motivo de Cancelación" placeholder="Explique por qué se cancela el servicio..." [rows]="4" />
           @if (cancelForm.get('notes')?.hasError('required') && cancelForm.get('notes')?.touched) {
             <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio</p>
           }

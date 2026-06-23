@@ -56,7 +56,7 @@ export type TransportOperationClosureResult = boolean | undefined;
       <form [formGroup]="closureForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <ui-textarea formControlName="notes" label="Observaciones / Motivo"
           [placeholder]="data.status === 'Completed' ? 'Ej: Todo salió según lo planeado...' : 'Ej: El vehículo presentó fallas técnicas...'"
-          rows="4" />
+          [rows]="4" />
         @if (closureForm.get('notes')?.hasError('required') && closureForm.get('notes')?.touched) {
           <p class="text-red-500 text-xs mt-1 font-medium">El motivo es obligatorio para cancelar</p>
         }

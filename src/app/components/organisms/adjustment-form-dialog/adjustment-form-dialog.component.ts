@@ -158,7 +158,7 @@ export interface AdjustmentFormData {
           </div>
 
           <!-- Technical Reason -->
-          <ui-textarea formControlName="reason" label="Justificación Técnica" placeholder="Ej: Devolución por mercancía en mal estado..." rows="4" />
+          <ui-textarea formControlName="reason" label="Justificación Técnica" placeholder="Ej: Devolución por mercancía en mal estado..." [rows]="4" />
         </form>
       </div>
 

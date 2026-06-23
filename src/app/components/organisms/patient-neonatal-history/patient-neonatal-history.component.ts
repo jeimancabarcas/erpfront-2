@@ -55,9 +55,9 @@ import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
           <!-- Right Column: Text Backgrounds -->
           <div class="lg:col-span-8 space-y-6">
-            <ui-textarea label="Detalles Adicionales de ant. Neonatales" [value]="patient()?.neonatalNotes ?? ''" (valueChange)="patient()!.neonatalNotes = $event" rows="4" placeholder="Escriba los detalles aquí..." />
-            <ui-textarea label="Antecedentes Personales" [value]="patient()?.personalBackground ?? ''" (valueChange)="patient()!.personalBackground = $event" rows="3" placeholder="Escribe aquí los detalles..." />
-            <ui-textarea label="Antecedentes Familiares" [value]="patient()?.familyBackground ?? ''" (valueChange)="patient()!.familyBackground = $event" rows="3" placeholder="Escriba aquí los antecedentes familiares..." />
+            <ui-textarea label="Detalles Adicionales de ant. Neonatales" [value]="patient()?.neonatalNotes ?? ''" (valueChange)="patient()!.neonatalNotes = $event" [rows]="4" placeholder="Escriba los detalles aquí..." />
+            <ui-textarea label="Antecedentes Personales" [value]="patient()?.personalBackground ?? ''" (valueChange)="patient()!.personalBackground = $event" [rows]="3" placeholder="Escribe aquí los detalles..." />
+            <ui-textarea label="Antecedentes Familiares" [value]="patient()?.familyBackground ?? ''" (valueChange)="patient()!.familyBackground = $event" [rows]="3" placeholder="Escriba aquí los antecedentes familiares..." />
           </div>
         </div>
       </div>

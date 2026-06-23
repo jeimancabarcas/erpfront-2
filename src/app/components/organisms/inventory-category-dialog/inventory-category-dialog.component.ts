@@ -44,7 +44,7 @@ import { TextareaComponent } from '../../atoms/textarea/textarea.component';
             label="Descripción (Opcional)"
             [value]="category().description ?? ''"
             (valueChange)="category().description = $event"
-            rows="3"
+            [rows]="3"
             placeholder="Añade una breve descripción..."
           />
         </div>

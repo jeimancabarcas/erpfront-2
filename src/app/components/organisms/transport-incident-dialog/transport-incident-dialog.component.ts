@@ -69,7 +69,7 @@ export type TransportIncidentResult = boolean | undefined;
           </div>
 
           <div class="md:col-span-2">
-            <ui-textarea formControlName="description" label="Descripción de la Novedad" placeholder="Describa lo sucedido detalladamente..." rows="4" />
+            <ui-textarea formControlName="description" label="Descripción de la Novedad" placeholder="Describa lo sucedido detalladamente..." [rows]="4" />
             @if (incidentForm.get('description')?.hasError('required') && incidentForm.get('description')?.touched) {
               <p class="text-red-500 text-xs mt-1 font-medium">La descripción es obligatoria</p>
             }
