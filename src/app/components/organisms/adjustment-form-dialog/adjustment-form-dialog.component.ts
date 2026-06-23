@@ -1,12 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
@@ -15,7 +11,6 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { Invoice } from '../../../models/invoice.model';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
-import { startWith, map } from 'rxjs';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
@@ -30,11 +25,8 @@ export interface AdjustmentFormData {
   imports: [
     CommonModule, 
     ReactiveFormsModule, 
-    MatDialogModule, 
-    MatFormFieldModule, 
-    MatInputModule, 
-    MatButtonModule, 
-    MatAutocompleteModule,
+    MatDialogModule,
+    MatButtonModule,
     MatSnackBarModule,
     ButtonAtom,
     TextInputComponent,
@@ -110,22 +102,16 @@ export interface AdjustmentFormData {
           <div class="space-y-3">
             <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Factura de Referencia</label>
             @if (!selectedInvoice()) {
-              <div class="p-1 bg-gray-50 rounded-3xl border border-gray-100 animate-in fade-in slide-in-from-top duration-300">
-                <mat-form-field appearance="outline" class="w-full !m-0">
-                  <mat-label>Buscar factura por número o cliente...</mat-label>
-                  <input matInput [matAutocomplete]="autoInvoice" formControlName="invoiceSearch">
-                  <span class="material-icons" matPrefix class="mr-2 text-gray-400">search</span>
-                  <mat-autocomplete #autoInvoice="matAutocomplete" [displayWith]="displayInvoice" (optionSelected)="onInvoiceSelected($event.option.value)">
-                    @for (inv of filteredInvoices(); track inv.id) {
-                      <mat-option [value]="inv">
-                        <div class="flex flex-col py-1">
-                          <span class="font-bold text-sm text-gray-900">{{ inv.id }}</span>
-                          <span class="text-[10px] text-gray-500 tracking-tighter">{{ inv.customerName }} • {{ inv.total | currency:'USD':'symbol':'1.0-0' }}</span>
-                        </div>
-                      </mat-option>
-                    }
-                  </mat-autocomplete>
-                </mat-form-field>
+              <div class="relative p-1 bg-gray-50 rounded-3xl border border-gray-100 animate-in fade-in slide-in-from-top duration-300">
+                <ui-select
+                  [searchable]="true"
+                  [loading]="loadingInvoices()"
+                  [options]="invoiceOptions()"
+                  placeholder="Buscar factura por número o cliente..."
+                  [formControl]="adjustmentForm.controls.invoiceSearch"
+                  (searchChange)="onInvoiceSearch($event)"
+                  showSubtitle="true"
+                />
               </div>
             } @else {
               <!-- Selected Invoice Premium Card -->
@@ -219,18 +205,32 @@ export class AdjustmentFormDialogOrganism implements OnInit {
     return this.invoiceService.invoices().map(inv => this.mapBackendInvoiceToFinanceInvoice(inv));
   });
 
-  // Reactive Invoice Filtering
-  filteredInvoices = toSignal(
-    this.adjustmentForm.get('invoiceSearch')!.valueChanges.pipe(
-      startWith(''),
-      map(value => {
-        const val = value as string | FinanceInvoice | null;
-        const query = typeof val === 'string' ? val : val?.id;
-        return query ? this._filterInvoices(query) : this.realFinanceInvoices();
-      })
-    ),
-    { initialValue: [] as FinanceInvoice[] }
-  );
+  // Invoice search state
+  invoiceSearchTerm = signal('');
+  loadingInvoices = signal(false);
+
+  invoiceOptions = computed<SelectOption[]>(() => {
+    const term = this.invoiceSearchTerm().toLowerCase();
+    const invoices = this.realFinanceInvoices();
+    const formatTotal = (total: number) => `$${total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    if (!term) {
+      return invoices.map(inv => ({
+        value: inv.id,
+        label: `${inv.id} - ${inv.customerName}`,
+        subtitle: formatTotal(inv.total)
+      }));
+    }
+    return invoices
+      .filter(inv =>
+        inv.id.toLowerCase().includes(term) ||
+        inv.customerName.toLowerCase().includes(term)
+      )
+      .map(inv => ({
+        value: inv.id,
+        label: `${inv.id} - ${inv.customerName}`,
+        subtitle: formatTotal(inv.total)
+      }));
+  });
 
   // Dynamic Correction Concepts list based on Type (Credit or Debit)
   correctionConcepts = computed(() => {
@@ -258,10 +258,24 @@ export class AdjustmentFormDialogOrganism implements OnInit {
   );
 
   constructor() {
+    // Watch invoice selection from ui-select
+    this.adjustmentForm.get('invoiceSearch')?.valueChanges.subscribe((id) => {
+      if (id && typeof id === 'string') {
+        const invoice = this.realFinanceInvoices().find(inv => inv.id === id);
+        if (invoice) {
+          this.selectedInvoice.set(invoice);
+          this.adjustmentForm.patchValue({ amount: invoice.total });
+        }
+      }
+    });
+
     if (this.data.invoice) {
       setTimeout(() => {
         if (this.data.invoice) {
-          this.onInvoiceSelected(this.data.invoice);
+          const inv = this.data.invoice;
+          this.adjustmentForm.get('invoiceSearch')?.setValue(inv.id);
+          this.selectedInvoice.set(inv);
+          this.adjustmentForm.patchValue({ amount: inv.total });
         }
       });
     }
@@ -276,22 +290,8 @@ export class AdjustmentFormDialogOrganism implements OnInit {
     });
   }
 
-  onInvoiceSelected(invoice: FinanceInvoice) {
-    this.selectedInvoice.set(invoice);
-    this.adjustmentForm.get('invoiceSearch')?.setValue('');
-    this.adjustmentForm.patchValue({ amount: invoice.total });
-  }
-
-  displayInvoice(invoice: FinanceInvoice): string {
-    return invoice?.id || '';
-  }
-
-  private _filterInvoices(query: string): FinanceInvoice[] {
-    const filterValue = query.toLowerCase();
-    return this.realFinanceInvoices().filter(inv =>
-      inv.id.toLowerCase().includes(filterValue) ||
-      inv.customerName.toLowerCase().includes(filterValue)
-    );
+  onInvoiceSearch(query: string): void {
+    this.invoiceSearchTerm.set(query);
   }
 
   private mapBackendInvoiceToFinanceInvoice(inv: Invoice): FinanceInvoice {
