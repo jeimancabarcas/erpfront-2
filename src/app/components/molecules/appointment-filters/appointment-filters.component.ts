@@ -25,7 +25,7 @@ import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component
     >
       <ui-text-input icon="search" placeholder="Nombre del paciente..." [(value)]="searchQuery" />
 
-      <ui-datepicker label="Fecha" [(value)]="dateFilter" />
+      <ui-datepicker label="Fecha" [value]="dateToString(dateFilter())" (valueChange)="onDateChange($event)" />
 
       <ui-select
         placeholder="Todos los estados"
@@ -61,4 +61,16 @@ export class AppointmentFiltersMolecule {
   ];
 
   clear = output<void>();
+
+  dateToString(d: Date | null): string {
+    if (!d) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  }
+
+  onDateChange(val: string) {
+    this.dateFilter.set(val ? new Date(val) : null);
+  }
 }

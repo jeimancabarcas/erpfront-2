@@ -53,7 +53,7 @@ export interface FilterDefinition {
             @case ('date') {
               <ui-datepicker
                 [label]="filter.label"
-                [value]="parseDate(filterValues()[filter.key])"
+                [value]="filterValues()[filter.key]"
                 (valueChange)="onDateChange(filter.key, $event)"
               />
             }
@@ -85,12 +85,12 @@ export class SearchFiltersMolecule implements OnDestroy {
     this.emitWithDebounce();
   }
 
-  onDateChange(key: string, date: Date | null): void {
-    this.onFilterChange(key, date ? date.toISOString().split('T')[0] : '');
+  onDateChange(key: string, value: string): void {
+    this.onFilterChange(key, value);
   }
 
-  parseDate(value: string): Date | null {
-    return value ? new Date(value) : null;
+  parseDate(value: string): string {
+    return value || '';
   }
 
   onClear(): void {
