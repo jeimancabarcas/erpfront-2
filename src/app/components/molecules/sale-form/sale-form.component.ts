@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
   FormsModule,
@@ -20,7 +20,7 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { Product } from '../../../models/product.model';
 import { Customer } from '../../../models/customer.model';
 import { CreateInvoiceDto } from '../../../models/invoice.model';
-import { startWith, map } from 'rxjs';
+import { startWith, map, Subject, debounceTime, Subscription } from 'rxjs';
 import { ProductPriceInfoMolecule } from '../product-price-info/product-price-info.component';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
@@ -110,7 +110,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                 [options]="customerOptions()"
                 [formControl]="customerSearchControl"
                 (searchChange)="onCustomerSearch($event)"
-                footerLabel="+ Crear nuevo cliente"
+                footerLabel="Crear nuevo cliente"
                 (footerAction)="openCreateCustomerDialog()"
                 emptyText="No se encontraron clientes"
               />
@@ -433,7 +433,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     `,
   ],
 })
-export class SaleFormMolecule implements OnInit {
+export class SaleFormMolecule implements OnInit, OnDestroy {
   private dialogRef = inject(MatDialogRef<SaleFormMolecule, boolean>);
   private matDialog = inject(MatDialog);
   dialogData = inject(MAT_DIALOG_DATA, { optional: true });
@@ -448,6 +448,8 @@ export class SaleFormMolecule implements OnInit {
   customersList = signal<Customer[]>([]);
   isLoadingCustomers = signal(false);
   customerSearchControl = new FormControl<string>('');
+  private customerSearch$ = new Subject<string>();
+  private searchSub: Subscription | null = null;
 
   // Computed options for ui-select
   customerOptions = computed<SelectOption[]>(() =>
@@ -503,6 +505,11 @@ export class SaleFormMolecule implements OnInit {
     // Initial customer load
     this._fetchCustomers('');
 
+    // Debounced customer search
+    this.searchSub = this.customerSearch$.pipe(debounceTime(300)).subscribe(query => {
+      this._fetchCustomers(query);
+    });
+
     // Product search filters locally from allProducts
     this.productSearchControl.valueChanges
       .pipe(
@@ -516,7 +523,7 @@ export class SaleFormMolecule implements OnInit {
   }
 
   onCustomerSearch(query: string) {
-    this._fetchCustomers(query);
+    this.customerSearch$.next(query);
   }
 
   close(result: boolean) {
@@ -683,6 +690,10 @@ export class SaleFormMolecule implements OnInit {
         },
       });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.searchSub?.unsubscribe();
   }
 
   private showNotification(message: string, type: 'success' | 'error' = 'success') {
