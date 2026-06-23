@@ -85,6 +85,10 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                       <span data-testid="manual-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700">
                         MANUAL
                       </span>
+                    } @else {
+                      <span data-testid="electronic-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700">
+                        ELECTRÓNICA
+                      </span>
                     }
                   </div>
                 </td>

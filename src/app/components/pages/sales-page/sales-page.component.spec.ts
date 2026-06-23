@@ -17,6 +17,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
   return {
     id: 'inv-1',
     invoiceNumber: 'FAC-0001',
+    sequentialNumber: 1,
     date: '2026-01-01T00:00:00Z',
     customerId: 'cust-1',
     customer: { id: 'cust-1', name: 'Test Customer' } as any,
@@ -201,6 +202,37 @@ describe('SalesPageComponent — MANUAL badge in invoice list (TDD)', () => {
 
     const nativeEl: HTMLElement = fixture.nativeElement;
     const badge = nativeEl.querySelector('[data-testid="manual-badge"]');
+    expect(badge).toBeNull();
+  });
+
+  it('renders ELECTRÓNICA badge when isElectronic is true', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'SETP990001', isElectronic: true });
+    await buildComponent([invoice]);
+    fixture.detectChanges();
+
+    const nativeEl: HTMLElement = fixture.nativeElement;
+    const badge = nativeEl.querySelector('[data-testid="electronic-badge"]');
+    expect(badge).not.toBeNull();
+    expect(badge?.textContent?.trim()).toBe('ELECTRÓNICA');
+  });
+
+  it('renders ELECTRÓNICA badge when invoice has been emitted (isElectronic + emission)', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001', emission: { number: 'SETP990099', cude: '', qrUrl: '', publicUrl: '', isValidated: true }, isElectronic: true });
+    await buildComponent([invoice]);
+    fixture.detectChanges();
+
+    const nativeEl: HTMLElement = fixture.nativeElement;
+    const badge = nativeEl.querySelector('[data-testid="electronic-badge"]');
+    expect(badge).not.toBeNull();
+  });
+
+  it('does NOT render ELECTRÓNICA badge when isElectronic is false', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001', isElectronic: false });
+    await buildComponent([invoice]);
+    fixture.detectChanges();
+
+    const nativeEl: HTMLElement = fixture.nativeElement;
+    const badge = nativeEl.querySelector('[data-testid="electronic-badge"]');
     expect(badge).toBeNull();
   });
 });

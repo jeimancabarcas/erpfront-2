@@ -1,12 +1,26 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { InvoiceService } from '../../../services/invoice.service';
 import { Invoice } from '../../../models/invoice.model';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { CreditNote, DebitNote } from '../../../models/sales-note.model';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
+import { AdjustmentFormDialogOrganism } from '../adjustment-form-dialog/adjustment-form-dialog.component';
+
+interface TraceEvent {
+  type: 'Emisión Inicial' | 'Emisión Electrónica' | 'Nota Crédito' | 'Nota Débito';
+  number: string;
+  date: string;
+  concept: string;
+  observation: string | null;
+  amount: number;
+  isCredit: boolean;
+  cude?: string | null;
+  publicUrl?: string | null;
+}
 
 @Component({
   selector: 'app-invoice-detail-dialog',
@@ -15,7 +29,8 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     CommonModule,
     CurrencyPipe,
     DatePipe,
-    ButtonAtom
+    ButtonAtom,
+    TextareaComponent
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[950px] shadow-2xl">
@@ -104,6 +119,12 @@ import { ButtonAtom } from '../../atoms/button/button.component';
                   <span class="text-xs font-bold text-gray-500">Total Facturado</span>
                   <span class="text-xl font-black text-indigo-600">{{ inv.totalAmount | currency }}</span>
                 </div>
+                @if (inv.netTotal != null) {
+                  <div class="flex justify-between items-center pt-1">
+                    <span class="text-xs font-bold text-gray-500">Neto (con ajustes)</span>
+                    <span class="text-base font-black text-emerald-600">{{ inv.netTotal | currency }}</span>
+                  </div>
+                }
               </div>
             </div>
           </div>
@@ -146,130 +167,160 @@ import { ButtonAtom } from '../../atoms/button/button.component';
             </div>
           </div>
 
-          <!-- Associated Electronic Notes (DIAN) -->
-          @if (notes().creditNotes.length > 0 || notes().debitNotes.length > 0) {
+          <!-- Trazabilidad de la Factura -->
+          @if (traceEvents().length > 0) {
             <div class="space-y-4 mb-8 animate-in fade-in duration-300">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Documentos Electrónicos de Ajuste (DIAN)</label>
-              <div class="grid grid-cols-1 gap-4">
-                <!-- Credit Notes -->
-                @for (note of notes().creditNotes; track note.id) {
-                  <div class="p-5 bg-red-50/40 border border-red-100 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                    <div class="flex items-start gap-4">
-                      <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <span class="material-icons scale-90">assignment_returned</span>
-                      </div>
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <h4 class="font-black text-gray-900 text-sm leading-none m-0">Nota de Crédito {{ note.noteNumber }}</h4>
-                          <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[8px] font-black uppercase tracking-wider">
-                            VÁLIDA
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Trazabilidad de la Factura</label>
+              <div class="border border-gray-100 rounded-[28px] overflow-hidden shadow-sm bg-white">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-gray-50/50 border-b border-gray-100">
+                      <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tipo</th>
+                      <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Número</th>
+                      <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha</th>
+                      <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Concepto</th>
+                      <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Monto</th>
+                      <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Saldo</th>
+                      <th class="py-4 px-6"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-50">
+                    @for (event of traceEvents(); track $index) {
+                      <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="py-4 px-6">
+                          <div class="flex items-center gap-2">
+                            <span [class]="event.type === 'Emisión Inicial' 
+                              ? 'w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shrink-0'
+                              : event.type === 'Emisión Electrónica'
+                              ? 'w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0'
+                              : event.type === 'Nota Crédito'
+                              ? 'w-8 h-8 bg-red-100 text-red-600 rounded-xl flex items-center justify-center shrink-0'
+                              : 'w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0'">
+                              <span class="material-icons scale-75">
+                                {{ event.type === 'Emisión Inicial' ? 'receipt' : event.type === 'Emisión Electrónica' ? 'rocket_launch' : event.type === 'Nota Crédito' ? 'assignment_returned' : 'assignment_turned_in' }}
+                              </span>
+                            </span>
+                            <span class="text-xs font-black text-gray-900">{{ event.type }}</span>
+                          </div>
+                        </td>
+                        <td class="py-4 px-6">
+                          <span class="text-xs font-bold text-gray-900">{{ event.number }}</span>
+                        </td>
+                        <td class="py-4 px-6">
+                          <span class="text-xs text-gray-500">{{ event.date | date:'dd MMM, yyyy' }}</span>
+                        </td>
+                        <td class="py-4 px-6">
+                          <span class="text-xs text-gray-600">{{ event.concept }}</span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                          <span [class]="event.type === 'Nota Crédito'
+                            ? 'text-xs font-black text-red-600'
+                            : event.type === 'Nota Débito'
+                            ? 'text-xs font-black text-blue-600'
+                            : 'text-xs font-black text-gray-900'">
+                            {{ event.isCredit ? '-' : '+' }}{{ event.amount | currency }}
                           </span>
-                        </div>
-                        <p class="text-[9px] text-gray-400 font-semibold uppercase mt-1.5 leading-none">CUDE: {{ note.cude || 'N/A' }}</p>
-                        @if (note.observation) {
-                          <p class="text-xs text-gray-600 font-medium mt-2.5 italic">"{{ note.observation }}"</p>
-                        }
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-4 self-end md:self-auto">
-                      <span class="text-base font-black text-red-600">-{{ note.amount | currency }}</span>
-                      @if (note.publicUrl) {
-                        <a [href]="note.publicUrl" target="_blank" class="!rounded-full !px-4 !h-9 !border-red-200 !text-red-700 !bg-white hover:!bg-red-50 text-xs shadow-sm border inline-flex items-center gap-1 no-underline">
-                          <span class="material-icons mr-1 scale-75">picture_as_pdf</span>
-                          PDF DIAN
-                        </a>
-                      }
-                    </div>
-                  </div>
-                }
-
-                <!-- Debit Notes -->
-                @for (note of notes().debitNotes; track note.id) {
-                  <div class="p-5 bg-blue-50/40 border border-blue-100 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                    <div class="flex items-start gap-4">
-                      <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <span class="material-icons scale-90">assignment_turned_in</span>
-                      </div>
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <h4 class="font-black text-gray-900 text-sm leading-none m-0">Nota de Débito {{ note.noteNumber }}</h4>
-                          <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[8px] font-black uppercase tracking-wider">
-                            VÁLIDA
-                          </span>
-                        </div>
-                        <p class="text-[9px] text-gray-400 font-semibold uppercase mt-1.5 leading-none">CUDE: {{ note.cude || 'N/A' }}</p>
-                        @if (note.observation) {
-                          <p class="text-xs text-gray-600 font-medium mt-2.5 italic">"{{ note.observation }}"</p>
-                        }
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-4 self-end md:self-auto">
-                      <span class="text-base font-black text-blue-600">+{{ note.amount | currency }}</span>
-                      @if (note.publicUrl) {
-                        <a [href]="note.publicUrl" target="_blank" class="!rounded-full !px-4 !h-9 !border-blue-200 !text-blue-700 !bg-white hover:!bg-blue-50 text-xs shadow-sm border inline-flex items-center gap-1 no-underline">
-                          <span class="material-icons mr-1 scale-75">picture_as_pdf</span>
-                          PDF DIAN
-                        </a>
-                      }
-                    </div>
-                  </div>
-                }
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                          <span class="text-xs font-black text-gray-900">{{ runningBalance($index) | currency }}</span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                          @if (event.cude) {
+                            <span class="text-[9px] text-gray-400 font-medium" [title]="'CUDE: ' + event.cude">CUDE</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
             </div>
           }
 
           <!-- Notes -->
           @if (inv.notes) {
-            <div class="p-6 bg-amber-50/30 border border-amber-100 rounded-[24px] mb-8">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="material-icons text-amber-500 scale-75">description</span>
-                <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Observaciones</span>
+            <div class="mb-8">
+              <ui-textarea
+                label="Observaciones"
+                [value]="inv.notes"
+                [disabled]="true"
+                [rows]="3"
+              />
+            </div>
+          }
+
+          <!-- Emit error -->
+          @if (emitError(); as errorMsg) {
+            <div class="p-4 bg-red-50 border border-red-200 rounded-[24px] mb-6 flex items-center gap-3">
+              <span class="material-icons text-red-500">error_outline</span>
+              <p class="text-xs text-red-700 font-medium">{{ errorMsg }}</p>
+            </div>
+          }
+
+          <!-- Emission metadata (DIAN) -->
+          @if (inv.emission) {
+            <div class="space-y-4 mb-6 animate-in fade-in duration-300">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Emisión Electrónica (DIAN)</label>
+              <div class="p-6 bg-indigo-50/40 border border-indigo-100 rounded-[28px] space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span class="text-[10px] font-bold text-gray-500">Número de Emisión</span>
+                    <p class="font-black text-gray-900">{{ inv.emission.number }}</p>
+                  </div>
+                  <div>
+                    <span class="text-[10px] font-bold text-gray-500">CUDE</span>
+                    <p class="text-xs font-medium text-gray-600 break-all">{{ inv.emission.cude || 'N/A' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Validado:</span>
+                  @if (inv.emission.isValidated) {
+                    <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[9px] font-black">SÍ</span>
+                  } @else {
+                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[9px] font-black">PENDIENTE</span>
+                  }
+                </div>
+                <div class="flex items-center gap-4 flex-wrap">
+                  @if (inv.emission.publicUrl) {
+                    <ui-button variant="outline" (clicked)="openUrl(inv.emission.publicUrl)">
+                      <span class="material-icons text-[16px]">open_in_new</span>
+                      Ver en DIAN
+                    </ui-button>
+                  }
+                  @if (inv.emission.qrUrl) {
+                    <ui-button variant="outline" (clicked)="openUrl(inv.emission.qrUrl)">
+                      <span class="material-icons text-[16px]">qr_code_scanner</span>
+                      Ver QR
+                    </ui-button>
+                  }
+                </div>
               </div>
-              <p class="text-sm text-amber-900 font-medium">{{ inv.notes }}</p>
             </div>
           }
 
           <footer class="flex justify-end gap-3 pt-6 border-t border-gray-100 flex-wrap">
-            <button (click)="close()" class="!rounded-full !px-6 md:!px-8 !h-12 !font-bold text-gray-500 hover:bg-gray-50 transition-colors">
+            <ui-button variant="ghost" (clicked)="close()">
               Cerrar
-            </button>
-            
+            </ui-button>
+
             @if (inv.status !== 'CANCELLED') {
-              <button class="!rounded-full !px-6 md:!px-8 !h-12 !font-black !text-indigo-600 !border-indigo-200 hover:!bg-indigo-50 shadow-sm border inline-flex items-center gap-2">
+              <ui-button variant="outline" (clicked)="openAdjustmentDialog(inv)">
                 <span class="material-icons">post_add</span>
                 Emitir Nota (Crédito/Débito)
-              </button>
+              </ui-button>
             }
 
-            <button (click)="printPdf(inv)" [disabled]="pdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-indigo-600 text-white !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 inline-flex items-center gap-2">
-              @if (pdfLoading()) {
-                <span class="flex items-center justify-center gap-2">
-                  <span class="w-5 h-5 border-2 border-indigo-100 border-t-white rounded-full animate-spin"></span>
-                  <span>Generando PDF...</span>
-                </span>
-              } @else {
-                <span class="flex items-center justify-center gap-2">
-                  <span class="material-icons">print</span>
-                  Imprimir Factura
-                </span>
-              }
-            </button>
-
-            @if (inv.isElectronic) {
-              <button (click)="downloadDianPdf(inv)" [disabled]="dianPdfLoading()" class="!rounded-full !px-8 md:!px-10 !h-12 !bg-red-600 !text-white !font-black shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 inline-flex items-center gap-2">
-                @if (dianPdfLoading()) {
-                  <span class="flex items-center justify-center gap-2">
-                    <span class="w-5 h-5 border-2 border-red-100 border-t-white rounded-full animate-spin"></span>
-                    <span>Descargando PDF DIAN...</span>
-                  </span>
-                } @else {
-                  <span class="flex items-center justify-center gap-2">
-                    <span class="material-icons">picture_as_pdf</span>
-                    <span>Descargar PDF DIAN</span>
-                  </span>
-                }
-              </button>
+            @if (!inv.isElectronic && !inv.emission) {
+              <ui-button variant="primary" (clicked)="emitInvoice()" [disabled]="emitLoading()" [loading]="emitLoading()">
+                <span class="material-icons">rocket_launch</span>
+                Emitir Electrónicamente
+              </ui-button>
             }
+
+            <ui-button variant="primary" (clicked)="printPdf(inv)" [disabled]="pdfLoading()" [loading]="pdfLoading()">
+              <span class="material-icons">print</span>
+              Imprimir Factura
+            </ui-button>
           </footer>
         </div>
       }
@@ -289,6 +340,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
 })
 export class InvoiceDetailDialogOrganism implements OnInit {
   private dialogRef = inject(MatDialogRef<InvoiceDetailDialogOrganism>);
+  private matDialog = inject(MatDialog);
   private dialogData = inject(MAT_DIALOG_DATA);
   private invoiceService = inject(InvoiceService);
   private salesNoteService = inject(SalesNoteService);
@@ -298,7 +350,72 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   error = signal(false);
   notes = signal<{ creditNotes: CreditNote[], debitNotes: DebitNote[] }>({ creditNotes: [], debitNotes: [] });
   pdfLoading = signal(false);
-  dianPdfLoading = signal(false);
+  emitLoading = signal(false);
+  emitError = signal<string | null>(null);
+
+  traceEvents = computed(() => {
+    const inv = this.invoice();
+    const { creditNotes, debitNotes } = this.notes();
+    const events: TraceEvent[] = [];
+
+    if (inv) {
+      events.push({
+        type: 'Emisión Inicial',
+        number: inv.invoiceNumber,
+        date: inv.date,
+        concept: '-',
+        observation: inv.notes || null,
+        amount: Number(inv.totalAmount) || 0,
+        isCredit: false,
+      });
+
+      if (inv.emission) {
+        const emissionDate = inv.emission.createdAt ?? inv.date;
+        events.push({
+          type: 'Emisión Electrónica',
+          number: inv.emission.number,
+          date: emissionDate,
+          concept: `Emisión #${inv.emission.number}`,
+          observation: null,
+          amount: Number(inv.totalAmount) || 0,
+          isCredit: false,
+          cude: inv.emission.cude,
+          publicUrl: inv.emission.publicUrl,
+        });
+      }
+    }
+
+    for (const cn of creditNotes) {
+      events.push({
+        type: 'Nota Crédito',
+        number: cn.noteNumber || cn.referenceCode,
+        date: cn.createdAt,
+        concept: cn.correctionConceptCode,
+        observation: cn.observation,
+        amount: Number(cn.amount) || 0,
+        isCredit: true,
+        cude: cn.cude,
+        publicUrl: cn.publicUrl,
+      });
+    }
+
+    for (const dn of debitNotes) {
+      events.push({
+        type: 'Nota Débito',
+        number: dn.noteNumber || dn.referenceCode,
+        date: dn.createdAt,
+        concept: dn.correctionConceptCode,
+        observation: dn.observation,
+        amount: Number(dn.amount) || 0,
+        isCredit: false,
+        cude: dn.cude,
+        publicUrl: dn.publicUrl,
+      });
+    }
+
+    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return events;
+  });
 
   ngOnInit() {
     const data = this.dialogData;
@@ -327,12 +444,94 @@ export class InvoiceDetailDialogOrganism implements OnInit {
     this.dialogRef.close();
   }
 
+  emitInvoice() {
+    const currentInvoice = this.invoice();
+    if (!currentInvoice?.id) return;
+
+    this.emitLoading.set(true);
+    this.emitError.set(null);
+
+    this.invoiceService.emitInvoice(currentInvoice.id).subscribe({
+      next: (updatedInvoice) => {
+        this.invoice.set(updatedInvoice);
+        this.emitLoading.set(false);
+      },
+      error: () => {
+        this.emitLoading.set(false);
+        this.emitError.set('Error al emitir la factura electrónica');
+      },
+    });
+  }
+
   loadNotes(invoiceId: string) {
     this.salesNoteService.getNotesByInvoiceId(invoiceId).subscribe({
       next: (res) => {
         this.notes.set(res);
       },
       error: (err) => console.error('Error cargando notas de ajuste:', err)
+    });
+  }
+
+  runningBalance(index: number): number {
+    const events = this.traceEvents();
+    let balance = 0;
+    for (let i = 0; i <= index; i++) {
+      const e = events[i];
+      if (e.type === 'Emisión Inicial') {
+        balance = e.amount;
+      } else if (e.type === 'Nota Crédito') {
+        balance -= e.amount;
+      } else if (e.type === 'Nota Débito') {
+        balance += e.amount;
+      }
+      // Emisión Electrónica no modifica el saldo
+    }
+    return balance;
+  }
+
+  openUrl(url: string): void {
+    window.open(url, '_blank');
+  }
+
+  openAdjustmentDialog(invoice: Invoice): void {
+    const dialogRef = this.matDialog.open(AdjustmentFormDialogOrganism, {
+      width: '700px',
+      maxWidth: '95vw',
+      panelClass: 'erp-dialog-panel',
+      data: {
+        invoice: {
+          id: invoice.invoiceNumber || invoice.id,
+          dbId: invoice.id,
+          customerName: invoice.customer?.name || 'Desconocido',
+          customerTaxId: invoice.customer?.documentNumber || '',
+          date: invoice.date,
+          dueDate: invoice.date,
+          items: invoice.items || [],
+          subtotal: Number(invoice.totalAmount) || 0,
+          tax: 0,
+          total: Number(invoice.totalAmount) || 0,
+          status: invoice.status === 'PAID' ? 'Paid' : invoice.status === 'CANCELLED' ? 'Cancelled' : 'Draft',
+          isElectronic: invoice.isElectronic,
+          adjustments: [],
+        },
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        this.reloadInvoice();
+      }
+    });
+  }
+
+  private reloadInvoice(): void {
+    const current = this.invoice();
+    if (!current?.id) return;
+    this.invoiceService.getInvoiceById(current.id).subscribe({
+      next: (inv) => {
+        this.invoice.set(inv);
+        this.loadNotes(inv.id);
+      },
     });
   }
 
@@ -352,20 +551,5 @@ export class InvoiceDetailDialogOrganism implements OnInit {
     });
   }
 
-  downloadDianPdf(invoice: Invoice) {
-    if (!invoice.id) return;
-    this.dianPdfLoading.set(true);
-    this.invoiceService.getInvoiceDianPdf(invoice.id).subscribe({
-      next: (res) => {
-        this.dianPdfLoading.set(false);
-        downloadBase64Pdf(res.pdfBase64Encoded, res.fileName);
-      },
-      error: (err) => {
-        this.dianPdfLoading.set(false);
-        console.error('Error fetching DIAN PDF:', err);
-        alert('Error al descargar el PDF de la DIAN.');
-      }
-    });
-  }
 }
 

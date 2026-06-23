@@ -7,12 +7,10 @@ import {
   Validators,
   FormArray,
   FormControl,
+  AbstractControl,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -25,6 +23,10 @@ import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import {
+  ProductSelectionDialogComponent,
+  ProductSelectionDialogResult,
+} from '../../organisms/product-selection-dialog/product-selection-dialog.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
@@ -34,10 +36,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
     MatTableModule,
-    MatTooltipModule,
     MatSlideToggleModule,
     CurrencyPipe,
     ButtonAtom,
@@ -59,7 +58,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             <div
               class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 animate-in zoom-in duration-500"
             >
-              <mat-icon class="!text-[28px] !w-7 !h-7">shopping_cart</mat-icon>
+              <span class="material-icons !text-[28px] !w-7 !h-7">shopping_cart</span>
             </div>
             <div>
               <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">
@@ -76,20 +75,20 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
         </header>
 
         <form [formGroup]="saleForm" (ngSubmit)="onSubmit()" class="space-y-8">
-          <!-- Manual invoice toggle -->
-          <div class="flex items-center gap-4 px-1">
+          <!-- Electronic invoice toggle -->
+          <div class="flex items-center justify-between px-1">
             <mat-slide-toggle
-              [checked]="isManual()"
-              (change)="isManual.set($event.checked)"
-              color="warn"
+              [checked]="isElectronic()"
+              (change)="isElectronic.set($event.checked)"
+              color="primary"
             >
-              <span class="text-sm font-semibold text-gray-700">Venta manual</span>
+              <span class="text-sm font-semibold text-gray-700">Factura electrónica</span>
             </mat-slide-toggle>
           </div>
 
-          @if (isManual()) {
+          @if (!isElectronic()) {
             <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-              <mat-icon class="text-amber-500 mt-0.5 text-[18px]">warning_amber</mat-icon>
+              <span class="material-icons text-amber-500 mt-0.5 text-[18px]">warning_amber</span>
               <p class="text-xs text-amber-700 leading-relaxed">
                 Esta venta <strong>no será enviada a la DIAN</strong>. Se asignará un número
                 interno (MAN-XXXXXXXX) y no tendrá validez fiscal electrónica.
@@ -123,38 +122,22 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             />
           </div>
 
-          <!-- Product Selection Area -->
-          <div class="bg-gray-50/50 rounded-[28px] p-6 border border-gray-100 space-y-4">
-            <div class="flex items-center gap-2 mb-2">
-              <mat-icon class="text-indigo-600 scale-75">add_circle</mat-icon>
-              <h3 class="text-xs font-black text-gray-900 uppercase tracking-widest">
-                Añadir Productos
-              </h3>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4 items-start">
-              <div>
-                <ui-select
-                  label="Producto"
-                  placeholder="Escriba el nombre del producto..."
-                  [searchable]="true"
-                  [options]="productOptions()"
-                  [showSubtitle]="true"
-                  [formControl]="productSearchControl"
-                  (valueChange)="onProductSelected($event)"
-                />
-              </div>
-            </div>
+          <!-- Add Product Button -->
+          <div class="flex justify-start">
+            <ui-button variant="outline" (clicked)="openAddProductDialog()">
+              <span class="material-icons text-lg mr-2">add</span>
+              Añadir Producto
+            </ui-button>
           </div>
 
           <!-- Added Products Table -->
-          @if (items.length > 0) {
+          @if (itemsCount() > 0) {
             <div class="space-y-4 animate-in fade-in slide-in-from-bottom duration-500">
               <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1"
                 >Detalle de Factura</label
               >
               <div class="border border-gray-100 rounded-[24px] overflow-hidden bg-white shadow-sm">
-                <table mat-table [dataSource]="items.controls" class="w-full">
+                <table mat-table [dataSource]="controls()" class="w-full">
                   <ng-container matColumnDef="product">
                     <th
                       mat-header-cell
@@ -167,7 +150,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                       <div class="flex flex-col">
                         <span class="font-bold text-gray-900">{{ control.value.name }}</span>
                         <span class="text-[10px] text-gray-400 font-medium"
-                          >Ref: {{ control.value.productId.split('-')[0] }}</span
+                          >Ref: {{ control.value.productId?.split('-')[0] }}</span
                         >
                       </div>
                     </td>
@@ -182,35 +165,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                       Precio Unit.
                     </th>
                     <td mat-cell *matCellDef="let control" class="px-4 text-right">
-                      <div class="flex items-center gap-2">
-                        <mat-icon
-                          class="!text-indigo-400 !text-[18px] !w-[18px] !h-[18px] cursor-help"
-                          [matTooltip]="
-                            '• Precio Config: ' +
-                            (control.value.referenceSellingPrice | currency) +
-                            '
-• Sugerido (30%): ' +
-                            (control.value.referenceAveragePrice * 1.3 | currency) +
-                            '
-• Promedio (PMP): ' +
-                            (control.value.referenceAveragePrice | currency) +
-                            '
-• Stock Total: ' +
-                            control.value.referenceStock +
-                            ' unidades'
-                          "
-                          matTooltipPosition="above"
-                          matTooltipClass="pre-line-tooltip"
-                          >info_outline</mat-icon
-                        >
-                        <mat-icon class="!text-gray-300 scale-75">edit</mat-icon>
-                        <input
-                          type="number"
-                          [value]="control.value.unitPrice"
-                          (change)="updatePrice(control, $event)"
-                          class="text-right bg-transparent border-b border-dashed border-gray-200 focus:border-indigo-500 outline-none font-bold"
-                        />
-                      </div>
+                      <span class="font-bold text-gray-900">{{
+                        control.value.unitPrice | currency
+                      }}</span>
                     </td>
                   </ng-container>
 
@@ -222,29 +179,10 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                     >
                       Cant.
                     </th>
-                    <td mat-cell *matCellDef="let control; let i = index" class="!p-2 text-center">
-                      <div class="flex items-center gap-3">
-                        <button
-                          type="button"
-                          mat-icon-button
-                          class="!bg-gray-100"
-                          (click)="updateQty(i, -1)"
-                          [disabled]="control.value.quantity <= 1"
-                        >
-                          <mat-icon>remove</mat-icon>
-                        </button>
-                        <span class="text-sm font-black text-gray-900">{{
-                          control.value.quantity
-                        }}</span>
-                        <button
-                          type="button"
-                          mat-icon-button
-                          class="!bg-gray-100"
-                          (click)="updateQty(i, 1)"
-                        >
-                          <mat-icon>add</mat-icon>
-                        </button>
-                      </div>
+                    <td mat-cell *matCellDef="let control" class="px-4 text-center">
+                      <span class="text-sm font-black text-gray-900">{{
+                        control.value.quantity
+                      }}</span>
                     </td>
                   </ng-container>
 
@@ -266,14 +204,14 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                   <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef class="bg-gray-50/50"></th>
                     <td mat-cell *matCellDef="let control; let i = index" class="text-right px-4">
-                      <button
-                        type="button"
-                        mat-icon-button
-                        (click)="removeItem(i)"
-                        class="!text-red-400 hover:!bg-red-50 transition-colors"
-                      >
-                        <mat-icon>delete_outline</mat-icon>
-                      </button>
+                      <div class="flex items-center justify-end gap-1">
+                        <ui-button variant="ghost" (clicked)="openEditProductDialog(i)" ariaLabel="Editar producto">
+                          <span class="material-icons text-[20px]">edit</span>
+                        </ui-button>
+                        <ui-button variant="ghost" (clicked)="removeItem(i)" ariaLabel="Eliminar producto">
+                          <span class="material-icons text-[20px]">delete_outline</span>
+                        </ui-button>
+                      </div>
                     </td>
                   </ng-container>
 
@@ -297,7 +235,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                   <div
                     class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center"
                   >
-                    <mat-icon>payments</mat-icon>
+                    <span class="material-icons">payments</span>
                   </div>
                   <div>
                     <p class="text-[10px] text-indigo-100 font-black uppercase tracking-widest">
@@ -320,7 +258,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
               <div
                 class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto"
               >
-                <mat-icon class="!text-gray-300 !text-3xl !w-7 !h-7">receipt</mat-icon>
+                <span class="material-icons !text-gray-300 !text-3xl !w-7 !h-7">receipt</span>
               </div>
               <div>
                 <p class="text-sm font-bold text-gray-900">No hay ítems en la factura</p>
@@ -336,19 +274,12 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             <ui-button
               variant="outline"
               (clicked)="close(false)"
-              class="!rounded-full !px-8 !h-12 !font-bold text-gray-500"
             >
               Descartar
             </ui-button>
-            <button
-              mat-flat-button
-              color="primary"
-              type="submit"
-              [disabled]="saleForm.invalid || items.length === 0 || isSubmitting()"
-              class="!rounded-full !px-12 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              {{ isSubmitting() ? 'Procesando...' : 'Generar Factura (PAID)' }}
-            </button>
+            <ui-button variant="primary" type="submit" [disabled]="saleForm.invalid || itemsCount() === 0 || isSubmitting()">
+              @if (isSubmitting()) { Procesando... } @else { Generar Factura (PAID) }
+            </ui-button>
           </div>
         </form>
       </div>
@@ -384,15 +315,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
         color: #9ca3af !important;
         cursor: not-allowed;
       }
-      mat-icon {
-        font-size: 24px;
-      }
-      ::ng-deep .pre-line-tooltip {
-        white-space: pre-line !important;
-        line-height: 1.6 !important;
-        padding: 12px !important;
-        font-size: 11px !important;
-      }
     `,
   ],
 })
@@ -413,29 +335,18 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   customerSearchControl = new FormControl<string>('');
   private customerSearch$ = new Subject<string>();
   private searchSub: Subscription | null = null;
+  private customerValueSub: Subscription | null = null;
 
   // Computed options for ui-select
   customerOptions = computed<SelectOption[]>(() =>
     this.customersList().map(c => ({ value: c.id, label: `${c.name} (${c.documentNumber})` }))
   );
 
-  productOptions = computed<SelectOption[]>(() =>
-    this.allProducts()
-      .filter(p => p.currentStock > 0)
-      .map(p => ({
-        value: p.id,
-        label: p.name,
-        subtitle: `Stock: ${p.currentStock}`
-      }))
-  );
-
   // Local state signals
   customers = this.customerService.customers;
   allProducts = this.productService.products;
   isSubmitting = signal(false);
-  isManual = signal(false);
-
-  productSearchControl = new FormControl<string>('');
+  isElectronic = signal(false);
 
   saleForm = this.fb.group({
     customerId: ['', Validators.required],
@@ -443,17 +354,23 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
     items: this.fb.array([]),
   });
 
-  // Reactive Autocomplete Search results - ui-select handles local filtering
+  // Total Amount — plain signal updated explicitly after FormArray changes
+  private _totalAmount = signal(0);
+  totalAmount = this._totalAmount.asReadonly();
 
-  // Trigger for total computation
-  private itemsTrigger = signal(0);
+  // Data source for MatTable — new array reference each time to force re-render
+  readonly controls = signal<AbstractControl[]>([]);
 
-  // Total Amount Computation
-  totalAmount = computed(() => {
-    this.itemsTrigger();
+  // Track items length as a signal for template reactivity
+  itemsCount = signal(0);
+
+  private recalcTotal() {
     const currentItems = this.items.value || [];
-    return currentItems.reduce((acc: number, item: any) => acc + item.unitPrice * item.quantity, 0);
-  });
+    const total = currentItems.reduce((acc: number, item: any) => acc + item.unitPrice * item.quantity, 0);
+    this._totalAmount.set(total);
+    this.controls.set([...this.items.controls]);
+    this.itemsCount.set(currentItems.length);
+  }
 
   get items() {
     return this.saleForm.get('items') as FormArray;
@@ -472,7 +389,12 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
       this._fetchCustomers(query);
     });
 
-    // Product search filters locally via ui-select's built-in searchable
+    // Sync customer selection to form
+    this.customerValueSub = this.customerSearchControl.valueChanges.subscribe(customerId => {
+      if (customerId) {
+        this.saleForm.patchValue({ customerId });
+      }
+    });
   }
 
   onCustomerSearch(query: string) {
@@ -525,73 +447,79 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
     }
   }
 
-  onProductSelected(productId: string) {
-    const product = this.allProducts().find(p => p.id === productId);
-    if (product) {
-      this.addProduct(product);
+  private computeExistingQuantities(excludeIndex?: number): Record<string, number> {
+    const qtys: Record<string, number> = {};
+    for (let i = 0; i < this.items.length; i++) {
+      if (i === excludeIndex) continue;
+      const item = this.items.at(i).value;
+      qtys[item.productId] = (qtys[item.productId] || 0) + item.quantity;
     }
+    return qtys;
   }
 
-  addProduct(product: Product) {
-    const qty = 1;
+  openAddProductDialog() {
+    const ref = this.matDialog.open(ProductSelectionDialogComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { mode: 'add', existingQuantities: this.computeExistingQuantities() },
+    });
 
-    if (product && qty > 0) {
-      const existingIndex = this.items.controls.findIndex((c) => c.value.productId === product.id);
+    ref.afterClosed().subscribe((result: ProductSelectionDialogResult | undefined) => {
+      if (!result) return;
 
-      if (existingIndex !== -1) {
-        const currentQty = this.items.at(existingIndex).get('quantity')?.value || 0;
-        const newQty = currentQty + qty;
-        if (newQty > product.currentStock) {
-          this.showNotification(`Stock insuficiente para ${product.name}`);
-          return;
-        }
-        this.items.at(existingIndex).get('quantity')?.setValue(newQty);
-      } else {
-        this.items.push(
-          this.fb.group({
-            productId: [product.id],
-            name: [product.name],
-            unitPrice: [product.sellingPrice || product.averagePurchasePrice * 1.3],
-            quantity: [qty, [Validators.required, Validators.max(product.currentStock)]],
-            referenceSellingPrice: [product.sellingPrice],
-            referenceAveragePrice: [product.averagePurchasePrice],
-            referenceStock: [product.currentStock],
-          }),
-        );
-      }
-
-      this.productSearchControl.setValue('');
-      this.itemsTrigger.update((v) => v + 1);
-    }
-  }
-
-  updateQty(index: number, delta: number) {
-    const control = this.items.at(index).get('quantity');
-    const productId = this.items.at(index).get('productId')?.value;
-    const product = this.allProducts().find((p) => p.id === productId);
-    const newQty = (control?.value || 0) + delta;
-
-    if (newQty > 0 && (!product || newQty <= product.currentStock)) {
-      control?.setValue(newQty);
-      this.itemsTrigger.update((v) => v + 1);
-    } else if (product && newQty > product.currentStock) {
-      this.showNotification(
-        `No puedes exceder el stock disponible (${product.currentStock})`,
+      this.items.push(
+        this.fb.group({
+          productId: [result.productId],
+          name: [result.name],
+          unitPrice: [result.unitPrice],
+          quantity: [result.quantity, [Validators.required]],
+          referenceSellingPrice: [result.referenceSellingPrice],
+          referenceAveragePrice: [result.referenceAveragePrice],
+          referenceStock: [result.referenceStock],
+        }),
       );
-    }
+
+      this.recalcTotal();
+    });
   }
 
-  updatePrice(control: any, event: any) {
-    const newPrice = parseFloat(event.target.value);
-    if (!isNaN(newPrice) && newPrice >= 0) {
-      control.patchValue({ unitPrice: newPrice });
-      this.itemsTrigger.update((v) => v + 1);
-    }
+  openEditProductDialog(index: number) {
+    const itemGroup = this.items.at(index);
+    const itemValue = itemGroup.value;
+
+    const ref = this.matDialog.open(ProductSelectionDialogComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        mode: 'edit',
+        lineItem: itemValue,
+        index,
+        existingQuantities: this.computeExistingQuantities(index),
+      },
+    });
+
+    ref.afterClosed().subscribe((result: ProductSelectionDialogResult | undefined) => {
+      if (!result) return;
+
+      itemGroup.patchValue({
+        productId: result.productId,
+        name: result.name,
+        unitPrice: result.unitPrice,
+        quantity: result.quantity,
+        referenceSellingPrice: result.referenceSellingPrice,
+        referenceAveragePrice: result.referenceAveragePrice,
+        referenceStock: result.referenceStock,
+      });
+
+      this.recalcTotal();
+    });
   }
 
   removeItem(index: number) {
     this.items.removeAt(index);
-    this.itemsTrigger.update((v) => v + 1);
+    this.recalcTotal();
   }
 
   onSubmit() {
@@ -616,12 +544,11 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
 
           return itemPayload;
         }),
-        isElectronic: !this.isManual(),
+        isElectronic: this.isElectronic(),
       };
 
       this.invoiceService.createInvoice(dto).subscribe({
         next: () => {
-          this.isManual.set(false);
           this.showNotification('Factura generada exitosamente');
           this.dialogRef.close(true);
         },
@@ -636,6 +563,7 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.searchSub?.unsubscribe();
+    this.customerValueSub?.unsubscribe();
   }
 
   private showNotification(message: string, type: 'success' | 'error' = 'success') {

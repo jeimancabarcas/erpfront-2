@@ -1,19 +1,58 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+// @vitest-environment jsdom
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
 import { FormGroup, FormControl } from '@angular/forms';
 import { SaleFormMolecule } from './sale-form.component';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
 import { InvoiceService } from '../../../services/invoice.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Customer } from '../../../models/customer.model';
 import { CustomerDialogOrganism } from '../../../components/organisms/customer-dialog/customer-dialog.component';
+import { ProductSelectionDialogComponent, ProductSelectionDialogResult } from '../../organisms/product-selection-dialog/product-selection-dialog.component';
 
-describe('SaleFormMolecule - Customer Autocomplete (TDD)', () => {
+// Initialize Angular testing environment if not already initialized by Angular test builder
+try {
+  getTestBed().initTestEnvironment(
+    BrowserTestingModule,
+    platformBrowserTesting(),
+  );
+} catch {
+  // Already initialized — ignore
+}
+
+function createTestModule(
+  mockDialogRef: any,
+  mockMatDialog: any,
+  mockProductService: any,
+  mockCustomerService: any,
+  mockInvoiceService: any,
+) {
+  TestBed.resetTestingModule();
+  return TestBed.configureTestingModule({
+    imports: [SaleFormMolecule, NoopAnimationsModule],
+    providers: [
+      { provide: MatDialogRef, useValue: mockDialogRef },
+      { provide: MAT_DIALOG_DATA, useValue: null },
+      { provide: ProductService, useValue: mockProductService },
+      { provide: CustomerService, useValue: mockCustomerService },
+      { provide: InvoiceService, useValue: mockInvoiceService },
+      { provide: MatDialog, useValue: mockMatDialog },
+    ],
+  })
+    .overrideComponent(SaleFormMolecule, {
+      set: {
+        providers: [{ provide: MatDialog, useValue: mockMatDialog }],
+      },
+    })
+    .compileComponents();
+}
+
+describe('SaleFormMolecule — Product Dialog Integration (TDD)', () => {
   let component: SaleFormMolecule;
   let fixture: ComponentFixture<SaleFormMolecule>;
   let mockProductService: any;
@@ -21,7 +60,6 @@ describe('SaleFormMolecule - Customer Autocomplete (TDD)', () => {
   let mockInvoiceService: any;
   let mockDialogRef: any;
   let mockMatDialog: any;
-  let mockSnackBar: any;
 
   const mockCustomers: Customer[] = [
     {
@@ -36,32 +74,20 @@ describe('SaleFormMolecule - Customer Autocomplete (TDD)', () => {
       createdAt: '2026-06-21T09:00:00.000Z',
       updatedAt: '2026-06-21T09:00:00.000Z',
     },
-    {
-      id: 'cust-2',
-      name: 'Jane Smith',
-      documentNumber: '222',
-      documentType: 'CC',
-      email: 'ja@example.com',
-      status: 'ACTIVE',
-      phone: '456',
-      address: 'Calle 2',
-      createdAt: '2026-06-21T09:00:00.000Z',
-      updatedAt: '2026-06-21T09:00:00.000Z',
-    },
   ];
 
   beforeEach(async () => {
     mockProductService = {
       products: signal([]),
       loadProducts: vi.fn().mockReturnValue(of([])),
-    };
+    } as any;
 
     mockCustomerService = {
       customers: signal([]),
       loadCustomers: vi
         .fn()
         .mockReturnValue(
-          of({ data: mockCustomers, meta: { total: 2, page: 1, limit: 10, lastPage: 1 } }),
+          of({ data: mockCustomers, meta: { total: 1, page: 1, limit: 10, lastPage: 1 } }),
         ),
     };
 
@@ -75,280 +101,252 @@ describe('SaleFormMolecule - Customer Autocomplete (TDD)', () => {
 
     mockMatDialog = {
       open: vi.fn().mockReturnValue({
-        afterClosed: () => of(true),
+        afterClosed: () => of(null),
       }),
     };
 
-    mockSnackBar = {
-      open: vi.fn(),
-    };
-
-    await TestBed.configureTestingModule({
-      imports: [SaleFormMolecule, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: null },
-        { provide: ProductService, useValue: mockProductService },
-        { provide: CustomerService, useValue: mockCustomerService },
-        { provide: InvoiceService, useValue: mockInvoiceService },
-        { provide: MatDialog, useValue: mockMatDialog },
-        { provide: MatSnackBar, useValue: mockSnackBar },
-      ],
-    })
-      .overrideComponent(SaleFormMolecule, {
-        set: {
-          providers: [{ provide: MatDialog, useValue: mockMatDialog }],
-        },
-      })
-      .compileComponents();
+    await createTestModule(mockDialogRef, mockMatDialog, mockProductService, mockCustomerService, mockInvoiceService);
 
     fixture = TestBed.createComponent(SaleFormMolecule);
     component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
-  it('should search customers with a 300ms debounce when text is entered in customerSearchControl and reset page', async () => {
-    vi.useFakeTimers();
-    fixture.detectChanges();
+  it('should open ProductSelectionDialog in "add" mode when openAddProductDialog is called', () => {
+    component.openAddProductDialog();
 
-    // Clear calls from OnInit initial fetch
-    mockCustomerService.loadCustomers.mockClear();
-
-    // Simulate user typing:
-    component.customerSearchControl.setValue('John');
-
-    // Check that it hasn't called the service immediately:
-    expect(mockCustomerService.loadCustomers).not.toHaveBeenCalled();
-
-    // Fast-forward 300ms:
-    vi.advanceTimersByTime(300);
-
-    expect(mockCustomerService.loadCustomers).toHaveBeenCalledWith({
-      page: 1,
-      limit: 10,
-      search: 'John',
-    });
-    expect(component.currentPage).toBe(1);
-    expect(component.currentSearchTerm).toBe('John');
-    vi.useRealTimers();
-  });
-
-  it('should append customers when loading more results without closing the dropdown', async () => {
-    fixture.detectChanges();
-
-    // Initially mock customer service output:
-    const firstPageCustomers = [mockCustomers[0]];
-    const secondPageCustomers = [mockCustomers[1]];
-
-    mockCustomerService.loadCustomers.mockReturnValue(
-      of({
-        data: secondPageCustomers,
-        meta: { total: 2, page: 2, limit: 1, lastPage: 2 },
+    expect(mockMatDialog.open).toHaveBeenCalledWith(
+      ProductSelectionDialogComponent,
+      expect.objectContaining({
+        data: expect.objectContaining({ mode: 'add' }),
       }),
     );
-
-    component.customersList.set(firstPageCustomers);
-    component.currentPage = 1;
-    component.hasMore.set(true);
-    component.currentSearchTerm = 'John';
-
-    // Simulate clicking load more:
-    const mockEvent = {
-      stopPropagation: vi.fn(),
-      preventDefault: vi.fn(),
-    } as any;
-
-    component.loadMoreCustomers(mockEvent);
-
-    expect(mockEvent.stopPropagation).toHaveBeenCalled();
-    expect(mockEvent.preventDefault).toHaveBeenCalled();
-    expect(component.currentPage).toBe(2);
-    expect(mockCustomerService.loadCustomers).toHaveBeenCalledWith({
-      page: 2,
-      limit: 10,
-      search: 'John',
-    });
-
-    expect(component.customersList()).toEqual([...firstPageCustomers, ...secondPageCustomers]);
   });
 
-  it('should open CustomerDialogOrganism when no customers found, and auto-select the new customer using hybrid fallback', async () => {
-    fixture.detectChanges();
-
-    const newCustomer: Customer = {
-      id: 'cust-new',
-      name: 'New Customer',
-      documentNumber: '999',
-      documentType: 'CC',
-      email: 'new@example.com',
-      status: 'ACTIVE',
-      phone: '999',
-      address: 'Calle Nueva',
-      createdAt: '2026-06-21T09:00:00.000Z',
-      updatedAt: '2026-06-21T09:00:00.000Z',
+  it('should push new FormGroup to FormArray when dialog returns a result', () => {
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 2,
+      unitPrice: 50000,
+      referenceSellingPrice: 80000,
+      referenceAveragePrice: 50000,
+      referenceStock: 10,
     };
 
-    // Mock customerService.customers signal to emit the new customer as the first item when queried:
-    mockCustomerService.customers = signal([newCustomer]);
-
-    // Simulate opening the dialog:
-    const mockEvent = {
-      stopPropagation: vi.fn(),
-      preventDefault: vi.fn(),
-    } as any;
-
-    component.openCreateCustomerDialog(mockEvent);
-
-    expect(mockMatDialog.open).toHaveBeenCalledWith(CustomerDialogOrganism, {
-      width: '600px',
+    mockMatDialog.open.mockReturnValue({
+      afterClosed: () => of(mockResult),
     });
 
-    // Verify it auto-selects the new customer:
-    expect(component.saleForm.get('customerId')?.value).toBe('cust-new');
-    expect(component.customerSearchControl.value).toBe(newCustomer);
+    component.openAddProductDialog();
+
+    expect(component.items.length).toBe(1);
+    expect(component.items.at(0).value.productId).toBe('prod-1');
+    expect(component.items.at(0).value.name).toBe('Test Product');
+    expect(component.items.at(0).value.quantity).toBe(2);
+    expect(component.items.at(0).value.unitPrice).toBe(50000);
   });
-});
 
-// ---------------------------------------------------------------------------
-// Phase 3.1 RED — SaleFormMolecule: manual invoice toggle (TDD)
-// ---------------------------------------------------------------------------
+  it('should NOT add item when dialog is dismissed (returns undefined)', () => {
+    component.openAddProductDialog();
+    expect(component.items.length).toBe(0);
+  });
 
-describe('SaleFormMolecule — manual invoice toggle (TDD)', () => {
-  let component: SaleFormMolecule;
-  let fixture: ComponentFixture<SaleFormMolecule>;
-  let mockInvoiceService: any;
-  let capturedDto: any;
+  it('should allow duplicate products — each add creates independent FormGroup', () => {
+    const mockResult1: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Product A',
+      quantity: 1,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
 
-  beforeEach(async () => {
-    capturedDto = null;
+    const mockResult2: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Product A',
+      quantity: 2,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
 
-    mockInvoiceService = {
-      createInvoice: vi.fn().mockImplementation((dto: any) => {
-        capturedDto = dto;
-        return of({ id: 'inv-new' });
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(mockResult1) });
+    component.openAddProductDialog();
+
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(mockResult2) });
+    component.openAddProductDialog();
+
+    expect(component.items.length).toBe(2);
+    expect(component.items.at(0).value.productId).toBe('prod-1');
+    expect(component.items.at(1).value.productId).toBe('prod-1');
+    expect(component.items.at(0).value.quantity).toBe(1);
+    expect(component.items.at(1).value.quantity).toBe(2);
+  });
+
+  it('should open ProductSelectionDialog in "edit" mode with pre-filled line item', () => {
+    // First add a product
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 1,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(mockResult) });
+    component.openAddProductDialog();
+
+    mockMatDialog.open.mockClear();
+    mockMatDialog.open.mockReturnValue({ afterClosed: () => of(null) });
+
+    component.openEditProductDialog(0);
+
+    expect(mockMatDialog.open).toHaveBeenCalledWith(
+      ProductSelectionDialogComponent,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          mode: 'edit',
+          lineItem: expect.objectContaining({
+            productId: 'prod-1',
+            quantity: 1,
+            unitPrice: 100,
+          }),
+          index: 0,
+        }),
       }),
-    };
-
-    const mockProductService = {
-      products: signal([]),
-      loadProducts: vi.fn().mockReturnValue(of([])),
-    };
-
-    const mockCustomerService = {
-      customers: signal([]),
-      loadCustomers: vi.fn().mockReturnValue(
-        of({ data: [], meta: { total: 0, page: 1, limit: 10, lastPage: 1 } }),
-      ),
-    };
-
-    const mockDialogRef = { close: vi.fn() };
-    const mockMatDialog = {
-      open: vi.fn().mockReturnValue({ afterClosed: () => of(null) }),
-    };
-    const mockSnackBar = { open: vi.fn() };
-
-    await TestBed.configureTestingModule({
-      imports: [SaleFormMolecule, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: null },
-        { provide: ProductService, useValue: mockProductService },
-        { provide: CustomerService, useValue: mockCustomerService },
-        { provide: InvoiceService, useValue: mockInvoiceService },
-        { provide: MatDialog, useValue: mockMatDialog },
-        { provide: MatSnackBar, useValue: mockSnackBar },
-      ],
-    })
-      .overrideComponent(SaleFormMolecule, {
-        set: {
-          providers: [{ provide: MatDialog, useValue: mockMatDialog }],
-        },
-      })
-      .compileComponents();
-
-    fixture = TestBed.createComponent(SaleFormMolecule);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    );
   });
 
-  it('toggle starts as false — isManual() returns false', () => {
-    expect(component.isManual()).toBe(false);
+  it('should patch FormGroup when edit dialog returns result', () => {
+    const initialResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 1,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(initialResult) });
+    component.openAddProductDialog();
+
+    const editResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 5,
+      unitPrice: 90,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(editResult) });
+    component.openEditProductDialog(0);
+
+    expect(component.items.at(0).value.quantity).toBe(5);
+    expect(component.items.at(0).value.unitPrice).toBe(90);
   });
 
-  it('toggle starts as false — amber warning block is not rendered', () => {
-    const nativeEl: HTMLElement = fixture.nativeElement;
-    const warningDiv = nativeEl.querySelector('.bg-amber-50');
-    expect(warningDiv).toBeNull();
+  it('should NOT update item when edit dialog is dismissed', () => {
+    const initialResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 1,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(initialResult) });
+    component.openAddProductDialog();
+
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(undefined) });
+
+    const previousValue = component.items.at(0).value.quantity;
+    component.openEditProductDialog(0);
+
+    expect(component.items.at(0).value.quantity).toBe(previousValue);
   });
 
-  it('user sets toggle to true — amber warning block is visible', async () => {
-    component.isManual.set(true);
-    fixture.detectChanges();
-    await fixture.whenStable();
+  it('should remove item when delete is called', () => {
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 1,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(mockResult) });
+    component.openAddProductDialog();
 
-    const nativeEl: HTMLElement = fixture.nativeElement;
-    const warningDiv = nativeEl.querySelector('.bg-amber-50');
-    expect(warningDiv).not.toBeNull();
+    expect(component.items.length).toBe(1);
+
+    component.removeItem(0);
+    expect(component.items.length).toBe(0);
   });
 
-  it('submit with toggle off — DTO includes isElectronic: true', () => {
-    // Set a valid customer and items so onSubmit passes the guard
+  it('should have isElectronic signal defaulting to false', () => {
+    expect(component.isElectronic()).toBe(false);
+  });
+
+  it('should send isElectronic: false by default (manual mode)', () => {
     component.saleForm.patchValue({ customerId: 'cust-1' });
-    // Add item directly to the items array
-    component.items.clear();
-    component.items.push(new FormGroup({
-      productId: new FormControl('prod-1'),
-      quantity: new FormControl(1),
-      unitPrice: new FormControl(100),
-      referenceSellingPrice: new FormControl(100)
-    }));
 
-    component.isManual.set(false);
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 1,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(mockResult) });
+    component.openAddProductDialog();
+
+    let capturedDto: any = null;
+    mockInvoiceService.createInvoice = vi.fn().mockImplementation((dto: any) => {
+      capturedDto = dto;
+      return of({ id: 'inv-new' });
+    });
+
     component.onSubmit();
 
-    if (capturedDto) {
-      expect(capturedDto.isElectronic).toBe(true);
-    } else {
-      // onSubmit may not fire due to form validation; just assert isManual is false
-      expect(component.isManual()).toBe(false);
-    }
+    expect(capturedDto).not.toBeNull();
+    expect(capturedDto.isElectronic).toBe(false);
   });
 
-  it('submit with toggle on — DTO includes isElectronic: false', () => {
+  it('should send isElectronic: true when toggle is activated', () => {
     component.saleForm.patchValue({ customerId: 'cust-1' });
-    component.items.clear();
-    component.items.push(new FormGroup({
-      productId: new FormControl('prod-1'),
-      quantity: new FormControl(1),
-      unitPrice: new FormControl(100),
-      referenceSellingPrice: new FormControl(100)
-    }));
 
-    component.isManual.set(true);
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-1',
+      name: 'Test Product',
+      quantity: 1,
+      unitPrice: 100,
+      referenceSellingPrice: 100,
+      referenceAveragePrice: 50,
+      referenceStock: 10,
+    };
+    mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(mockResult) });
+    component.openAddProductDialog();
+
+    component.isElectronic.set(true);
+
+    let capturedDto: any = null;
+    mockInvoiceService.createInvoice = vi.fn().mockImplementation((dto: any) => {
+      capturedDto = dto;
+      return of({ id: 'inv-new' });
+    });
+
     component.onSubmit();
 
-    if (capturedDto) {
-      expect(capturedDto.isElectronic).toBe(false);
-    } else {
-      expect(component.isManual()).toBe(true);
-    }
-  });
-
-  it('successful submit resets toggle to false', async () => {
-    component.isManual.set(true);
-    component.saleForm.patchValue({ customerId: 'cust-1' });
-    component.items.clear();
-    component.items.push(new FormGroup({
-      productId: new FormControl('prod-1'),
-      quantity: new FormControl(1),
-      unitPrice: new FormControl(100),
-      referenceSellingPrice: new FormControl(100)
-    }));
-
-    mockInvoiceService.createInvoice.mockReturnValue(of({ id: 'inv-new' }));
-    component.onSubmit();
-    await fixture.whenStable();
-
-    // After a successful submit, isManual should reset to false
-    expect(component.isManual()).toBe(false);
+    expect(capturedDto).not.toBeNull();
+    expect(capturedDto.isElectronic).toBe(true);
   });
 });

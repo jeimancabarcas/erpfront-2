@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
@@ -17,6 +17,7 @@ import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 export interface AdjustmentFormData {
   type?: 'Credit' | 'Debit';
   invoice?: FinanceInvoice;
+  invoiceIsElectronic?: boolean;
 }
 
 @Component({
@@ -26,7 +27,7 @@ export interface AdjustmentFormData {
     CommonModule, 
     ReactiveFormsModule, 
     MatDialogModule,
-    MatButtonModule,
+    MatSlideToggleModule,
     MatSnackBarModule,
     ButtonAtom,
     TextInputComponent,
@@ -50,13 +51,13 @@ export interface AdjustmentFormData {
       
       <!-- Fixed Header -->
       <header class="flex items-center gap-6 p-10 pb-6 relative z-10">
-        <div class="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-[24px] flex items-center justify-center shadow-xl shadow-amber-100">
+        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-[24px] flex items-center justify-center shadow-xl shadow-indigo-100">
           <span class="material-icons !text-[32px] !w-8 !h-8">history_edu</span>
         </div>
         <div>
           <h2 class="text-3xl font-black text-gray-900 tracking-tight !m-0">Nota de Ajuste</h2>
           <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1.5 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+            <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
             Emisión de Documento Electrónico
           </p>
         </div>
@@ -77,7 +78,7 @@ export interface AdjustmentFormData {
                 type="button" 
                 class="flex-1 py-3.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all duration-300"
                 [class.bg-white]="adjustmentForm.get('type')?.value === 'Credit'"
-                [class.text-amber-600]="adjustmentForm.get('type')?.value === 'Credit'"
+                [class.text-indigo-600]="adjustmentForm.get('type')?.value === 'Credit'"
                 [class.shadow-md]="adjustmentForm.get('type')?.value === 'Credit'"
                 [class.text-gray-400]="adjustmentForm.get('type')?.value !== 'Credit'"
                 (click)="adjustmentForm.get('type')?.setValue('Credit')"
@@ -88,7 +89,7 @@ export interface AdjustmentFormData {
                 type="button" 
                 class="flex-1 py-3.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all duration-300"
                 [class.bg-white]="adjustmentForm.get('type')?.value === 'Debit'"
-                [class.text-amber-600]="adjustmentForm.get('type')?.value === 'Debit'"
+                [class.text-indigo-600]="adjustmentForm.get('type')?.value === 'Debit'"
                 [class.shadow-md]="adjustmentForm.get('type')?.value === 'Debit'"
                 [class.text-gray-400]="adjustmentForm.get('type')?.value !== 'Debit'"
                 (click)="adjustmentForm.get('type')?.setValue('Debit')"
@@ -97,6 +98,34 @@ export interface AdjustmentFormData {
               </button>
             </div>
           </div>
+
+          <!-- Electronic toggle -->
+          <div class="flex items-center justify-between px-1">
+            <mat-slide-toggle
+              [checked]="isElectronic()"
+              (change)="isElectronic.set($event.checked)"
+              [disabled]="isElectronicDisabled()"
+              color="primary"
+            >
+              <span class="text-sm font-semibold text-gray-700">Nota Electrónica (DIAN)</span>
+            </mat-slide-toggle>
+          </div>
+
+          @if (isElectronicDisabled() && selectedInvoice()?.isElectronic === false) {
+            <div class="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
+              <span class="material-icons text-blue-500 mt-0.5 text-[18px]">info</span>
+              <p class="text-xs text-blue-700 leading-relaxed">
+                La factura de referencia es <strong>manual</strong>. Las notas electrónicas solo pueden emitirse para facturas electrónicas.
+              </p>
+            </div>
+          } @else if (!isElectronic()) {
+            <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+              <span class="material-icons text-amber-500 mt-0.5 text-[18px]">warning_amber</span>
+              <p class="text-xs text-amber-700 leading-relaxed">
+                Esta nota <strong>no será enviada a la DIAN</strong>. Se generará solo en el sistema local sin validez fiscal electrónica.
+              </p>
+            </div>
+          }
 
           <!-- Invoice Reference Selection -->
           <div class="space-y-3">
@@ -128,9 +157,9 @@ export interface AdjustmentFormData {
                     <span class="text-[10px] font-bold text-gray-500">{{ selectedInvoice()?.total | currency:'USD':'symbol':'1.0-0' }}</span>
                   </div>
                 </div>
-                <button type="button" mat-stroked-button color="primary" (click)="selectedInvoice.set(null)" class="!rounded-full !h-10 !border-indigo-200 hover:!bg-white">
+                <ui-button variant="outline" (clicked)="selectedInvoice.set(null)">
                   Cambiar
-                </button>
+                </ui-button>
               </div>
             }
           </div>
@@ -150,19 +179,15 @@ export interface AdjustmentFormData {
 
       <!-- Fixed Footer Actions -->
       <div class="p-10 pt-6 border-t border-gray-50 bg-white relative z-20">
-        <div class="flex flex-col gap-4">
-          <button mat-flat-button color="primary" type="button" (click)="onSubmit()"
-            [disabled]="adjustmentForm.invalid || !selectedInvoice() || isSubmitting()" 
-            class="!rounded-full !h-16 !font-black !bg-gradient-to-r from-amber-500 to-orange-500 shadow-xl shadow-amber-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100">
-            @if (isSubmitting()) {
-              Transmitiendo nota...
-            } @else {
-              Transmitir Comprobante Electrónico
-            }
-          </button>
-          <button mat-button type="button" (click)="dialogRef.close()" class="!rounded-full !h-12 !font-bold text-gray-400 hover:text-gray-600">
+        <div class="flex justify-end gap-3">
+          <ui-button variant="ghost" (clicked)="dialogRef.close()">
             Cancelar Operación
-          </button>
+          </ui-button>
+          <ui-button variant="primary" (clicked)="onSubmit()"
+            [disabled]="adjustmentForm.invalid || !selectedInvoice() || isSubmitting()"
+            [loading]="isSubmitting()">
+            Transmitir Comprobante Electrónico
+          </ui-button>
         </div>
       </div>
     </div>
@@ -191,6 +216,11 @@ export class AdjustmentFormDialogOrganism implements OnInit {
 
   selectedInvoice = signal<FinanceInvoice | null>(null);
   isSubmitting = signal<boolean>(false);
+  isElectronic = signal(this.data.invoice?.isElectronic ?? false);
+  isElectronicDisabled = computed(() => {
+    const inv = this.selectedInvoice();
+    return inv ? !inv.isElectronic : true;
+  });
 
   adjustmentForm = this.fb.group({
     type: [this.data.type || 'Credit', Validators.required],
@@ -264,17 +294,19 @@ export class AdjustmentFormDialogOrganism implements OnInit {
         const invoice = this.realFinanceInvoices().find(inv => inv.id === id);
         if (invoice) {
           this.selectedInvoice.set(invoice);
+          this.isElectronic.set(invoice.isElectronic ?? false);
           this.adjustmentForm.patchValue({ amount: invoice.total });
         }
       }
     });
 
     if (this.data.invoice) {
-      setTimeout(() => {
+      queueMicrotask(() => {
         if (this.data.invoice) {
           const inv = this.data.invoice;
           this.adjustmentForm.get('invoiceSearch')?.setValue(inv.id);
           this.selectedInvoice.set(inv);
+          this.isElectronic.set(inv.isElectronic ?? false);
           this.adjustmentForm.patchValue({ amount: inv.total });
         }
       });
@@ -302,6 +334,7 @@ export class AdjustmentFormDialogOrganism implements OnInit {
       customerTaxId: inv.customer?.documentNumber || 'N/A',
       date: inv.date,
       dueDate: inv.date,
+      isElectronic: inv.isElectronic,
       subtotal: Number(inv.totalAmount || 0),
       tax: 0,
       total: Number(inv.totalAmount || 0),
@@ -329,7 +362,8 @@ export class AdjustmentFormDialogOrganism implements OnInit {
       // Construct DTO
       const dto: any = {
         correctionConceptCode: val.correctionConceptCode!,
-        observation: val.reason || 'Sin observación'
+        observation: val.reason || 'Sin observación',
+        isElectronic: this.isElectronic(),
       };
 
       // If partial credit note, calculate and scale item prices

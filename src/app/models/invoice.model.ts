@@ -11,9 +11,19 @@ export interface InvoiceItem {
   product?: Product; // Incluido en respuestas GET
 }
 
+export interface EmissionInfo {
+  number: string;
+  cude: string;
+  qrUrl: string;
+  publicUrl: string;
+  isValidated: boolean;
+  createdAt?: string;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string; // Generado por el back (e.g., FAC-0001)
+  sequentialNumber: number; // Auto-increment asignado por PostgreSQL
   date: string;
   customerId: string;
   totalAmount: number;
@@ -21,6 +31,7 @@ export interface Invoice {
   status: InvoiceStatus;
   notes?: string;
   isElectronic?: boolean;
+  emission?: EmissionInfo; // Metadata de emisión electrónica Factus
   items: InvoiceItem[];
   customer?: Customer; // Incluido en respuestas GET
 }

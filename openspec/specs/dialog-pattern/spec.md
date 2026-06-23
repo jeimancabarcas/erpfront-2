@@ -13,7 +13,7 @@ Canonical MatDialog pattern for all dialog organisms. Every component opened via
 | REQ-3 | P0 | Use `FormBuilder`/`FormGroup`/`FormControl`; `[(ngModel)]` PROHIBITED |
 | REQ-4 | P0 | `loading` signal (boolean); show loading indicator (spinner/skeleton) while `true` |
 | REQ-5 | P0 | `errorMsg` signal (`string \| null`); dismissible error banner when non-null |
-| REQ-6 | P1 | Handle `undefined`/partial `MAT_DIALOG_DATA` with sensible defaults |
+| REQ-6 | P1 | Handle `undefined`/partial `MAT_DIALOG_DATA` with sensible defaults — component MUST handle three cases: (1) no data at all — use empty defaults; (2) partial data — merge with defaults without crashing; (3) mode-driven data (`{ mode: 'add' \| 'edit', ... }`) — initialize form state accordingly. Every injected data field SHOULD have a safe fallback. |
 | REQ-7 | P1 | Import only Material modules used; always include `ReactiveFormsModule`, never `FormsModule` |
 | REQ-8 | P1 | Icons via `<span class="material-icons">` only — `<mat-icon>` PROHIBITED |
 | REQ-9 | P1 | Close buttons MUST have `aria-label`; form controls MUST use `for`/`id` or `aria-label` |
@@ -45,6 +45,32 @@ Canonical MatDialog pattern for all dialog organisms. Every component opened via
 - **GIVEN** a dialog opened without `MAT_DIALOG_DATA`
 - **WHEN** the form initializes
 - **THEN** all controls have empty/null defaults and the form is pristine
+
+#### Scenario: Mode-driven data — Add mode
+- **GIVEN** a dialog opened with `{ mode: 'add' }`
+- **WHEN** the component initializes
+- **THEN** form is initialized in create/empty state
+- **AND** no pre-existing item data is loaded
+- **AND** any item-specific fields are disabled or hidden
+
+#### Scenario: Mode-driven data — Edit mode
+- **GIVEN** a dialog opened with `{ mode: 'edit', item: { ...existingData } }`
+- **WHEN** the component initializes
+- **THEN** form controls are pre-filled with `item` values
+- **AND** identity fields (e.g., product selector) are locked/disabled to prevent identity changes
+- **AND** mutable fields (quantity, price) remain editable
+
+#### Scenario: Partial data — missing optional fields
+- **GIVEN** a dialog opened with `{ mode: 'add', product: { ... } }` but no `item`
+- **WHEN** the form initializes
+- **THEN** product data is available for reference display
+- **AND** form fields that depend on `item` use safe defaults without error
+
+#### Scenario: FormArray consumer pattern
+- **GIVEN** a dialog that returns data via `dialogRef.close(payload)`
+- **WHEN** the parent component subscribes to `afterClosed()`
+- **THEN** the parent pushes the payload into its own `FormArray` or updates an existing `FormGroup`
+- **AND** the dialog itself does NOT own or mutate the parent's `FormArray` directly
 
 #### Scenario: REQ-9 — Accessibility audit pass
 - **GIVEN** a rendered dialog

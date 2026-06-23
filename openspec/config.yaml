@@ -18,8 +18,9 @@ testing:
       available: false
       tool: ""
   coverage:
-    available: false
-    command: ""
+    available: true
+    command: ng test --code-coverage --watch=false
+    provider: "@vitest/coverage-v8"
   quality_tools:
     linter:
       available: false

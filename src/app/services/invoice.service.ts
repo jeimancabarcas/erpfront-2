@@ -84,4 +84,11 @@ export class InvoiceService {
   getInvoiceDianPdf(id: string): Observable<{ pdfBase64Encoded: string; fileName: string }> {
     return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(`${this.apiUrl}/${id}/dian-pdf`);
   }
+
+  /**
+   * Emite electrónicamente una factura manual post-hoc (POST /sales/invoices/:id/emit)
+   */
+  emitInvoice(id: string): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.apiUrl}/${id}/emit`, {});
+  }
 }
