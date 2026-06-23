@@ -15,14 +15,14 @@ import { CommonModule, formatDate } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatCalendar } from '@angular/material/datepicker';
 
 let nextId = 0;
 
 @Component({
   selector: 'ui-datepicker',
   standalone: true,
-  imports: [CommonModule, OverlayModule, MatNativeDateModule, MatDatepickerModule],
+  imports: [CommonModule, OverlayModule, MatNativeDateModule, MatCalendar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
