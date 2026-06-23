@@ -1,12 +1,11 @@
 import { Component, inject, signal, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialogRef } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { FinanceService } from '../../../services/finance.service';
 import { FinanceInvoice, InvoiceItem, FinanceCustomer, FinanceProduct } from '../../../models/finance.model';
-import { startWith, map } from 'rxjs';
 import { ButtonAtom } from '../../atoms/button/button.component';
 
 export interface GeneralInvoiceFormResult {
@@ -20,7 +19,8 @@ export interface GeneralInvoiceFormResult {
     CommonModule,
     ReactiveFormsModule,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    SelectAtom
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white max-w-3xl flex flex-col max-h-[95vh]">
@@ -46,27 +46,18 @@ export interface GeneralInvoiceFormResult {
           <!-- Customer Selection Area -->
           <div class="space-y-4">
             @if (!selectedCustomer()) {
-              <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100 animate-in fade-in slide-in-from-top duration-300">
-                <ui-text-input
-                  label="Seleccionar Cliente"
-                  icon="search"
-                  placeholder="Buscar por nombre o identificación..."
+              <div class="relative p-6 bg-gray-50 rounded-3xl border border-gray-100 animate-in fade-in slide-in-from-top duration-300">
+                <ui-select
+                  [searchable]="true"
+                  [loading]="loadingCustomers()"
+                  [options]="customerOptions()"
+                  placeholder="Buscar cliente..."
                   [formControl]="invoiceForm.controls.customerSearch"
+                  (searchChange)="onCustomerSearch($event)"
+                  footerLabel="+ Crear nuevo cliente"
+                  (footerAction)="openNewCustomerDialog()"
+                  showSubtitle="true"
                 />
-                @if (showCustomerDropdown()) {
-                    <div class="absolute left-0 right-0 top-16 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto">
-                      @for (customer of filteredCustomers(); track customer.id) {
-                        <button
-                          type="button"
-                          class="w-full flex flex-col px-4 py-3 text-left hover:bg-indigo-50 transition-colors border-b border-gray-50 last:border-0"
-                          (click)="onCustomerSelected(customer)"
-                        >
-                          <span class="font-bold text-sm text-gray-900">{{ customer.name }}</span>
-                          <span class="text-[10px] text-gray-400 tracking-tighter">NIT: {{ customer.taxId }}</span>
-                        </button>
-                      }
-                    </div>
-                  }
               </div>
             } @else {
               <!-- Selected Customer Premium Card -->
@@ -106,29 +97,14 @@ export interface GeneralInvoiceFormResult {
                   
                   <!-- Line 1: Main Product / Service Search -->
                   <div class="flex gap-3 items-start">
-                    <div class="flex-1 relative">
-                      <ui-text-input
-                        icon="inventory_2"
-                        placeholder="Descripción del Producto o Servicio"
+                    <div class="flex-1">
+                      <ui-select
+                        [searchable]="true"
+                        [options]="catalogOptions()"
+                        placeholder="Buscar producto o servicio..."
                         [formControl]="$any(item).controls.description"
-                        (focus)="openProductDropdown($index)"
-                        (blur)="closeProductDropdown($index)"
-                        (input)="filterProducts($index, $event)"
+                        (searchChange)="onProductSearch($event)"
                       />
-                      @if (activeProductDropdown() === $index) {
-                        <div class="absolute left-0 right-0 top-16 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto">
-                          @for (prod of filteredCatalog(); track prod.id) {
-                            <button
-                              type="button"
-                              class="w-full flex justify-between items-center px-4 py-3 text-left hover:bg-indigo-50 transition-colors border-b border-gray-50 last:border-0"
-                              (mousedown)="onProductSelected($index, prod.name)"
-                            >
-                              <span class="font-bold text-sm text-gray-900">{{ prod.name }}</span>
-                              <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full font-black text-gray-500 uppercase tracking-tighter">{{ prod.category }}</span>
-                            </button>
-                          }
-                        </div>
-                      }
                     </div>
                     
                     <ui-button variant="icon" (clicked)="removeItem($index)" class="opacity-0 group-hover:opacity-100 transition-opacity"><!-- TODO: add variant for colored icon button -->
@@ -219,42 +195,67 @@ export class GeneralInvoiceFormDialogOrganism {
     items: this.fb.array([])
   });
 
-  // Reactive Customer Filtering
-  filteredCustomers = toSignal(
-    this.invoiceForm.get('customerSearch')!.valueChanges.pipe(
-      startWith(''),
-      map(value => {
-        const val = value as string | FinanceCustomer | null;
-        const name = typeof val === 'string' ? val : val?.name;
-        return name ? this._filterCustomers(name) : this.financeService.customers();
-      })
-    ),
-    { initialValue: this.financeService.customers() }
-  );
+  // ── Customer search state ──
+  customerSearchTerm = signal('');
+  loadingCustomers = signal(false);
 
-  showCustomerDropdown = signal(false);
+  customerOptions = computed<SelectOption[]>(() => {
+    const term = this.customerSearchTerm().toLowerCase();
+    const customers = this.financeService.customers();
+    if (!term) {
+      return customers.map(c => ({
+        value: c.id,
+        label: c.name,
+        subtitle: `NIT: ${c.taxId}`
+      }));
+    }
+    return customers
+      .filter(c => c.name.toLowerCase().includes(term) || c.taxId.includes(term))
+      .map(c => ({
+        value: c.id,
+        label: c.name,
+        subtitle: `NIT: ${c.taxId}`
+      }));
+  });
+
+  // ── Product search state ──
+  productSearchTerm = signal('');
+
+  catalogOptions = computed<SelectOption[]>(() => {
+    const term = this.productSearchTerm().toLowerCase();
+    const catalog = this.financeService.catalog();
+    if (!term) {
+      return catalog.map(p => ({
+        value: p.name,
+        label: p.name,
+        subtitle: p.category
+      }));
+    }
+    return catalog
+      .filter(p => p.name.toLowerCase().includes(term))
+      .map(p => ({
+        value: p.name,
+        label: p.name,
+        subtitle: p.category
+      }));
+  });
 
   get items() {
     return this.invoiceForm.get('items') as FormArray;
   }
 
-  // Product dropdown state
-  activeProductDropdown = signal<number | null>(null);
-  productSearchQuery = signal('');
-  filteredCatalog = computed(() => {
-    const q = this.productSearchQuery().toLowerCase().trim();
-    if (!q) return this.financeService.catalog();
-    return this.financeService.catalog().filter(p =>
-      p.name.toLowerCase().includes(q)
-    );
-  });
-
   // Output to replace MatDialogRef
   closed = output<FinanceInvoice | null>();
 
   constructor() {
-    this.invoiceForm.get('customerSearch')?.valueChanges.subscribe(() => {
-      this.showCustomerDropdown.set(true);
+    // Watch customer selection from ui-select
+    this.invoiceForm.get('customerSearch')?.valueChanges.subscribe((id) => {
+      if (id && typeof id === 'string') {
+        const customer = this.financeService.customers().find(c => c.id === id);
+        if (customer) {
+          this.selectedCustomer.set(customer);
+        }
+      }
     });
     this.addItem(); // Initial item
   }
@@ -267,6 +268,19 @@ export class GeneralInvoiceFormDialogOrganism {
       taxRate: [0.19]
     });
     this.items.push(itemGroup);
+
+    // Watch product selection to auto-fill price and tax
+    itemGroup.get('description')?.valueChanges.subscribe((productName) => {
+      if (productName && typeof productName === 'string') {
+        const product = this.financeService.catalog().find(p => p.name === productName);
+        if (product) {
+          itemGroup.patchValue({
+            unitPrice: product.price,
+            taxRate: product.taxRate
+          }, { emitEvent: false });
+        }
+      }
+    });
   }
 
   removeItem(index: number) {
@@ -275,50 +289,18 @@ export class GeneralInvoiceFormDialogOrganism {
     }
   }
 
-  // Selection Handlers
-  onCustomerSelected(customer: FinanceCustomer) {
-    this.selectedCustomer.set(customer);
-    this.invoiceForm.get('customerSearch')?.setValue('');
-    this.showCustomerDropdown.set(false);
+  // ── Search handlers ──
+  onCustomerSearch(query: string): void {
+    this.customerSearchTerm.set(query);
   }
 
-  openProductDropdown(index: number) {
-    this.activeProductDropdown.set(index);
-    this.productSearchQuery.set('');
+  onProductSearch(query: string): void {
+    this.productSearchTerm.set(query);
   }
 
-  closeProductDropdown(index: number) {
-    // Delay to allow mousedown on option to fire first
-    setTimeout(() => {
-      if (this.activeProductDropdown() === index) {
-        this.activeProductDropdown.set(null);
-      }
-    }, 200);
-  }
-
-  filterProducts(index: number, event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.productSearchQuery.set(value);
-  }
-
-  onProductSelected(index: number, productName: string) {
-    const product = this.financeService.catalog().find(p => p.name === productName);
-    if (product) {
-      this.items.at(index).patchValue({
-        unitPrice: product.price,
-        taxRate: product.taxRate
-      });
-    }
-    this.activeProductDropdown.set(null);
-  }
-
-  displayCustomer(customer: FinanceCustomer): string {
-    return customer?.name || '';
-  }
-
-  private _filterCustomers(name: string): FinanceCustomer[] {
-    const filterValue = name.toLowerCase();
-    return this.financeService.customers().filter(c => c.name.toLowerCase().includes(filterValue));
+  openNewCustomerDialog(): void {
+    // Placeholder — wire up to customer creation dialog as needed
+    console.log('Open new customer dialog');
   }
 
   // Totals
