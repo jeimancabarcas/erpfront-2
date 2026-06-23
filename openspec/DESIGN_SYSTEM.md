@@ -282,6 +282,55 @@ productOptions = computed<SelectOption[]>(() =>
 
 ---
 
+## Estructura del Sidebar
+
+El menú lateral usa grupos colapsables (`mat-expansion-panel`) para módulos con múltiples rutas. El servicio `SidebarService` gestiona el estado de expansión y auto-expande al navegar.
+
+### Menú actual
+
+```
+📋 Menú Principal
+├── 🏠 Inicio                    → /dashboard
+├── 🏪 Gestión Comercial ▾       → sidebarService.comercialExpanded
+│   ├── 💳 Ventas                → /sales
+│   └── 👥 Clientes              → /sales/customers
+├── 🚚 Abastecimiento ▾          → sidebarService.abastecimientoExpanded
+│   ├── 🛒 Compras               → /inventory/purchases
+│   └── 🏢 Proveedores           → /inventory/suppliers
+├── 📦 Inventario ▾              → sidebarService.inventoryExpanded
+│   ├── 📊 Resumen               → /inventory
+│   ├── 📂 Categorías            → /inventory/categories
+│   └── 📦 Productos             → /inventory/products
+├── 💰 Finanzas ▾                → sidebarService.financeExpanded
+├── 🏥 Pediatría ▾               → sidebarService.pediatricsExpanded
+└── 🚛 Transporte                → /transport
+```
+
+### Cómo agregar un nuevo grupo
+
+1. **`sidebar.service.ts`**: Agregar propiedad `nuevoExpanded = false` y método público `isNuevoActive(): boolean`
+2. **`sidebar.component.ts`**: Agregar bloque `mat-accordion` > `mat-expansion-panel` siguiendo el patrón existente
+
+```html
+<mat-accordion class="sidebar-accordion" multi>
+  <mat-expansion-panel
+    [expanded]="sidebarService.nuevoExpanded"
+    (opened)="sidebarService.nuevoExpanded = true"
+    (closed)="sidebarService.nuevoExpanded = false"
+  >
+    <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 !rounded-full group">
+      <mat-panel-title class="flex items-center gap-4">
+        <mat-icon [class.!text-indigo-900]="sidebarService.isNuevoActive()">icono</mat-icon>
+        <span [class.!text-indigo-900]="sidebarService.isNuevoActive()">Nuevo Grupo</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <!-- Sub-ítems -->
+  </mat-expansion-panel>
+</mat-accordion>
+```
+
+---
+
 ## Lecciones Aprendidas
 
 1. **Siempre agregar el componente al array `imports`**: El import de TypeScript no es suficiente — Angular standalone components requieren estar en `@Component.imports`.
