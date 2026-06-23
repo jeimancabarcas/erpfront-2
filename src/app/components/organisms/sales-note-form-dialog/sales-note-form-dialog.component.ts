@@ -2,8 +2,6 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormArray, FormGroup } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -11,6 +9,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 import { Invoice } from '../../../models/invoice.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SalesNoteService } from '../../../services/sales-note.service';
@@ -28,8 +27,6 @@ export interface SalesNoteDialogData {
     FormsModule,
     ReactiveFormsModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
@@ -38,7 +35,8 @@ export interface SalesNoteDialogData {
     CurrencyPipe,
     ButtonAtom,
     TextInputComponent,
-    SelectAtom
+    SelectAtom,
+    TextareaComponent
   ],
   template: `
     <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[850px] shadow-2xl">
@@ -95,13 +93,7 @@ export interface SalesNoteDialogData {
           </div>
 
           <!-- Observation -->
-          <div class="space-y-2">
-            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Observación / Justificación</label>
-            <mat-form-field appearance="outline" class="w-full !m-0">
-              <textarea matInput formControlName="observation" rows="3" placeholder="Indique la justificación de este ajuste..."></textarea>
-              <mat-icon matPrefix class="mr-2 text-gray-400">edit_note</mat-icon>
-            </mat-form-field>
-          </div>
+          <ui-textarea formControlName="observation" label="Observación / Justificación" placeholder="Indique la justificación de este ajuste..." rows="3" />
 
           <!-- Advanced Testing Config -->
           <div class="p-5 bg-slate-50/80 rounded-[24px] border border-slate-100 space-y-4">

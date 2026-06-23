@@ -5,11 +5,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { Patient } from '../../../services/pediatrics.service';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 @Component({
   selector: 'app-patient-neonatal-history',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatInputModule, MatFormFieldModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatInputModule, MatFormFieldModule, TextareaComponent],
   template: `
     <div class="pt-8">
       <div class="bg-white rounded-[40px] p-10 border border-gray-100 shadow-sm">
@@ -54,20 +55,9 @@ import { Patient } from '../../../services/pediatrics.service';
 
           <!-- Right Column: Text Backgrounds -->
           <div class="lg:col-span-8 space-y-6">
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Detalles Adicionales de ant. Neonatales</mat-label>
-              <textarea matInput rows="4" placeholder="Escriba los detalles aquí..." [value]="patient()?.neonatalNotes"></textarea>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Antecedentes Personales</mat-label>
-              <textarea matInput rows="3" placeholder="Escribe aquí los detalles..." [value]="patient()?.personalBackground"></textarea>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Antecedentes Familiares</mat-label>
-              <textarea matInput rows="3" placeholder="Escriba aquí los antecedentes familiares..." [value]="patient()?.familyBackground"></textarea>
-            </mat-form-field>
+            <ui-textarea label="Detalles Adicionales de ant. Neonatales" [value]="patient()?.neonatalNotes ?? ''" (valueChange)="patient()!.neonatalNotes = $event" rows="4" placeholder="Escriba los detalles aquí..." />
+            <ui-textarea label="Antecedentes Personales" [value]="patient()?.personalBackground ?? ''" (valueChange)="patient()!.personalBackground = $event" rows="3" placeholder="Escribe aquí los detalles..." />
+            <ui-textarea label="Antecedentes Familiares" [value]="patient()?.familyBackground ?? ''" (valueChange)="patient()!.familyBackground = $event" rows="3" placeholder="Escriba aquí los antecedentes familiares..." />
           </div>
         </div>
       </div>

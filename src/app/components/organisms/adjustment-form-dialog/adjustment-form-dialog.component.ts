@@ -17,6 +17,7 @@ import { Invoice } from '../../../models/invoice.model';
 import { AdjustmentNote, FinanceInvoice } from '../../../models/finance.model';
 import { startWith, map } from 'rxjs';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface AdjustmentFormData {
   type?: 'Credit' | 'Debit';
@@ -37,7 +38,8 @@ export interface AdjustmentFormData {
     MatSnackBarModule,
     ButtonAtom,
     TextInputComponent,
-    SelectAtom
+    SelectAtom,
+    TextareaComponent
   ],
   template: `
     @if (loading()) {
@@ -156,14 +158,7 @@ export interface AdjustmentFormData {
           </div>
 
           <!-- Technical Reason -->
-          <div class="space-y-3">
-            <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Justificación Técnica</label>
-            <mat-form-field appearance="outline" class="w-full !m-0">
-              <mat-label>Motivo detallado del ajuste contable</mat-label>
-              <textarea matInput formControlName="reason" rows="4" placeholder="Ej: Devolución por mercancía en mal estado..."></textarea>
-              <span class="material-icons" matPrefix class="mr-2 text-gray-400">subject</span>
-            </mat-form-field>
-          </div>
+          <ui-textarea formControlName="reason" label="Justificación Técnica" placeholder="Ej: Devolución por mercancía en mal estado..." rows="4" />
         </form>
       </div>
 

@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 
 @Component({
@@ -26,7 +27,8 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
     MatIconModule,
     MatDialogModule,
     TextInputComponent,
-    SelectAtom
+    SelectAtom,
+    TextareaComponent
   ],
   template: `
     <div class="p-2 max-w-4xl mx-auto">
@@ -116,10 +118,7 @@ import { PediatricsService, Patient } from '../../../services/pediatrics.service
 
               <ui-text-input label="Clínica o Lugar donde nació" icon="local_hospital" placeholder="Ej. Clínica del Country" [required]="true" [formControl]="healthForm.controls.birthPlace" class="md:col-span-2" />
 
-              <mat-form-field appearance="outline" class="w-full md:col-span-2">
-                <mat-label>Observaciones</mat-label>
-                <textarea matInput formControlName="observations" placeholder="Cualquier información relevante..." rows="3"></textarea>
-              </mat-form-field>
+              <ui-textarea formControlName="observations" label="Observaciones" placeholder="Cualquier información relevante..." rows="3" class="md:col-span-2" />
             </div>
 
             <div class="flex justify-between mt-8">

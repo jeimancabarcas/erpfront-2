@@ -14,6 +14,7 @@ import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { PurchaseOrder, CreatePurchaseOrderDto, PurchaseOrderStatus } from '../../../models/purchase-order.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
+import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface PurchaseOrderDialogData {
   order?: PurchaseOrder;
@@ -40,6 +41,7 @@ interface PurchaseOrderItemForm {
     ButtonAtom,
     TextInputComponent,
     SelectAtom,
+    TextareaComponent,
   ],
   template: `
     <div class="flex flex-col h-full max-h-[90vh] p-8">
@@ -94,10 +96,7 @@ interface PurchaseOrderItemForm {
                 <mat-datepicker #picker></mat-datepicker>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="w-full md:col-span-2">
-                <mat-label>Observaciones / Notas</mat-label>
-                <textarea matInput formControlName="observations" rows="3" placeholder="Detalles adicionales sobre el pedido..."></textarea>
-              </mat-form-field>
+              <ui-textarea formControlName="observations" label="Observaciones / Notas" placeholder="Detalles adicionales sobre el pedido..." rows="3" class="md:col-span-2" />
             </div>
 
             <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100">
