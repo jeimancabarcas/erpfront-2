@@ -16,13 +16,14 @@ import { CommonModule } from '@angular/common';
       [class.is-textarea]="type() === 'textarea'"
     >
       @if (type() === 'textarea') {
+        <!-- @deprecated Use <ui-textarea> instead. Will be removed in a future version. -->
         <textarea
           class="input__field"
           [value]="value()"
           [placeholder]="placeholder()"
           [disabled]="disabled()"
           [attr.aria-invalid]="!!error() || null"
-          [attr.aria-describedby]="error() ? 'input-error' : (helperText() ? 'input-helper' : null)"
+          [attr.aria-describedby="error() ? 'input-error' : (helperText() ? 'input-helper' : null)"
           (input)="onInput($event)"
           (focus)="focused.set(true)"
           (blur)="focused.set(false)"
@@ -69,6 +70,11 @@ import { CommonModule } from '@angular/common';
   `
 })
 export class InputAtom {
+  /**
+   * @deprecated The 'textarea' variant is deprecated since v2.0.
+   * Use `<ui-textarea>` instead. See `textarea.component.ts` for the replacement.
+   * This variant will be removed in a future version.
+   */
   type = input<'text' | 'number' | 'textarea' | 'password'>('text');
   label = input<string>('');
   placeholder = input<string>('');
