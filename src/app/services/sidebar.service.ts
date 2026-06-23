@@ -11,6 +11,7 @@ export class SidebarService {
   inventoryExpanded = false;
   financeExpanded = false;
   pediatricsExpanded = false;
+  comercialExpanded = false;
 
   constructor() {
     // Listen to router events to auto-expand the section corresponding to the active route
@@ -34,6 +35,9 @@ export class SidebarService {
     if (this.isPediatricsActive()) {
       this.pediatricsExpanded = true;
     }
+    if (this.isComercialActive()) {
+      this.comercialExpanded = true;
+    }
   }
 
   private isInventoryActive(): boolean {
@@ -48,6 +52,10 @@ export class SidebarService {
       paths.some((path) => url === path || url.startsWith(path + '/')) &&
       !url.includes('/inventory/purchases')
     );
+  }
+
+  isComercialActive(): boolean {
+    return this.router.url.startsWith('/sales');
   }
 
   private isPediatricsActive(): boolean {
