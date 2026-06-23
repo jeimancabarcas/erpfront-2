@@ -6,6 +6,7 @@ import { FinanceService } from '../../../../services/finance.service';
 import { TransportRoute } from '../../../../models/transport.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../../../components/atoms/select/select.component';
+import { DatepickerComponent } from '../../../../components/atoms/datepicker/datepicker.component';
 
 @Component({
   selector: 'app-transport-dispatch-view',
@@ -14,7 +15,8 @@ import { SelectAtom, SelectOption } from '../../../../components/atoms/select/se
     CommonModule,
     ReactiveFormsModule,
     ButtonAtom,
-    SelectAtom
+    SelectAtom,
+    DatepickerComponent
   ],
   template: `
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -55,13 +57,7 @@ import { SelectAtom, SelectOption } from '../../../../components/atoms/select/se
               <ui-select label="Vehículo Disponible" placeholder="Seleccionar vehículo" [options]="vehicleOptions()" [formControl]="dispatchForm.controls.vehicleId" />
 
               <!-- Date -->
-              <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Fecha de Inicio</label>
-                <div class="relative">
-                  <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">calendar_today</span>
-                  <input type="date" formControlName="departureDate" class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
-                </div>
-              </div>
+              <ui-datepicker label="Fecha de Inicio" [formControl]="dispatchForm.controls.departureDate" />
 
               <!-- Time -->
               <div class="flex flex-col gap-1.5">

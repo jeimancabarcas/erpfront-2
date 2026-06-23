@@ -9,6 +9,7 @@ import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 
 export interface TransportMaintenanceDialogData {
   vehicleId: string;
@@ -26,7 +27,8 @@ export type TransportMaintenanceResult = boolean | undefined;
     TextInputComponent,
     ButtonAtom,
     SelectAtom,
-    TextareaComponent
+    TextareaComponent,
+    DatepickerComponent
   ],
   template: `
     @if (loading()) {
@@ -57,10 +59,7 @@ export type TransportMaintenanceResult = boolean | undefined;
             
             <ui-select label="Tipo de Mantenimiento" [options]="maintenanceTypeOptions" [formControl]="maintenanceForm.controls.type" />
 
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha Programada</label>
-              <input type="date" formControlName="scheduledDate" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-sm">
-            </div>
+            <ui-datepicker label="Fecha Programada" [formControl]="maintenanceForm.controls.scheduledDate" />
 
             <div class="md:col-span-2">
               <ui-textarea formControlName="description" label="Descripción Detallada" placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..." [rows]="4" />
@@ -102,7 +101,7 @@ export class TransportMaintenanceDialogOrganism {
 
   maintenanceForm = this.fb.group({
     type: ['Preventivo', Validators.required],
-    scheduledDate: [new Date().toISOString().split('T')[0], Validators.required],
+    scheduledDate: [new Date(), Validators.required],
     description: ['', [Validators.required, Validators.minLength(10)]],
     cost: [null as number | null]
   });

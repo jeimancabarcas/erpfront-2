@@ -9,6 +9,7 @@ import { OperationType } from '../../../models/transport.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 
 export interface TransportOperationDialogData {
   routeId: string;
@@ -26,7 +27,8 @@ export type TransportOperationResult = boolean | undefined;
     MatButtonModule,
     ButtonAtom,
     SelectAtom,
-    TextareaComponent
+    TextareaComponent,
+    DatepickerComponent
   ],
   template: `
     @if (loading()) {
@@ -57,10 +59,7 @@ export type TransportOperationResult = boolean | undefined;
             
             <ui-select label="Tipo de Operación" [options]="operationTypeOptions" [formControl]="operationForm.controls.type" />
 
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha de Operación</label>
-              <input type="date" formControlName="timestamp" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-            </div>
+            <ui-datepicker label="Fecha de Operación" [formControl]="operationForm.controls.timestamp" />
 
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Operación</label>
@@ -138,7 +137,7 @@ export class TransportOperationDialogOrganism implements OnInit {
     type: ['', Validators.required],
     vehicleId: ['', Validators.required],
     description: ['', [Validators.required, Validators.minLength(5)]],
-    timestamp: [new Date().toISOString().split('T')[0], Validators.required],
+    timestamp: [new Date(), Validators.required],
     operationTime: [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), Validators.required],
     status: ['InProcess']
   });

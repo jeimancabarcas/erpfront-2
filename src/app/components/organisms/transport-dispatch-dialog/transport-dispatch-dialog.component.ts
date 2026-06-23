@@ -9,6 +9,7 @@ import { TransportService } from '../../../services/transport.service';
 import { FinanceService } from '../../../services/finance.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 
 export interface TransportDispatchDialogData {
   vehicleId: string;
@@ -25,7 +26,8 @@ export type TransportDispatchResult = boolean | undefined;
     MatButtonModule,
     TextInputComponent,
     ButtonAtom,
-    SelectAtom
+    SelectAtom,
+    DatepickerComponent
   ],
   template: `
     @if (loading()) {
@@ -66,10 +68,7 @@ export type TransportDispatchResult = boolean | undefined;
                 </div>
               </div>
 
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha de Inicio</label>
-                <input type="date" formControlName="departureDate" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm">
-              </div>
+              <ui-datepicker label="Fecha de Inicio" [formControl]="dispatchForm.controls.departureDate" />
 
               <div>
                 <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora de Inicio</label>
@@ -131,7 +130,7 @@ export class TransportDispatchDialogOrganism implements OnInit {
     origin: ['', Validators.required],
     destination: ['', Validators.required],
     vehicleId: [''],
-    departureDate: [new Date().toISOString().split('T')[0], Validators.required],
+    departureDate: [new Date(), Validators.required],
     departureTime: [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), Validators.required],
     servicePrice: [0, [Validators.required, Validators.min(0)]]
   });

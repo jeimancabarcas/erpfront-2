@@ -8,6 +8,7 @@ import { TransportService } from '../../../services/transport.service';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 
 export interface TransportIncidentDialogData {
   routeId: string;
@@ -24,7 +25,8 @@ export type TransportIncidentResult = boolean | undefined;
     MatButtonModule,
     ButtonAtom,
     SelectAtom,
-    TextareaComponent
+    TextareaComponent,
+    DatepickerComponent
   ],
   template: `
     @if (loading()) {
@@ -54,10 +56,7 @@ export type TransportIncidentResult = boolean | undefined;
           <ui-select label="Tipo de Novedad" [options]="incidentTypeOptions" [formControl]="incidentForm.controls.type" />
 
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">Fecha</label>
-              <input type="date" formControlName="timestamp" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-sm">
-            </div>
+            <ui-datepicker label="Fecha" [formControl]="incidentForm.controls.timestamp" />
 
             <div>
               <label class="text-xs font-medium text-gray-500 mb-1.5 block">Hora</label>
@@ -112,7 +111,7 @@ export class TransportIncidentDialogOrganism {
   incidentForm = this.fb.group({
     type: ['', Validators.required],
     description: ['', [Validators.required, Validators.minLength(10)]],
-    timestamp: [new Date().toISOString().split('T')[0], Validators.required],
+    timestamp: [new Date(), Validators.required],
     incidentTime: [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), Validators.required]
   });
 

@@ -4,6 +4,7 @@ import { InputAtom } from '../../atoms/input/input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { CardAtom } from '../../atoms/card/card.component';
+import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 
 export interface FilterDefinition {
   key: string;
@@ -15,7 +16,7 @@ export interface FilterDefinition {
 @Component({
   selector: 'ui-search-filters',
   standalone: true,
-  imports: [CommonModule, InputAtom, SelectAtom, ButtonAtom, CardAtom],
+  imports: [CommonModule, InputAtom, SelectAtom, ButtonAtom, CardAtom, DatepickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './search-filters.component.scss',
   template: `
@@ -43,15 +44,11 @@ export interface FilterDefinition {
               />
             }
             @case ('date') {
-              <div class="search-filters__date">
-                <label class="search-filters__date-label">{{ filter.label }}</label>
-                <input
-                  class="search-filters__date-input"
-                  type="date"
-                  [value]="filterValues()[filter.key]"
-                  (input)="onDateChange(filter.key, $event)"
-                />
-              </div>
+              <ui-datepicker
+                [label]="filter.label"
+                [value]="parseDate(filterValues()[filter.key])"
+                (valueChange)="onDateChange(filter.key, $event)"
+              />
             }
           }
         }
@@ -83,9 +80,12 @@ export class SearchFiltersMolecule implements OnDestroy {
     this.emitWithDebounce();
   }
 
-  onDateChange(key: string, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.onFilterChange(key, target.value);
+  onDateChange(key: string, date: Date | null): void {
+    this.onFilterChange(key, date ? date.toISOString().split('T')[0] : '');
+  }
+
+  parseDate(value: string): Date | null {
+    return value ? new Date(value) : null;
   }
 
   onClear(): void {
