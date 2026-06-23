@@ -9,7 +9,7 @@ import {
   ElementRef,
   inject,
   HostListener,
-  viewChild,
+  forwardRef,
 } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -27,7 +27,7 @@ let nextId = 0;
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: DatepickerComponent,
+      useExisting: forwardRef(() => DatepickerComponent),
       multi: true,
     },
   ],

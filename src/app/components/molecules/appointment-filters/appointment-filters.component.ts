@@ -17,25 +17,35 @@ import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component
     MatButtonModule,
     TextInputComponent,
     SelectAtom,
-    DatepickerComponent
+    DatepickerComponent,
   ],
   template: `
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm">
+    <div
+      class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm"
+    >
       <ui-text-input icon="search" placeholder="Nombre del paciente..." [(value)]="searchQuery" />
 
       <ui-datepicker label="Fecha" [(value)]="dateFilter" />
 
-      <ui-select placeholder="Todos los estados" [options]="statusOptions" [(value)]="statusFilter" />
+      <ui-select
+        placeholder="Todos los estados"
+        [options]="statusOptions"
+        [(value)]="statusFilter"
+      />
 
       <div class="flex items-center gap-2">
-        <button mat-stroked-button class="!rounded-2xl !h-14 w-full !border-gray-100 text-gray-500 font-bold" (click)="clear.emit()">
+        <button
+          mat-stroked-button
+          class="!rounded-2xl !h-14 w-full !border-gray-100 text-gray-500 font-bold"
+          (click)="clear.emit()"
+        >
           <mat-icon class="mr-2">filter_alt_off</mat-icon>
           Limpiar
         </button>
       </div>
     </div>
   `,
-  styles: [``]
+  styles: [``],
 })
 export class AppointmentFiltersMolecule {
   searchQuery = model<string>('');
@@ -49,6 +59,6 @@ export class AppointmentFiltersMolecule {
     { value: 'Cancelled', label: 'Cancelado' },
     { value: 'Completed', label: 'Completado' },
   ];
-  
+
   clear = output<void>();
 }

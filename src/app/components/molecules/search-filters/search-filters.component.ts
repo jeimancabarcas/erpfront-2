@@ -1,4 +1,11 @@
-import { Component, input, output, signal, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import {
+  Component,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InputAtom } from '../../atoms/input/input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
@@ -54,13 +61,11 @@ export interface FilterDefinition {
         }
 
         @if (hasActiveFilters) {
-          <ui-button variant="ghost" (clicked)="onClear()">
-            Limpiar
-          </ui-button>
+          <ui-button variant="ghost" (clicked)="onClear()"> Limpiar </ui-button>
         }
       </div>
     </ui-card>
-  `
+  `,
 })
 export class SearchFiltersMolecule implements OnDestroy {
   filters = input<FilterDefinition[]>([]);
@@ -72,11 +77,11 @@ export class SearchFiltersMolecule implements OnDestroy {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   get hasActiveFilters(): boolean {
-    return Object.values(this.filterValues()).some(v => v !== '');
+    return Object.values(this.filterValues()).some((v) => v !== '');
   }
 
   onFilterChange(key: string, value: string): void {
-    this.filterValues.update(prev => ({ ...prev, [key]: value }));
+    this.filterValues.update((prev) => ({ ...prev, [key]: value }));
     this.emitWithDebounce();
   }
 

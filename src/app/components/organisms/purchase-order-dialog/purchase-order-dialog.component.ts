@@ -1,7 +1,14 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule, formatDate, CurrencyPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  FormArray,
+  FormControl,
+  Validators,
+} from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
@@ -9,7 +16,11 @@ import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component
 import { SupplierService } from '../../../services/supplier.service';
 import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
-import { PurchaseOrder, CreatePurchaseOrderDto, PurchaseOrderStatus } from '../../../models/purchase-order.model';
+import {
+  PurchaseOrder,
+  CreatePurchaseOrderDto,
+  PurchaseOrderStatus,
+} from '../../../models/purchase-order.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
@@ -40,7 +51,9 @@ interface PurchaseOrderItemForm {
     <div class="flex flex-col h-full max-h-[90vh] p-8">
       <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <div
+            class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600"
+          >
             <span class="material-icons text-3xl">shopping_cart</span>
           </div>
           <div>
@@ -58,19 +71,28 @@ interface PurchaseOrderItemForm {
       </header>
 
       @if (isReadonly()) {
-        <div class="mx-2 mb-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3 text-amber-700">
+        <div
+          class="mx-2 mb-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3 text-amber-700"
+        >
           <span class="material-icons">warning</span>
-          <p class="text-xs font-bold uppercase tracking-wide">Esta orden ya no se puede editar porque está finalizada o anulada.</p>
+          <p class="text-xs font-bold uppercase tracking-wide">
+            Esta orden ya no se puede editar porque está finalizada o anulada.
+          </p>
         </div>
       }
 
       @if (error()) {
-        <div class="mx-2 mb-4 bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center justify-between gap-3 text-red-700">
+        <div
+          class="mx-2 mb-4 bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center justify-between gap-3 text-red-700"
+        >
           <div class="flex items-center gap-3">
             <span class="material-icons text-red-500">error_outline</span>
             <p class="text-xs font-bold uppercase tracking-wide">{{ error() }}</p>
           </div>
-          <button (click)="error.set(null)" class="!text-red-400 hover:!text-red-600 transition-colors">
+          <button
+            (click)="error.set(null)"
+            class="!text-red-400 hover:!text-red-600 transition-colors"
+          >
             <span class="material-icons">close</span>
           </button>
         </div>
@@ -80,20 +102,38 @@ interface PurchaseOrderItemForm {
         <fieldset [disabled]="isReadonly()" class="contents">
           <form [formGroup]="form" class="space-y-8 pb-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ui-select label="Proveedor" [options]="supplierOptions()" [formControl]="form.controls.supplierId" />
+              <ui-select
+                label="Proveedor"
+                [options]="supplierOptions()"
+                [formControl]="form.controls.supplierId"
+              />
 
               <ui-datepicker label="Fecha de Pedido" [formControl]="form.controls.orderDate" />
 
-              <ui-textarea formControlName="observations" label="Observaciones / Notas" placeholder="Detalles adicionales sobre el pedido..." [rows]="3" class="md:col-span-2" />
+              <ui-textarea
+                formControlName="observations"
+                label="Observaciones / Notas"
+                placeholder="Detalles adicionales sobre el pedido..."
+                [rows]="3"
+                class="md:col-span-2"
+              />
             </div>
 
             <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100">
               <div class="flex justify-between items-center mb-6">
-                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                <h3
+                  class="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2"
+                >
                   <span class="material-icons text-indigo-600">list</span>
                   Productos del Pedido
                 </h3>
-                <button type="button" mat-flat-button color="primary" (click)="addItem()" class="!rounded-full !h-10 !text-xs !font-bold !bg-indigo-600">
+                <button
+                  type="button"
+                  mat-flat-button
+                  color="primary"
+                  (click)="addItem()"
+                  class="!rounded-full !h-10 !text-xs !font-bold !bg-indigo-600"
+                >
                   <span class="material-icons mr-2">add</span>
                   Agregar Item
                 </button>
@@ -102,7 +142,10 @@ interface PurchaseOrderItemForm {
               @if (itemsArray.length > 0) {
                 <div class="space-y-6 pr-1">
                   @for (itemGroup of itemsArray.controls; track $index; let i = $index) {
-                    <div [formGroup]="itemGroup" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md group relative">
+                    <div
+                      [formGroup]="itemGroup"
+                      class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md group relative"
+                    >
                       <button
                         type="button"
                         mat-icon-button
@@ -113,19 +156,38 @@ interface PurchaseOrderItemForm {
                       </button>
 
                       <div class="flex flex-col gap-6">
-                        <ui-select label="Producto" [options]="productOptions()" [formControl]="$any(itemGroup).controls.productId" class="w-full" />
+                        <ui-select
+                          label="Producto"
+                          [options]="productOptions()"
+                          [formControl]="$any(itemGroup).controls.productId"
+                          class="w-full"
+                        />
 
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                           <div class="md:col-span-3">
-                            <ui-text-input label="Cantidad" type="number" icon="numbers" [formControl]="$any(itemGroup).controls.quantity" />
+                            <ui-text-input
+                              label="Cantidad"
+                              type="number"
+                              icon="numbers"
+                              [formControl]="$any(itemGroup).controls.quantity"
+                            />
                           </div>
 
                           <div class="md:col-span-4">
-                            <ui-text-input label="Precio Unitario" type="number" icon="payments" [formControl]="$any(itemGroup).controls.unitPrice" />
+                            <ui-text-input
+                              label="Precio Unitario"
+                              type="number"
+                              icon="payments"
+                              [formControl]="$any(itemGroup).controls.unitPrice"
+                            />
                           </div>
 
                           <div class="md:col-span-5 flex flex-col items-end">
-                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Subtotal de línea</div>
+                            <div
+                              class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1"
+                            >
+                              Subtotal de línea
+                            </div>
                             <div class="text-xl font-black text-indigo-600 tracking-tight">
                               {{ getItemTotal(i) | currency }}
                             </div>
@@ -138,15 +200,29 @@ interface PurchaseOrderItemForm {
 
                 <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
                   <div class="text-right">
-                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total de la Orden</p>
-                    <p class="text-3xl font-black text-gray-900 tracking-tighter">{{ orderTotal() | currency }}</p>
+                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">
+                      Total de la Orden
+                    </p>
+                    <p class="text-3xl font-black text-gray-900 tracking-tighter">
+                      {{ orderTotal() | currency }}
+                    </p>
                   </div>
                 </div>
               } @else {
-                <div class="py-12 text-center border-2 border-dashed border-gray-200 rounded-3xl bg-white/50">
+                <div
+                  class="py-12 text-center border-2 border-dashed border-gray-200 rounded-3xl bg-white/50"
+                >
                   <span class="material-icons text-gray-200 text-5xl mb-2">inventory_2</span>
-                  <p class="text-gray-400 text-sm font-bold">No hay productos agregados a esta orden</p>
-                  <button type="button" mat-button color="primary" (click)="addItem()" class="mt-2 !font-bold">
+                  <p class="text-gray-400 text-sm font-bold">
+                    No hay productos agregados a esta orden
+                  </p>
+                  <button
+                    type="button"
+                    mat-button
+                    color="primary"
+                    (click)="addItem()"
+                    class="mt-2 !font-bold"
+                  >
                     Comenzar a agregar
                   </button>
                 </div>
@@ -175,12 +251,23 @@ interface PurchaseOrderItemForm {
       </footer>
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+      }
+    `,
+  ],
 })
 export class PurchaseOrderDialogOrganism implements OnInit {
   loading = signal(false);
@@ -202,11 +289,11 @@ export class PurchaseOrderDialogOrganism implements OnInit {
   products = this.productService.products;
 
   supplierOptions = computed<SelectOption[]>(() =>
-    this.suppliers().map(s => ({ value: s.id, label: s.name }))
+    this.suppliers().map((s) => ({ value: s.id, label: s.name })),
   );
 
   productOptions = computed<SelectOption[]>(() =>
-    this.products().map(p => ({ value: p.id, label: `${p.name} (${p.sku})` }))
+    this.products().map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` })),
   );
 
   form = this.fb.group({
@@ -220,8 +307,10 @@ export class PurchaseOrderDialogOrganism implements OnInit {
     return this.form.get('items') as FormArray<FormGroup<PurchaseOrderItemForm>>;
   }
 
-  isReadonly = computed(() =>
-    this.isEditMode() && (['COMPLETED', 'CANCELLED'] as PurchaseOrderStatus[]).includes(this.orderStatus())
+  isReadonly = computed(
+    () =>
+      this.isEditMode() &&
+      (['COMPLETED', 'CANCELLED'] as PurchaseOrderStatus[]).includes(this.orderStatus()),
   );
 
   orderTotal = signal(0);
@@ -231,7 +320,7 @@ export class PurchaseOrderDialogOrganism implements OnInit {
       const total = this.itemsArray.controls.reduce((acc, group) => {
         const qty = group.get('quantity')?.value ?? 0;
         const price = group.get('unitPrice')?.value ?? 0;
-        return acc + (qty * price);
+        return acc + qty * price;
       }, 0);
       this.orderTotal.set(total);
     });
@@ -247,7 +336,8 @@ export class PurchaseOrderDialogOrganism implements OnInit {
 
     if (this.dialogData?.order) {
       this.isEditMode.set(true);
-      const { id, orderNumber, status, supplierId, orderDate, observations, items } = this.dialogData.order;
+      const { id, orderNumber, status, supplierId, orderDate, observations, items } =
+        this.dialogData.order;
 
       this.orderId.set(id);
       this.orderNumber.set(orderNumber);
@@ -265,7 +355,11 @@ export class PurchaseOrderDialogOrganism implements OnInit {
     }
   }
 
-  private createItemGroup(productId = '', quantity = 1, unitPrice = 0): FormGroup<PurchaseOrderItemForm> {
+  private createItemGroup(
+    productId = '',
+    quantity = 1,
+    unitPrice = 0,
+  ): FormGroup<PurchaseOrderItemForm> {
     return this.fb.group({
       productId: [productId, Validators.required],
       quantity: [quantity, [Validators.required, Validators.min(1)]],
@@ -290,7 +384,7 @@ export class PurchaseOrderDialogOrganism implements OnInit {
 
   isProductSelected(productId: string, index: number): boolean {
     return this.itemsArray.controls.some(
-      (group, i) => group.get('productId')?.value === productId && i !== index
+      (group, i) => group.get('productId')?.value === productId && i !== index,
     );
   }
 

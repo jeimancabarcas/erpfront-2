@@ -28,7 +28,7 @@ export type TransportMaintenanceResult = boolean | undefined;
     ButtonAtom,
     SelectAtom,
     TextareaComponent,
-    DatepickerComponent
+    DatepickerComponent,
   ],
   template: `
     @if (loading()) {
@@ -39,56 +39,87 @@ export type TransportMaintenanceResult = boolean | undefined;
       <div class="flex flex-col items-center gap-2 text-red-500 py-12">
         <span class="material-icons text-5xl">error_outline</span>
         <p>{{ error() }}</p>
-        <button (click)="close()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+        <button
+          (click)="close()"
+          class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4"
+        >
+          Cerrar
+        </button>
       </div>
     } @else {
-    <div class="p-0 overflow-hidden">
-      <header class="bg-amber-500 p-8 text-white flex justify-between items-center">
-        <div>
-          <h2 class="text-2xl font-black tracking-tight mb-1">Programar Mantenimiento</h2>
-          <p class="text-amber-50 text-sm font-medium italic">Define el servicio técnico para el vehículo {{ data.vehicleId }}.</p>
-        </div>
-        <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
-          <span class="material-icons">close</span>
-        </ui-button>
-      </header>
+      <div class="p-0 overflow-hidden">
+        <header class="bg-amber-500 p-8 text-white flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-black tracking-tight mb-1">Programar Mantenimiento</h2>
+            <p class="text-amber-50 text-sm font-medium italic">
+              Define el servicio técnico para el vehículo {{ data.vehicleId }}.
+            </p>
+          </div>
+          <ui-button variant="icon" (clicked)="close()" ariaLabel="Cerrar diálogo">
+            <span class="material-icons">close</span>
+          </ui-button>
+        </header>
 
-      <div class="p-10 bg-white">
-        <form [formGroup]="maintenanceForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <ui-select label="Tipo de Mantenimiento" [options]="maintenanceTypeOptions" [formControl]="maintenanceForm.controls.type" />
+        <div class="p-10 bg-white">
+          <form [formGroup]="maintenanceForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ui-select
+                label="Tipo de Mantenimiento"
+                [options]="maintenanceTypeOptions"
+                [formControl]="maintenanceForm.controls.type"
+              />
 
-            <ui-datepicker label="Fecha Programada" [formControl]="maintenanceForm.controls.scheduledDate" />
+              <ui-datepicker
+                label="Fecha Programada"
+                [formControl]="maintenanceForm.controls.scheduledDate"
+              />
 
-            <div class="md:col-span-2">
-              <ui-textarea formControlName="description" label="Descripción Detallada" placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..." [rows]="4" />
+              <div class="md:col-span-2">
+                <ui-textarea
+                  formControlName="description"
+                  label="Descripción Detallada"
+                  placeholder="Ej: Cambio de aceite, revisión de frenos y alineación..."
+                  [rows]="4"
+                />
+              </div>
+
+              <ui-text-input
+                label="Costo Estimado (Opcional)"
+                type="number"
+                icon="attach_money"
+                [formControl]="maintenanceForm.controls.cost"
+              />
             </div>
 
-            <ui-text-input label="Costo Estimado (Opcional)" type="number" icon="attach_money" [formControl]="maintenanceForm.controls.cost" />
-          </div>
-
-          <div class="flex gap-4 pt-4">
-            <button type="button" (click)="close()" class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" 
-                    [disabled]="maintenanceForm.invalid"
-                    class="!rounded-full !h-14 !px-8 !font-black !bg-amber-600 text-white flex-1 shadow-xl shadow-amber-100 hover:scale-105 transition-all disabled:opacity-50">
-              Programar Servicio
-            </button>
-          </div>
-        </form>
+            <div class="flex gap-4 pt-4">
+              <button
+                type="button"
+                (click)="close()"
+                class="!rounded-full !h-14 !px-8 !font-bold flex-1 border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                [disabled]="maintenanceForm.invalid"
+                class="!rounded-full !h-14 !px-8 !font-black !bg-amber-600 text-white flex-1 shadow-xl shadow-amber-100 hover:scale-105 transition-all disabled:opacity-50"
+              >
+                Programar Servicio
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     }
-  `
+  `,
 })
 export class TransportMaintenanceDialogOrganism {
   loading = signal(false);
   error = signal<string | null>(null);
   readonly data = inject<TransportMaintenanceDialogData>(MAT_DIALOG_DATA);
-  private dialogRef = inject(MatDialogRef<TransportMaintenanceDialogOrganism, TransportMaintenanceResult>);
+  private dialogRef = inject(
+    MatDialogRef<TransportMaintenanceDialogOrganism, TransportMaintenanceResult>,
+  );
   private fb = inject(FormBuilder);
   private transportService = inject(TransportService);
 
@@ -103,7 +134,7 @@ export class TransportMaintenanceDialogOrganism {
     type: ['Preventivo', Validators.required],
     scheduledDate: [new Date(), Validators.required],
     description: ['', [Validators.required, Validators.minLength(10)]],
-    cost: [null as number | null]
+    cost: [null as number | null],
   });
 
   close(result?: TransportMaintenanceResult) {
@@ -119,7 +150,7 @@ export class TransportMaintenanceDialogOrganism {
         description: val.description!,
         scheduledDate: new Date(val.scheduledDate!).toISOString(),
         status: 'Scheduled',
-        cost: val.cost || undefined
+        cost: val.cost || undefined,
       });
       this.dialogRef.close(true);
     }
