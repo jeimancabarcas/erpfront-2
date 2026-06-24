@@ -195,9 +195,18 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                       Subtotal
                     </th>
                     <td mat-cell *matCellDef="let control" class="px-6 text-right">
-                      <span class="text-sm font-black text-indigo-600">{{
-                        control.value.unitPrice * control.value.quantity | currency
-                      }}</span>
+                      <div class="flex flex-col items-end">
+                        <span class="text-sm font-black text-indigo-600">{{
+                          toNumber(control.value.unitPrice) * control.value.quantity - getItemTotalTax(control.value) | currency
+                        }}</span>
+                        @if (control.value.taxItems?.length) {
+                          <div class="text-[10px] text-gray-400 mt-0.5 space-y-0.5">
+                            @for (tax of control.value.taxItems; track tax.code) {
+                              <span>{{ tax.name }}: {{ toNumber(tax.amount) | currency }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
                     </td>
                   </ng-container>
 
@@ -229,26 +238,29 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
 
               <!-- Total Summary -->
               <div
-                class="p-6 bg-indigo-600 rounded-[24px] border border-indigo-700 flex justify-between items-center shadow-xl shadow-indigo-100 animate-in zoom-in duration-300"
+                class="p-6 bg-indigo-600 rounded-[24px] border border-indigo-700 shadow-xl shadow-indigo-100 animate-in zoom-in duration-300"
               >
-                <div class="flex items-center gap-3 text-white">
-                  <div
-                    class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center"
-                  >
-                    <span class="material-icons">payments</span>
+                <!-- Total -->
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-3 text-white">
+                    <div
+                      class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center"
+                    >
+                      <span class="material-icons">payments</span>
+                    </div>
+                    <div>
+                      <p class="text-[10px] text-indigo-100 font-black uppercase tracking-widest">
+                        Total Facturado
+                      </p>
+                      <p class="text-xs text-indigo-200 font-medium italic">
+                        Venta sujeta a descuento de inventario
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p class="text-[10px] text-indigo-100 font-black uppercase tracking-widest">
-                      Total Facturado
-                    </p>
-                    <p class="text-xs text-indigo-200 font-medium italic">
-                      Venta sujeta a descuento de inventario
-                    </p>
-                  </div>
+                  <span class="text-3xl font-black text-white tabular-nums">{{
+                    totalAmount() | currency
+                  }}</span>
                 </div>
-                <span class="text-3xl font-black text-white tabular-nums">{{
-                  totalAmount() | currency
-                }}</span>
               </div>
             </div>
           } @else {
@@ -358,6 +370,14 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   private _totalAmount = signal(0);
   totalAmount = this._totalAmount.asReadonly();
 
+  // Subtotal (sum of unitPrice * quantity, includes taxes)
+  private _subtotal = signal(0);
+  subtotalAmount = this._subtotal.asReadonly();
+
+  // Tax breakdown per tax code for display in totals
+  private _taxSummaries = signal<{ code: string; name: string; amount: number }[]>([]);
+  taxSummaries = this._taxSummaries.asReadonly();
+
   // Data source for MatTable — new array reference each time to force re-render
   readonly controls = signal<AbstractControl[]>([]);
 
@@ -366,8 +386,27 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
 
   private recalcTotal() {
     const currentItems = this.items.value || [];
-    const total = currentItems.reduce((acc: number, item: any) => acc + item.unitPrice * item.quantity, 0);
-    this._totalAmount.set(total);
+
+    const subtotal = currentItems.reduce((acc: number, item: any) => acc + item.unitPrice * item.quantity, 0);
+    this._subtotal.set(subtotal);
+    this._totalAmount.set(subtotal);
+
+    // Compute tax breakdown from stored tax items per product
+    const taxMap = new Map<string, { code: string; name: string; amount: number }>();
+    for (const item of currentItems) {
+      if (item.taxItems && Array.isArray(item.taxItems)) {
+        for (const tax of item.taxItems) {
+          const existing = taxMap.get(tax.code);
+          if (existing) {
+            existing.amount += tax.amount;
+          } else {
+            taxMap.set(tax.code, { code: tax.code, name: tax.name, amount: tax.amount });
+          }
+        }
+      }
+    }
+    this._taxSummaries.set(Array.from(taxMap.values()));
+
     this.controls.set([...this.items.controls]);
     this.itemsCount.set(currentItems.length);
   }
@@ -457,6 +496,38 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
     return qtys;
   }
 
+  /** Compute per-item tax amounts from product tax configuration */
+  private computeTaxItems(
+    unitPrice: number,
+    quantity: number,
+    productTaxes?: { id: string; name: string; code: string; percentage: number; type: string }[],
+  ): { code: string; name: string; rate: number; amount: number }[] {
+    if (!productTaxes || productTaxes.length === 0) return [];
+
+    const totalRate = productTaxes.reduce((sum, t) => sum + Number(t.percentage), 0);
+    if (totalRate === 0) return [];
+
+    const itemSubtotal = unitPrice * quantity;
+    const priceBeforeTax = itemSubtotal / (1 + totalRate / 100);
+
+    return productTaxes.map(tax => ({
+      code: tax.code,
+      name: tax.name,
+      rate: Number(tax.percentage),
+      amount: Math.round(priceBeforeTax * (Number(tax.percentage) / 100) * 100) / 100,
+    }));
+  }
+
+  /** Returns total tax amount for a line item */
+  getItemTotalTax(item: any): number {
+    if (!item.taxItems?.length) return 0;
+    return item.taxItems.reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
+  }
+
+  toNumber(val: any): number {
+    return Number(val) || 0;
+  }
+
   openAddProductDialog() {
     const ref = this.matDialog.open(ProductSelectionDialogComponent, {
       ...DIALOG_DEFAULTS,
@@ -468,6 +539,9 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
     ref.afterClosed().subscribe((result: ProductSelectionDialogResult | undefined) => {
       if (!result) return;
 
+      const product = this.allProducts().find(p => p.id === result.productId);
+      const taxItems = this.computeTaxItems(result.unitPrice, result.quantity, product?.taxes);
+
       this.items.push(
         this.fb.group({
           productId: [result.productId],
@@ -477,6 +551,7 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
           referenceSellingPrice: [result.referenceSellingPrice],
           referenceAveragePrice: [result.referenceAveragePrice],
           referenceStock: [result.referenceStock],
+          taxItems: [taxItems],
         }),
       );
 
@@ -503,6 +578,9 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
     ref.afterClosed().subscribe((result: ProductSelectionDialogResult | undefined) => {
       if (!result) return;
 
+      const product = this.allProducts().find(p => p.id === result.productId);
+      const taxItems = this.computeTaxItems(result.unitPrice, result.quantity, product?.taxes);
+
       itemGroup.patchValue({
         productId: result.productId,
         name: result.name,
@@ -511,6 +589,7 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
         referenceSellingPrice: result.referenceSellingPrice,
         referenceAveragePrice: result.referenceAveragePrice,
         referenceStock: result.referenceStock,
+        taxItems: taxItems,
       });
 
       this.recalcTotal();

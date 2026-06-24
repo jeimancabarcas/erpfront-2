@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { InvoiceService } from '../../../services/invoice.service';
-import { Invoice } from '../../../models/invoice.model';
+import { Invoice, InvoiceItemTax } from '../../../models/invoice.model';
 import { SalesNoteService } from '../../../services/sales-note.service';
 import { CreditNote, DebitNote } from '../../../models/sales-note.model';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
@@ -115,8 +115,8 @@ interface TraceEvent {
                   <span class="text-xs font-black text-gray-900">{{ inv.date | date:'longDate' }}</span>
                 </div>
                 <hr class="border-t border-indigo-100">
-                <div class="flex justify-between items-center pt-2">
-                  <span class="text-xs font-bold text-gray-500">Total Facturado</span>
+                <div class="flex justify-between items-center pt-1">
+                  <span class="text-sm font-bold text-gray-500">Total Facturado</span>
                   <span class="text-xl font-black text-indigo-600">{{ inv.totalAmount | currency }}</span>
                 </div>
                 @if (inv.netTotal != null) {
@@ -140,6 +140,7 @@ interface TraceEvent {
                     <th class="py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Cant.</th>
                     <th class="py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Precio Unit.</th>
                     <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Subtotal</th>
+                    <th class="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Impuestos</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -157,8 +158,31 @@ interface TraceEvent {
                       <td class="py-4 px-4 text-center text-xs font-medium text-gray-500">
                         {{ item.unitPrice | currency }}
                       </td>
-                      <td class="py-4 px-6 text-center font-black text-gray-900">
-                        {{ item.subtotal | currency }}
+                      <td class="py-4 px-6 text-center">
+                        <div class="flex flex-col items-center">
+                          <span class="font-bold text-gray-900">{{ toNumber(item.subtotal) | currency }}</span>
+                          @if (getItemTaxes(item).length > 0) {
+                            <div class="text-[11px] text-gray-400 mt-0.5 space-y-0.5">
+                              @for (tax of getItemTaxes(item); track tax.taxCode) {
+                                <div class="flex justify-between gap-2">
+                                  <span>{{ tax.taxName ?? tax.taxCode }}:</span>
+                                  <span class="font-medium">{{ toNumber(tax.taxAmount) | currency }}</span>
+                                </div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      </td>
+                      <td class="py-4 px-6 text-center">
+                        @if (getItemTaxes(item).length > 0) {
+                          <div class="flex flex-col items-center gap-0.5">
+                            @for (tax of getItemTaxes(item); track tax.taxCode) {
+                              <span class="text-[11px] font-medium" [class.text-gray-500]="true">{{ tax.taxName ?? tax.taxCode }}: {{ toNumber(tax.taxAmount) | currency }}</span>
+                            }
+                          </div>
+                        } @else {
+                          <span class="text-xs text-gray-300">-</span>
+                        }
                       </td>
                     </tr>
                   }
@@ -166,6 +190,26 @@ interface TraceEvent {
               </table>
             </div>
           </div>
+
+          <!-- Tax Summary -->
+          @if (taxSummary().length > 0) {
+            <div class="space-y-4 mb-8 animate-in fade-in duration-300">
+              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Resumen de Impuestos</label>
+              <div class="p-6 bg-gray-50 rounded-[28px] border border-gray-100 space-y-3">
+                @for (tax of taxSummary(); track tax.taxCode) {
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-500">{{ tax.taxName ?? tax.taxCode }}</span>
+                    <span class="text-xs font-black text-gray-900">{{ toNumber(tax.taxAmount) | currency }}</span>
+                  </div>
+                }
+                <hr class="border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-bold text-gray-700">Total Impuestos</span>
+                  <span class="text-sm font-black text-indigo-600">{{ totalTaxAmount() | currency }}</span>
+                </div>
+              </div>
+            </div>
+          }
 
           <!-- Trazabilidad de la Factura -->
           @if (traceEvents().length > 0) {
@@ -416,6 +460,53 @@ export class InvoiceDetailDialogOrganism implements OnInit {
     events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return events;
   });
+
+  taxSummary = computed(() => {
+    const inv = this.invoice();
+    if (!inv?.items) return [];
+
+    const taxMap = new Map<string, { taxCode: string; taxName: string; taxAmount: number }>();
+    for (const item of inv.items) {
+      const itemTaxes = this.getItemTaxes(item);
+      if (itemTaxes.length > 0) {
+        for (const tax of itemTaxes) {
+          const existing = taxMap.get(tax.taxCode);
+          if (existing) {
+            existing.taxAmount += Number(tax.taxAmount);
+          } else {
+            taxMap.set(tax.taxCode, {
+              taxCode: tax.taxCode,
+              taxName: tax.taxName ?? tax.taxCode,
+              taxAmount: Number(tax.taxAmount),
+            });
+          }
+        }
+      }
+    }
+    return Array.from(taxMap.values());
+  });
+
+  totalTaxAmount = computed(() =>
+    this.taxSummary().reduce((sum, t) => sum + t.taxAmount, 0),
+  );
+
+  subtotalBeforeTax = computed(() => {
+    const inv = this.invoice();
+    if (!inv?.items) return 0;
+    return inv.items.reduce((sum, item) => {
+      const itemTax = Number(item.taxAmount) || 0;
+      return sum + Number(item.subtotal) - itemTax;
+    }, 0);
+  });
+
+  /** Returns taxes from either taxes or invoiceItemTaxes field */
+  getItemTaxes(item: any): InvoiceItemTax[] {
+    return item.taxes ?? item.invoiceItemTaxes ?? [];
+  }
+
+  toNumber(val: any): number {
+    return Number(val) || 0;
+  }
 
   ngOnInit() {
     const data = this.dialogData;

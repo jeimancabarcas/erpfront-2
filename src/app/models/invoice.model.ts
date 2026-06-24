@@ -3,11 +3,23 @@ import { Customer } from './customer.model';
 
 export type InvoiceStatus = 'DRAFT' | 'PAID' | 'CANCELLED';
 
+export interface InvoiceItemTax {
+  id: string;
+  taxId?: string;
+  taxCode: string;
+  taxName?: string;
+  taxRate: number;
+  taxAmount: number;
+}
+
 export interface InvoiceItem {
   productId: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  taxAmount?: number;
+  taxes?: InvoiceItemTax[];
+  invoiceItemTaxes?: InvoiceItemTax[];
   product?: Product; // Incluido en respuestas GET
 }
 

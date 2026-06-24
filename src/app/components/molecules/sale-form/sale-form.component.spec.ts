@@ -350,3 +350,208 @@ describe('SaleFormMolecule — Product Dialog Integration (TDD)', () => {
     expect(capturedDto.isElectronic).toBe(true);
   });
 });
+
+describe('SaleFormMolecule — Tax Breakdown Display (TDD)', () => {
+  let component: SaleFormMolecule;
+  let fixture: ComponentFixture<SaleFormMolecule>;
+  let mockProductService: any;
+  let mockCustomerService: any;
+  let mockInvoiceService: any;
+  let mockDialogRef: any;
+  let mockMatDialog: any;
+
+  const mockCustomers: Customer[] = [
+    {
+      id: 'cust-1',
+      name: 'John Doe',
+      documentNumber: '111',
+      documentType: 'CC',
+      email: 'j@example.com',
+      status: 'ACTIVE',
+      phone: '123',
+      address: 'Calle 1',
+      createdAt: '2026-06-21T09:00:00.000Z',
+      updatedAt: '2026-06-21T09:00:00.000Z',
+    },
+  ];
+
+  const mockProducts = [
+    {
+      id: 'prod-tax-1',
+      name: 'Taxed Product',
+      sku: 'TAX-001',
+      currentStock: 100,
+      minStock: 10,
+      maxStock: 200,
+      categoryId: 'cat-1',
+      category: { id: 'cat-1', name: 'Category' },
+      taxIds: ['tax-iva', 'tax-inc'],
+      taxes: [
+        { id: 'tax-iva', name: 'IVA', code: 'IVA', percentage: 19, type: 'percentage' },
+        { id: 'tax-inc', name: 'INC', code: 'INC', percentage: 4, type: 'percentage' },
+      ],
+      averagePurchasePrice: 50000,
+      sellingPrice: 123000,
+      createdAt: '',
+      updatedAt: '',
+    },
+    {
+      id: 'prod-no-tax',
+      name: 'Untaxed Product',
+      sku: 'NO-TAX-001',
+      currentStock: 50,
+      minStock: 5,
+      maxStock: 100,
+      categoryId: 'cat-1',
+      category: { id: 'cat-1', name: 'Category' },
+      taxIds: [],
+      taxes: [],
+      averagePurchasePrice: 30000,
+      sellingPrice: 50000,
+      createdAt: '',
+      updatedAt: '',
+    },
+  ];
+
+  beforeEach(async () => {
+    mockProductService = {
+      products: signal(mockProducts),
+      loadProducts: vi.fn().mockReturnValue(of(mockProducts)),
+    } as any;
+
+    mockCustomerService = {
+      customers: signal(mockCustomers),
+      loadCustomers: vi
+        .fn()
+        .mockReturnValue(
+          of({ data: mockCustomers, meta: { total: 1, page: 1, limit: 10, lastPage: 1 } }),
+        ),
+    };
+
+    mockInvoiceService = {
+      createInvoice: vi.fn().mockReturnValue(of({})),
+    };
+
+    mockDialogRef = {
+      close: vi.fn(),
+    };
+
+    mockMatDialog = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => of(null),
+      }),
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [SaleFormMolecule, NoopAnimationsModule],
+      providers: [
+        { provide: MatDialogRef, useValue: mockDialogRef },
+        { provide: MAT_DIALOG_DATA, useValue: null },
+        { provide: ProductService, useValue: mockProductService },
+        { provide: CustomerService, useValue: mockCustomerService },
+        { provide: InvoiceService, useValue: mockInvoiceService },
+        { provide: MatDialog, useValue: mockMatDialog },
+      ],
+    }).overrideComponent(SaleFormMolecule, {
+      set: {
+        providers: [{ provide: MatDialog, useValue: mockMatDialog }],
+      },
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SaleFormMolecule);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should compute tax items when product has taxes', () => {
+    const taxItems = component['computeTaxItems'](123000, 1, mockProducts[0].taxes);
+    expect(taxItems.length).toBe(2);
+    // IVA 19%: priceBeforeTax = 123000/(1+0.23) = 100000, IVA=100000*0.19=19000
+    // INC 4%: 100000*0.04=4000
+    expect(taxItems[0].code).toBe('IVA');
+    expect(taxItems[0].amount).toBe(19000);
+    expect(taxItems[1].code).toBe('INC');
+    expect(taxItems[1].amount).toBe(4000);
+  });
+
+  it('should return empty tax items when product has no taxes', () => {
+    const taxItems = component['computeTaxItems'](50000, 2, []);
+    expect(taxItems.length).toBe(0);
+  });
+
+  it('should return empty tax items when product taxes is undefined', () => {
+    const taxItems = component['computeTaxItems'](50000, 2, undefined);
+    expect(taxItems.length).toBe(0);
+  });
+
+  it('should compute tax breakdown correctly when adding product with taxes', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1' });
+
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-tax-1',
+      name: 'Taxed Product',
+      quantity: 1,
+      unitPrice: 123000,
+      referenceSellingPrice: 123000,
+      referenceAveragePrice: 50000,
+      referenceStock: 100,
+    };
+
+    mockMatDialog.open.mockReturnValue({ afterClosed: () => of(mockResult) });
+    component.openAddProductDialog();
+
+    expect(component.items.length).toBe(1);
+    expect(component.taxSummaries().length).toBe(2);
+    expect(component.subtotalAmount()).toBe(123000);
+    expect(component.totalAmount()).toBe(123000);
+    const ivaSummary = component.taxSummaries().find(t => t.code === 'IVA');
+    expect(ivaSummary?.amount).toBe(19000);
+    const incSummary = component.taxSummaries().find(t => t.code === 'INC');
+    expect(incSummary?.amount).toBe(4000);
+  });
+
+  it('should have empty tax summaries when adding untaxed product', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1' });
+
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-no-tax',
+      name: 'Untaxed Product',
+      quantity: 2,
+      unitPrice: 50000,
+      referenceSellingPrice: 50000,
+      referenceAveragePrice: 30000,
+      referenceStock: 50,
+    };
+
+    mockMatDialog.open.mockReturnValue({ afterClosed: () => of(mockResult) });
+    component.openAddProductDialog();
+
+    expect(component.items.length).toBe(1);
+    expect(component.taxSummaries().length).toBe(0);
+    expect(component.subtotalAmount()).toBe(100000);
+    expect(component.totalAmount()).toBe(100000);
+  });
+
+  it('should render tax breakdown in the template when items have taxes', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1' });
+
+    const mockResult: ProductSelectionDialogResult = {
+      productId: 'prod-tax-1',
+      name: 'Taxed Product',
+      quantity: 1,
+      unitPrice: 123000,
+      referenceSellingPrice: 123000,
+      referenceAveragePrice: 50000,
+      referenceStock: 100,
+    };
+
+    mockMatDialog.open.mockReturnValue({ afterClosed: () => of(mockResult) });
+    component.openAddProductDialog();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Subtotal');
+    expect(el.textContent).toContain('Total Facturado');
+  });
+});
