@@ -8,7 +8,7 @@ import { CreditNote, DebitNote } from '../../../models/sales-note.model';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
-import { AdjustmentFormDialogOrganism } from '../adjustment-form-dialog/adjustment-form-dialog.component';
+import { SalesNoteFormDialogOrganism, SalesNoteDialogData } from '../sales-note-form-dialog/sales-note-form-dialog.component';
 
 interface TraceEvent {
   type: 'Emisión Inicial' | 'Emisión Electrónica' | 'Nota Crédito' | 'Nota Débito';
@@ -160,17 +160,7 @@ interface TraceEvent {
                       </td>
                       <td class="py-4 px-6 text-center">
                         <div class="flex flex-col items-center">
-                          <span class="font-bold text-gray-900">{{ toNumber(item.subtotal) | currency }}</span>
-                          @if (getItemTaxes(item).length > 0) {
-                            <div class="text-[11px] text-gray-400 mt-0.5 space-y-0.5">
-                              @for (tax of getItemTaxes(item); track tax.taxCode) {
-                                <div class="flex justify-between gap-2">
-                                  <span>{{ tax.taxName ?? tax.taxCode }}:</span>
-                                  <span class="font-medium">{{ toNumber(tax.taxAmount) | currency }}</span>
-                                </div>
-                              }
-                            </div>
-                          }
+                          <span class="font-bold text-gray-900">{{ toNumber(item.subtotal) - toNumber(item.taxAmount) | currency }}</span>
                         </div>
                       </td>
                       <td class="py-4 px-6 text-center">
@@ -190,26 +180,6 @@ interface TraceEvent {
               </table>
             </div>
           </div>
-
-          <!-- Tax Summary -->
-          @if (taxSummary().length > 0) {
-            <div class="space-y-4 mb-8 animate-in fade-in duration-300">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Resumen de Impuestos</label>
-              <div class="p-6 bg-gray-50 rounded-[28px] border border-gray-100 space-y-3">
-                @for (tax of taxSummary(); track tax.taxCode) {
-                  <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-500">{{ tax.taxName ?? tax.taxCode }}</span>
-                    <span class="text-xs font-black text-gray-900">{{ toNumber(tax.taxAmount) | currency }}</span>
-                  </div>
-                }
-                <hr class="border-t border-gray-200">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-bold text-gray-700">Total Impuestos</span>
-                  <span class="text-sm font-black text-indigo-600">{{ totalTaxAmount() | currency }}</span>
-                </div>
-              </div>
-            </div>
-          }
 
           <!-- Trazabilidad de la Factura -->
           @if (traceEvents().length > 0) {
@@ -585,27 +555,42 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   }
 
   openAdjustmentDialog(invoice: Invoice): void {
-    const dialogRef = this.matDialog.open(AdjustmentFormDialogOrganism, {
-      width: '700px',
+    // Compute already returned quantities per product from existing credit notes
+    const returnedQuantities: Record<string, number> = {};
+    // Compute current effective price per product after previous adjustments
+    const adjustedPrices: Record<string, number> = {};
+    const { creditNotes } = this.notes();
+
+    // Process notes in chronological order (oldest first) to track effective price
+    const sortedNotes = [...creditNotes].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    for (const cn of sortedNotes) {
+      if (cn.items) {
+        for (const item of cn.items) {
+          if (item.productId) {
+            // Track returned quantity
+            returnedQuantities[item.productId] = (returnedQuantities[item.productId] || 0) + Number(item.quantity);
+
+            // Track price adjustments (discount B, correction C use a new price)
+            if (item.unitPrice != null) {
+              adjustedPrices[item.productId] = Number(item.unitPrice);
+            }
+          }
+        }
+      }
+    }
+
+    const dialogRef = this.matDialog.open(SalesNoteFormDialogOrganism, {
+      width: '850px',
       maxWidth: '95vw',
       panelClass: 'erp-dialog-panel',
       data: {
-        invoice: {
-          id: invoice.invoiceNumber || invoice.id,
-          dbId: invoice.id,
-          customerName: invoice.customer?.name || 'Desconocido',
-          customerTaxId: invoice.customer?.documentNumber || '',
-          date: invoice.date,
-          dueDate: invoice.date,
-          items: invoice.items || [],
-          subtotal: Number(invoice.totalAmount) || 0,
-          tax: 0,
-          total: Number(invoice.totalAmount) || 0,
-          status: invoice.status === 'PAID' ? 'Paid' : invoice.status === 'CANCELLED' ? 'Cancelled' : 'Draft',
-          isElectronic: invoice.isElectronic,
-          adjustments: [],
-        },
-      },
+        invoice: invoice,
+        returnedQuantities,
+        adjustedPrices,
+      } as SalesNoteDialogData,
     });
 
     dialogRef.afterClosed().subscribe((result) => {

@@ -3,11 +3,20 @@ export interface CreateSalesNoteDto {
   observation?: string;
   billNumber?: string;
   numberingRangeId?: number;
+  isElectronic?: boolean;
+  scenarioType?: string;
   items?: {
     codeReference: string;
     quantity: number;
-    price: number;
+    price?: number;
+    productId?: string;
   }[];
+}
+
+export interface CreditNoteItemInfo {
+  productId: string;
+  quantity: number;
+  unitPrice?: number;
 }
 
 export interface CreditNote {
@@ -23,6 +32,7 @@ export interface CreditNote {
   invoiceId: string;
   createdAt: string;
   updatedAt: string;
+  items?: CreditNoteItemInfo[];
 }
 
 export interface DebitNote {
