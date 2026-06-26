@@ -1,12 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Invoice } from '../../../models/invoice.model';
@@ -17,33 +12,34 @@ import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dialog.config';
+import { TableComponent, TableColumn } from '../../atoms/table/table.component';
+import { TableCellDirective } from '../../atoms/table/table-cell.directive';
 
 @Component({
   selector: 'app-customer-invoices-table-organism',
   standalone: true,
   imports: [
     CommonModule,
-    MatTableModule,
     MatPaginatorModule,
     MatIconModule,
-    MatButtonModule,
-    MatTooltipModule,
     ReactiveFormsModule,
     CurrencyPipe,
     DatePipe,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    TableComponent,
+    TableCellDirective
   ],
   template: `
-    <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-      <header class="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div class="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none overflow-hidden flex flex-col">
+      <header class="p-8 border-b border-gray-50 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-indigo-600">
+          <div class="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
             <mat-icon class="!w-6 !h-6">history</mat-icon>
           </div>
           <div>
-            <h3 class="text-xl font-black text-gray-900 leading-none">Historial de Facturación</h3>
-            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-2">Transacciones realizadas</p>
+            <h3 class="text-xl font-black text-gray-900 dark:text-gray-100 leading-none">Historial de Facturación</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-2">Transacciones realizadas</p>
           </div>
         </div>
         
@@ -55,73 +51,62 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dia
       @if (loading) {
         <div class="p-20 flex flex-col items-center justify-center space-y-4">
           <div class="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-          <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Consultando registros...</span>
+          <span class="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-widest">Consultando registros...</span>
         </div>
       } @else if (invoices.length === 0) {
         <div class="p-20 text-center space-y-4">
-          <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300">
+          <div class="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto text-gray-300 dark:text-gray-600">
             <mat-icon class="!w-8 !h-8">receipt_long</mat-icon>
           </div>
-          <p class="text-gray-400 font-bold tracking-tight">No se encontraron facturas para este cliente</p>
+          <p class="text-gray-400 dark:text-gray-500 font-bold tracking-tight">No se encontraron facturas para este cliente</p>
         </div>
       } @else {
-        <div class="overflow-x-auto flex-grow">
-          <table mat-table [dataSource]="invoices" class="w-full">
-            <!-- No. Factura Column -->
-            <ng-container matColumnDef="invoiceNumber">
-              <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50">No. Factura</th>
-              <td mat-cell *matCellDef="let inv" class="px-8 !py-6">
-                <span class="font-black text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs border border-indigo-100/50">
-                  {{ inv.invoiceNumber }}
-                </span>
-              </td>
-            </ng-container>
+        <ui-table
+          [columns]="tableColumns"
+          [data]="invoices"
+          [loading]="false"
+          emptyMessage="No se encontraron facturas para este cliente"
+          emptyIcon="receipt_long"
+        >
+          <ng-template uiTableCell="invoiceNumber" let-inv>
+            <span class="font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg text-xs border border-indigo-100/50 dark:border-indigo-800/50">
+              {{ inv.invoiceNumber }}
+            </span>
+          </ng-template>
 
-            <!-- Fecha Column -->
-            <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50">Fecha</th>
-              <td mat-cell *matCellDef="let inv" class="px-8 !py-6 text-sm text-gray-600 font-medium">
-                {{ inv.date | date:'dd MMM, yyyy' }}
-              </td>
-            </ng-container>
+          <ng-template uiTableCell="date" let-inv>
+            <span class="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              {{ inv.date | date:'dd MMM, yyyy' }}
+            </span>
+          </ng-template>
 
-            <!-- Monto Column -->
-            <ng-container matColumnDef="amount">
-              <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50 text-right">Monto Neto</th>
-              <td mat-cell *matCellDef="let inv" class="px-8 !py-6 text-right font-black text-gray-900">
-                {{ (inv.netTotal ?? inv.totalAmount) | currency }}
-              </td>
-            </ng-container>
+          <ng-template uiTableCell="amount" let-inv>
+            <span class="font-black text-gray-900 dark:text-gray-100">
+              {{ (inv.netTotal ?? inv.totalAmount) | currency }}
+            </span>
+          </ng-template>
 
-            <!-- Acciones Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef class="px-8 !py-6 !text-[10px] !font-black !text-gray-400 !uppercase !tracking-widest !bg-gray-50/50 text-center">Acciones</th>
-              <td mat-cell *matCellDef="let inv" class="px-8 !py-6 text-center">
-                <div class="flex justify-center gap-2">
-                  <ui-button 
-                    variant="icon"
-                    size="sm"
-                    [tooltip]="inv.isElectronic ? 'Descargar PDF DIAN' : 'Ver PDF Historial'"
-                    (clicked)="downloadInvoicePdf(inv)"
-                  >
-                    <mat-icon class="!text-red-600">picture_as_pdf</mat-icon>
-                  </ui-button>
-                  <ui-button 
-                    variant="icon"
-                    size="sm"
-                    tooltip="Ver detalle completo"
-                    (clicked)="viewInvoiceDetail(inv)"
-                  >
-                    <mat-icon class="!text-indigo-600">visibility</mat-icon>
-                  </ui-button>
-                </div>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/50 transition-colors"></tr>
-          </table>
-        </div>
+          <ng-template uiTableCell="actions" let-inv>
+            <div class="flex justify-center gap-2">
+              <ui-button 
+                variant="icon"
+                size="sm"
+                [tooltip]="inv.isElectronic ? 'Descargar PDF DIAN' : 'Ver PDF Historial'"
+                (clicked)="downloadInvoicePdf(inv)"
+              >
+                <mat-icon class="!text-red-600">picture_as_pdf</mat-icon>
+              </ui-button>
+              <ui-button 
+                variant="icon"
+                size="sm"
+                tooltip="Ver detalle completo"
+                (clicked)="viewInvoiceDetail(inv)"
+              >
+                <mat-icon class="!text-indigo-600">visibility</mat-icon>
+              </ui-button>
+            </div>
+          </ng-template>
+        </ui-table>
 
         <mat-paginator 
           [length]="totalCount"
@@ -129,7 +114,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dia
           [pageIndex]="pageIndex - 1"
           [pageSizeOptions]="[5, 10, 25]"
           (page)="pageChanged.emit($event)"
-          class="!bg-transparent !border-t !border-gray-50"
+          class="!bg-transparent !border-t !border-gray-50 dark:!border-gray-800"
         ></mat-paginator>
       }
     </div>
@@ -152,7 +137,12 @@ export class CustomerInvoicesTableOrganism {
   private invoiceService = inject(InvoiceService);
   
   invoiceFilter = new FormControl('');
-  displayedColumns = ['invoiceNumber', 'date', 'amount', 'actions'];
+  protected readonly tableColumns: TableColumn[] = [
+    { key: 'invoiceNumber', header: 'No. Factura' },
+    { key: 'date', header: 'Fecha' },
+    { key: 'amount', header: 'Monto Neto', align: 'right' },
+    { key: 'actions', header: 'Acciones', align: 'center', width: '140px' },
+  ];
 
   constructor() {
     this.invoiceFilter.valueChanges.pipe(

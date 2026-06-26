@@ -10,7 +10,6 @@ import {
   FormControl,
   AbstractControl,
 } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
@@ -30,6 +29,8 @@ import {
   ProductSelectionDialogComponent,
   ProductSelectionDialogResult,
 } from '../../organisms/product-selection-dialog/product-selection-dialog.component';
+import { TableComponent, TableColumn } from '../../atoms/table/table.component';
+import { TableCellDirective } from '../../atoms/table/table-cell.directive';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
@@ -39,36 +40,37 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatTableModule,
     MatSlideToggleModule,
     CurrencyPipe,
     PercentPipe,
     ButtonAtom,
     TextareaComponent,
     SelectAtom,
+    TableComponent,
+    TableCellDirective,
   ],
   template: `
     <div
-      class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[900px]"
+      class="relative overflow-hidden bg-white dark:bg-gray-900 flex flex-col max-h-[95vh] w-full max-w-[900px]"
     >
       <!-- Decorative Background Element -->
       <div
-        class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"
+        class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 dark:bg-indigo-900/30 rounded-full blur-3xl opacity-50"
       ></div>
 
       <div class="p-8 relative z-10 overflow-y-auto custom-scrollbar">
         <header class="flex items-center justify-between mb-10">
           <div class="flex items-center gap-5">
             <div
-              class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 animate-in zoom-in duration-500"
+              class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 dark:shadow-indigo-900/50 animate-in zoom-in duration-500"
             >
               <span class="material-icons !text-[28px] !w-7 !h-7">shopping_cart</span>
             </div>
             <div>
-              <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">
+              <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight !m-0 leading-tight">
                 Nueva Factura de Venta
               </h2>
-              <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">
+              <p class="text-gray-400 dark:text-gray-500 text-sm font-semibold uppercase tracking-widest mt-1">
                 Facturación & Inventario
               </p>
             </div>
@@ -86,14 +88,14 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
               (change)="isElectronic.set($event.checked)"
               color="primary"
             >
-              <span class="text-sm font-semibold text-gray-700">Factura electrónica</span>
+              <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Factura electrónica</span>
             </mat-slide-toggle>
           </div>
 
           @if (!isElectronic()) {
-            <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-              <span class="material-icons text-amber-500 mt-0.5 text-[18px]">warning_amber</span>
-              <p class="text-xs text-amber-700 leading-relaxed">
+            <div class="flex items-start gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-4 py-3">
+              <span class="material-icons text-amber-500 dark:text-amber-400 mt-0.5 text-[18px]">warning_amber</span>
+              <p class="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
                 Esta venta <strong>no será enviada a la DIAN</strong>. Se asignará un número
                 interno (MAN-XXXXXXXX) y no tendrá validez fiscal electrónica.
               </p>
@@ -160,7 +162,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                 formControlName="installments"
               />
               <div class="flex items-end pb-4">
-                <p class="text-xs text-gray-400">
+                <p class="text-xs text-gray-400 dark:text-gray-500">
                   @if (toNumber(installmentsValue()) > 1) {
                     {{ totalAmount() | currency }} ÷ {{ installmentsValue() }} = {{ totalAmount() / toNumber(installmentsValue()) | currency }}/cuota
                   } @else {
@@ -173,44 +175,49 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             <!-- Credit Summary Widget -->
             <div class="animate-in fade-in slide-in-from-bottom duration-300">
               @if (creditLoading()) {
-                <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-[20px]">
-                  <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
-                  <span class="text-xs text-gray-500 font-medium">Consultando crédito...</span>
+                <div class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-[20px]">
+                  <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
+                  <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Consultando crédito...</span>
                 </div>
               } @else if (creditError()) {
-                <div class="p-4 bg-amber-50 border border-amber-200 rounded-[20px] flex items-start gap-3">
-                  <span class="material-icons text-amber-500 text-sm mt-0.5">info</span>
-                  <p class="text-xs text-amber-700 font-medium">Crédito no configurado</p>
+              <div class="p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-[20px] flex items-start gap-3">
+                <span class="material-icons text-amber-500 dark:text-amber-400 text-sm mt-0.5">info</span>
+                <p class="text-xs text-amber-700 dark:text-amber-300 font-medium">Crédito no configurado</p>
                 </div>
               } @else if (creditSummary(); as credit) {
-                <div class="p-4 bg-gray-50 rounded-[20px] space-y-3">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-[20px] space-y-3">
                   <div class="flex items-center gap-2">
-                    <span class="material-icons text-indigo-500 text-[16px]">credit_score</span>
-                    <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Resumen de Crédito</span>
+                    <span class="material-icons text-indigo-500 dark:text-indigo-400 text-[16px]">credit_score</span>
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest">Resumen de Crédito</span>
                   </div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
-                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Saldo Actual</span>
-                      <p class="font-black text-gray-900 text-sm">{{ credit.currentBalance | currency }}</p>
+                      <span class="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">Saldo Actual</span>
+                      <p class="font-black text-gray-900 dark:text-gray-100 text-sm">{{ credit.currentBalance | currency }}</p>
                     </div>
                     <div>
-                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Límite</span>
-                      <p class="font-black text-gray-900 text-sm">{{ credit.creditLimit | currency }}</p>
+                      <span class="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">Límite</span>
+                      <p class="font-black text-gray-900 dark:text-gray-100 text-sm">{{ credit.creditLimit | currency }}</p>
                     </div>
                     <div>
-                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Disponible</span>
+                      <span class="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">Disponible</span>
                       <p class="font-black text-sm"
                          [class.text-gray-900]="credit.availableCredit !== null && credit.availableCredit > 0"
-                         [class.text-red-600]="credit.availableCredit === null || credit.availableCredit <= 0">
+                         [class.dark:text-gray-100]="credit.availableCredit !== null && credit.availableCredit > 0"
+                         [class.text-red-600]="credit.availableCredit === null || credit.availableCredit <= 0"
+                         [class.dark:text-red-400]="credit.availableCredit === null || credit.availableCredit <= 0">
                         {{ credit.availableCredit !== null ? (credit.availableCredit | currency) : 'N/A' }}
                       </p>
                     </div>
                     <div>
-                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Utilización</span>
+                      <span class="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">Utilización</span>
                       <p class="font-black text-sm"
                          [class.text-emerald-600]="(credit.utilizationPercent ?? 0) <= 70"
+                         [class.dark:text-emerald-400]="(credit.utilizationPercent ?? 0) <= 70"
                          [class.text-amber-600]="(credit.utilizationPercent ?? 0) > 70 && (credit.utilizationPercent ?? 0) <= 90"
-                         [class.text-red-600]="(credit.utilizationPercent ?? 0) > 90">
+                         [class.dark:text-amber-400]="(credit.utilizationPercent ?? 0) > 70 && (credit.utilizationPercent ?? 0) <= 90"
+                         [class.text-red-600]="(credit.utilizationPercent ?? 0) > 90"
+                         [class.dark:text-red-400]="(credit.utilizationPercent ?? 0) > 90">
                         {{ credit.utilizationPercent !== null ? (credit.utilizationPercent / 100 | percent:'1.0-0') : 'N/A' }}
                       </p>
                     </div>
@@ -223,112 +230,65 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
           <!-- Added Products Table -->
           @if (itemsCount() > 0) {
             <div class="space-y-4 animate-in fade-in slide-in-from-bottom duration-500">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1"
+              <label class="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest ml-1"
                 >Detalle de Factura</label
               >
-              <div class="border border-gray-100 rounded-[24px] overflow-hidden bg-white shadow-sm">
-                <table mat-table [dataSource]="controls()" class="w-full">
-                  <ng-container matColumnDef="product">
-                    <th
-                      mat-header-cell
-                      *matHeaderCellDef
-                      class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-6 bg-gray-50/50"
-                    >
-                      Producto
-                    </th>
-                    <td mat-cell *matCellDef="let control; let i = index" class="px-6 py-4">
-                      <div class="flex flex-col">
-                        <span class="font-bold text-gray-900">{{ control.value.name }}</span>
-                        <span class="text-[10px] text-gray-400 font-medium"
-                          >Ref: {{ control.value.productId?.split('-')[0] }}</span
-                        >
-                      </div>
-                    </td>
-                  </ng-container>
+              <div class="border border-gray-100 dark:border-gray-700 rounded-[24px] overflow-hidden bg-white dark:bg-gray-900 shadow-sm dark:shadow-none">
+                <ui-table
+                  [columns]="itemsColumns"
+                  [data]="itemsData()"
+                >
+                  <ng-template uiTableCell="product" let-item>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-gray-900 dark:text-gray-100">{{ item.name }}</span>
+                      <span class="text-[10px] text-gray-400 dark:text-gray-500 font-medium"
+                        >Ref: {{ item.productId?.split('-')[0] }}</span
+                      >
+                    </div>
+                  </ng-template>
 
-                  <ng-container matColumnDef="price">
-                    <th
-                      mat-header-cell
-                      *matHeaderCellDef
-                      class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-right"
-                    >
-                      Precio Unit.
-                    </th>
-                    <td mat-cell *matCellDef="let control" class="px-4 text-right">
-                      <span class="font-bold text-gray-900">{{
-                        control.value.unitPrice | currency
+                  <ng-template uiTableCell="quantity" let-item>
+                    <span class="text-sm font-black text-gray-900 dark:text-gray-100">{{ item.quantity }}</span>
+                  </ng-template>
+
+                  <ng-template uiTableCell="unitPrice" let-item>
+                    <span class="font-bold text-gray-900 dark:text-gray-100">{{ item.unitPrice | currency }}</span>
+                  </ng-template>
+
+                  <ng-template uiTableCell="subtotal" let-item>
+                    <div class="flex flex-col items-end">
+                      <span class="text-sm font-black text-indigo-600 dark:text-indigo-400">{{
+                        toNumber(item.unitPrice) * item.quantity - getItemTotalTax(item) | currency
                       }}</span>
-                    </td>
-                  </ng-container>
+                    </div>
+                  </ng-template>
 
-                  <ng-container matColumnDef="qty">
-                    <th
-                      mat-header-cell
-                      *matHeaderCellDef
-                      class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-4 bg-gray-50/50 text-center"
-                    >
-                      Cant.
-                    </th>
-                    <td mat-cell *matCellDef="let control" class="px-4 text-center">
-                      <span class="text-sm font-black text-gray-900">{{
-                        control.value.quantity
-                      }}</span>
-                    </td>
-                  </ng-container>
-
-                  <ng-container matColumnDef="total">
-                    <th
-                      mat-header-cell
-                      *matHeaderCellDef
-                      class="!text-[10px] !font-black !uppercase !tracking-widest !py-4 px-6 bg-gray-50/50 text-right"
-                    >
-                      Subtotal
-                    </th>
-                    <td mat-cell *matCellDef="let control" class="px-6 text-right">
-                      <div class="flex flex-col items-end">
-                        <span class="text-sm font-black text-indigo-600">{{
-                          toNumber(control.value.unitPrice) * control.value.quantity - getItemTotalTax(control.value) | currency
-                        }}</span>
-                        @if (control.value.taxItems?.length) {
-                          <div class="text-[10px] text-gray-400 mt-0.5 space-y-0.5">
-                            @for (tax of control.value.taxItems; track tax.code) {
-                              <span>{{ tax.name }}: {{ toNumber(tax.amount) | currency }}</span>
-                            }
-                          </div>
+                  <ng-template uiTableCell="taxes" let-item>
+                    @if (item.taxItems?.length) {
+                      <div class="text-[10px] text-gray-400 dark:text-gray-500 space-y-0.5">
+                        @for (tax of item.taxItems; track tax.code) {
+                          <span>{{ tax.name }}: {{ toNumber(tax.amount) | currency }}</span>
                         }
                       </div>
-                    </td>
-                  </ng-container>
+                    }
+                  </ng-template>
 
-                  <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef class="bg-gray-50/50"></th>
-                    <td mat-cell *matCellDef="let control; let i = index" class="text-right px-4">
-                      <div class="flex items-center justify-end gap-1">
-                        <ui-button variant="ghost" (clicked)="openEditProductDialog(i)" ariaLabel="Editar producto">
-                          <span class="material-icons text-[20px]">edit</span>
-                        </ui-button>
-                        <ui-button variant="ghost" (clicked)="removeItem(i)" ariaLabel="Eliminar producto">
-                          <span class="material-icons text-[20px]">delete_outline</span>
-                        </ui-button>
-                      </div>
-                    </td>
-                  </ng-container>
-
-                  <tr
-                    mat-header-row
-                    *matHeaderRowDef="['product', 'price', 'qty', 'total', 'actions']"
-                  ></tr>
-                  <tr
-                    mat-row
-                    *matRowDef="let row; columns: ['product', 'price', 'qty', 'total', 'actions']"
-                    class="hover:bg-gray-50/5 transition-colors border-b border-gray-50 last:border-0"
-                  ></tr>
-                </table>
+                  <ng-template uiTableCell="actions" let-item let-i="index">
+                    <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
+                      <ui-button variant="ghost" (clicked)="openEditProductDialog(i)" ariaLabel="Editar producto">
+                        <span class="material-icons text-[20px]">edit</span>
+                      </ui-button>
+                      <ui-button variant="ghost" (clicked)="removeItem(i)" ariaLabel="Eliminar producto">
+                        <span class="material-icons text-[20px]">delete_outline</span>
+                      </ui-button>
+                    </div>
+                  </ng-template>
+                </ui-table>
               </div>
 
               <!-- Total Summary -->
               <div
-                class="p-6 bg-indigo-600 rounded-[24px] border border-indigo-700 shadow-xl shadow-indigo-100 animate-in zoom-in duration-300"
+                class="p-6 bg-indigo-600 rounded-[24px] border border-indigo-700 shadow-xl shadow-indigo-100 dark:shadow-indigo-900/50 animate-in zoom-in duration-300"
               >
                 <!-- Total -->
                 <div class="flex justify-between items-center">
@@ -355,16 +315,16 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             </div>
           } @else {
             <div
-              class="p-12 text-center border-2 border-dashed border-gray-100 rounded-[28px] space-y-4"
+              class="p-12 text-center border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-[28px] space-y-4"
             >
               <div
-                class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto"
+                class="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto"
               >
-                <span class="material-icons !text-gray-300 !text-3xl !w-7 !h-7">receipt</span>
+                <span class="material-icons !text-gray-300 dark:!text-gray-600 !text-3xl !w-7 !h-7">receipt</span>
               </div>
               <div>
-                <p class="text-sm font-bold text-gray-900">No hay ítems en la factura</p>
-                <p class="text-xs text-gray-400">
+                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">No hay ítems en la factura</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">
                   Busca productos y agrégalos para generar la venta.
                 </p>
               </div>
@@ -372,7 +332,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
           }
 
           <!-- Footer Actions -->
-          <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100">
+          <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
             <ui-button
               variant="outline"
               (clicked)="close(false)"
@@ -544,11 +504,24 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   private _taxSummaries = signal<{ code: string; name: string; amount: number }[]>([]);
   taxSummaries = this._taxSummaries.asReadonly();
 
-  // Data source for MatTable — new array reference each time to force re-render
+  // Snapshot of FormArray controls — backing signal for itemsData computed
   readonly controls = signal<AbstractControl[]>([]);
 
   // Track items length as a signal for template reactivity
   itemsCount = signal(0);
+
+  protected readonly itemsColumns: TableColumn[] = [
+    { key: 'product', header: 'Producto', width: '30%' },
+    { key: 'quantity', header: 'Cant.', align: 'center', width: '90px' },
+    { key: 'unitPrice', header: 'Precio Unit.', align: 'right', width: '130px' },
+    { key: 'subtotal', header: 'Subtotal', align: 'right', width: '120px' },
+    { key: 'taxes', header: 'Impuestos', align: 'right', width: '120px' },
+    { key: 'actions', header: '', width: '60px' },
+  ];
+
+  protected readonly itemsData = computed<any[]>(() =>
+    this.controls().map(ctrl => ctrl.value),
+  );
 
   private recalcTotal() {
     const currentItems = this.items.value || [];

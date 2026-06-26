@@ -10,6 +10,8 @@ import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { TextInputComponent } from '../../../../components/atoms/text-input/text-input.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
+import { TableComponent, TableColumn } from '../../../../components/atoms/table/table.component';
+import { TableCellDirective } from '../../../../components/atoms/table/table-cell.directive';
 
 @Component({
   selector: 'app-inventory-suppliers-page',
@@ -18,7 +20,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     CommonModule,
     BreadcrumbMolecule,
     ButtonAtom,
-    TextInputComponent
+    TextInputComponent,
+    TableComponent,
+    TableCellDirective
   ],
   template: `
       <app-breadcrumb 
@@ -30,8 +34,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
 
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-6">
         <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Proveedores</h1>
-          <p class="text-gray-500 font-medium">Administra tus socios comerciales y fuentes de suministro.</p>
+          <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Proveedores</h1>
+          <p class="text-gray-500 dark:text-gray-400 font-medium">Administra tus socios comerciales y fuentes de suministro.</p>
         </div>
         <ui-button 
           variant="primary"
@@ -43,7 +47,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
       </header>
 
       <!-- Barra de Filtros -->
-      <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
+      <div class="bg-white dark:bg-gray-900 p-6 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ui-text-input icon="search" placeholder="Buscar por nombre..." [value]="nameFilter()" (valueChange)="nameFilter.set($event); debouncedFilter()" />
 
@@ -51,80 +55,78 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
         </div>
       </div>
 
-      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-100">
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">NIT</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Nombre</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Dirección</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Teléfono</th>
-              <th class="px-6 py-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (supplier of suppliers(); track supplier.id) {
-              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
-                <td class="px-6 py-5">
-                  <span class="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {{ supplier.nit }}
-                  </span>
-                </td>
-                <td class="px-6 py-5">
-                  <div class="font-bold text-gray-900">{{ supplier.name }}</div>
-                </td>
-                <td class="px-6 py-5">
-                  <div class="flex items-center gap-2">
-                    <span class="material-icons text-gray-400 text-sm">location_on</span>
-                    <span class="text-xs truncate max-w-[200px]">{{ supplier.address }}</span>
-                  </div>
-                </td>
-                <td class="px-6 py-5">
-                  <div class="flex items-center gap-2">
-                    <span class="material-icons text-gray-400 text-sm">phone</span>
-                    <span class="text-xs font-bold">{{ supplier.phone }}</span>
-                  </div>
-                </td>
-                <td class="px-6 py-5 text-right">
-                  <ui-button variant="icon" (clicked)="openSupplierDialog(supplier)">
-                    <span class="material-icons">edit</span>
-                  </ui-button>
-                  <ui-button variant="icon" (clicked)="confirmDelete(supplier)">
-                    <span class="material-icons">delete</span>
-                  </ui-button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="p-12 text-center">
-                  <div class="flex flex-col items-center gap-4">
-                    <span class="material-icons text-5xl text-gray-200">business</span>
-                    <h3 class="text-lg font-bold text-gray-400">No se encontraron proveedores</h3>
-                    <p class="text-sm text-gray-300 max-w-xs">Aún no has registrado proveedores en tu sistema o los filtros aplicados no coinciden.</p>
-                    <ui-button variant="primary" (clicked)="openSupplierDialog()">
-                      <span class="material-icons mr-2">add</span>
-                      Registrar Primer Proveedor
-                    </ui-button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="bg-white dark:bg-gray-900 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <ui-table
+          [columns]="tableColumns"
+          [data]="suppliers()"
+          [loading]="false"
+          [clickable]="false"
+          emptyMessage="No se encontraron proveedores"
+          emptyIcon="business"
+        >
+          <!-- NIT -->
+          <ng-template uiTableCell="nit" let-item>
+            <span class="font-mono text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              {{ item.nit }}
+            </span>
+          </ng-template>
+
+          <!-- Name -->
+          <ng-template uiTableCell="name" let-item>
+            <div class="font-bold text-gray-900 dark:text-gray-100">{{ item.name }}</div>
+          </ng-template>
+
+          <!-- Address -->
+          <ng-template uiTableCell="address" let-item>
+            <div class="flex items-center gap-2">
+              <span class="material-icons text-gray-400 dark:text-gray-500 text-sm">location_on</span>
+              <span class="text-xs text-gray-900 dark:text-gray-100 truncate max-w-[200px]">{{ item.address }}</span>
+            </div>
+          </ng-template>
+
+          <!-- Phone -->
+          <ng-template uiTableCell="phone" let-item>
+            <div class="flex items-center gap-2">
+              <span class="material-icons text-gray-400 dark:text-gray-500 text-sm">phone</span>
+              <span class="text-xs font-bold text-gray-900 dark:text-gray-100">{{ item.phone }}</span>
+            </div>
+          </ng-template>
+
+          <!-- Actions -->
+          <ng-template uiTableCell="actions" let-item>
+            <div class="flex justify-end" (click)="$event.stopPropagation()">
+              <ui-button variant="icon" (clicked)="openSupplierDialog(item)">
+                <span class="material-icons">edit</span>
+              </ui-button>
+              <ui-button variant="icon" (clicked)="confirmDelete(item)">
+                <span class="material-icons">delete</span>
+              </ui-button>
+            </div>
+          </ng-template>
+
+          <!-- Empty state -->
+          <ng-container empty>
+            <p class="text-sm text-gray-300 dark:text-gray-600 max-w-xs">Aún no has registrado proveedores en tu sistema o los filtros aplicados no coinciden.</p>
+            <ui-button variant="primary" (clicked)="openSupplierDialog()">
+              <span class="material-icons mr-2">add</span>
+              Registrar Primer Proveedor
+            </ui-button>
+          </ng-container>
+        </ui-table>
         
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 dark:border-gray-800">
           <div class="flex items-center gap-2">
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
               Anterior
             </ui-button>
-            <span class="text-xs font-bold text-gray-400">
+            <span class="text-xs font-bold text-gray-400 dark:text-gray-500">
               Página {{ pageIndex() }} de {{ totalPages() }}
             </span>
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
               Siguiente
             </ui-button>
           </div>
-          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 dark:text-gray-400 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none">
             <option value="5">5 / pág</option>
             <option value="10" selected>10 / pág</option>
             <option value="25">25 / pág</option>
@@ -138,6 +140,14 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
   `]
 })
 export class InventorySuppliersPageComponent implements OnInit {
+  protected readonly tableColumns: TableColumn[] = [
+    { key: 'nit', header: 'NIT' },
+    { key: 'name', header: 'Nombre' },
+    { key: 'address', header: 'Dirección' },
+    { key: 'phone', header: 'Teléfono' },
+    { key: 'actions', header: '', width: '100px' },
+  ];
+
   private dialog = inject(MatDialog);
   private supplierService = inject(SupplierService);
 

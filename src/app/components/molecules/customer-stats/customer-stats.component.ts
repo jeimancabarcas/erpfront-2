@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
   standalone: true,
   imports: [CommonModule, MatIconModule, CurrencyPipe],
   template: `
-    <div class="bg-indigo-600 rounded-[32px] p-8 text-white shadow-xl shadow-indigo-100 flex flex-col justify-center h-full min-h-[200px] relative overflow-hidden group">
+    <div class="bg-indigo-600 rounded-[32px] p-8 text-white shadow-xl shadow-indigo-100 dark:shadow-indigo-900/40 flex flex-col justify-center h-full min-h-[200px] relative overflow-hidden group">
       <!-- Background Decoration -->
       <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-500"></div>
       

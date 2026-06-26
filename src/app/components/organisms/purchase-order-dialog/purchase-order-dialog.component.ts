@@ -49,19 +49,19 @@ interface PurchaseOrderItemForm {
     DatepickerComponent,
   ],
   template: `
-    <div class="flex flex-col h-full max-h-[90vh] p-8">
+    <div class="flex flex-col h-full max-h-[90vh] bg-white dark:bg-gray-900 p-8">
       <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
           <div
-            class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600"
+            class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400"
           >
             <span class="material-icons text-3xl">shopping_cart</span>
           </div>
           <div>
-            <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
+            <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
               {{ isEditMode() ? 'Editar Orden' : 'Nueva Orden de Compra' }}
             </h2>
-            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
               {{ isEditMode() ? 'Orden ' + orderNumber() : 'Registro de pedido' }}
             </p>
           </div>
@@ -73,7 +73,7 @@ interface PurchaseOrderItemForm {
 
       @if (isReadonly()) {
         <div
-          class="mx-2 mb-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3 text-amber-700"
+          class="mx-2 mb-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800 p-4 rounded-2xl flex items-center gap-3 text-amber-700 dark:text-amber-300"
         >
           <span class="material-icons">warning</span>
           <p class="text-xs font-bold uppercase tracking-wide">
@@ -84,7 +84,7 @@ interface PurchaseOrderItemForm {
 
       @if (error()) {
         <div
-          class="mx-2 mb-4 bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center justify-between gap-3 text-red-700"
+          class="mx-2 mb-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 p-4 rounded-2xl flex items-center justify-between gap-3 text-red-700 dark:text-red-300"
         >
           <div class="flex items-center gap-3">
             <span class="material-icons text-red-500">error_outline</span>
@@ -92,7 +92,7 @@ interface PurchaseOrderItemForm {
           </div>
           <button
             (click)="error.set(null)"
-            class="!text-red-400 hover:!text-red-600 transition-colors"
+            class="!text-red-400 dark:!text-red-300 hover:!text-red-600 dark:hover:!text-red-400 transition-colors"
           >
             <span class="material-icons">close</span>
           </button>
@@ -120,12 +120,12 @@ interface PurchaseOrderItemForm {
               />
             </div>
 
-            <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700">
               <div class="flex justify-between items-center mb-6">
                 <h3
-                  class="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2"
+                  class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-widest flex items-center gap-2"
                 >
-                  <span class="material-icons text-indigo-600">list</span>
+                  <span class="material-icons text-indigo-600 dark:text-indigo-400">list</span>
                   Productos del Pedido
                 </h3>
                 <button
@@ -133,7 +133,7 @@ interface PurchaseOrderItemForm {
                   mat-flat-button
                   color="primary"
                   (click)="addItem()"
-                  class="!rounded-full !h-10 !text-xs !font-bold !bg-indigo-600"
+                  class="!rounded-full !h-10 !text-xs !font-bold !bg-indigo-600 dark:!bg-indigo-500"
                 >
                   <span class="material-icons mr-2">add</span>
                   Agregar Item
@@ -145,13 +145,13 @@ interface PurchaseOrderItemForm {
                   @for (itemGroup of itemsArray.controls; track $index; let i = $index) {
                     <div
                       [formGroup]="itemGroup"
-                      class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:border-indigo-100 hover:shadow-md group relative"
+                      class="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-none transition-all hover:border-indigo-100 dark:hover:border-indigo-800 hover:shadow-md group relative"
                     >
                       <button
                         type="button"
                         mat-icon-button
                         (click)="removeItem(i)"
-                        class="!absolute -top-2 -right-2 !bg-white !shadow-sm !text-red-300 hover:!text-red-600 !border !border-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                        class="!absolute -top-2 -right-2 !bg-white dark:!bg-gray-900 !shadow-sm dark:!shadow-none !text-red-300 dark:!text-red-400 hover:!text-red-600 dark:hover:!text-red-400 !border !border-gray-50 dark:!border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <span class="material-icons">close</span>
                       </button>
@@ -185,11 +185,11 @@ interface PurchaseOrderItemForm {
 
                           <div class="md:col-span-5 flex flex-col items-end">
                             <div
-                              class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1"
+                              class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1"
                             >
                               Subtotal de línea
                             </div>
-                            <div class="text-xl font-black text-indigo-600 tracking-tight">
+                            <div class="text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
                               {{ getItemTotal(i) | currency }}
                             </div>
                           </div>
@@ -199,22 +199,22 @@ interface PurchaseOrderItemForm {
                   }
                 </div>
 
-                <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
+                <div class="flex justify-end mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <div class="text-right">
-                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">
+                    <p class="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
                       Total de la Orden
                     </p>
-                    <p class="text-3xl font-black text-gray-900 tracking-tighter">
+                    <p class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tighter">
                       {{ orderTotal() | currency }}
                     </p>
                   </div>
                 </div>
               } @else {
                 <div
-                  class="py-12 text-center border-2 border-dashed border-gray-200 rounded-3xl bg-white/50"
+                  class="py-12 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-3xl bg-white/50 dark:bg-gray-900/50"
                 >
-                  <span class="material-icons text-gray-200 text-5xl mb-2">inventory_2</span>
-                  <p class="text-gray-400 text-sm font-bold">
+                  <span class="material-icons text-gray-200 dark:text-gray-600 text-5xl mb-2">inventory_2</span>
+                  <p class="text-gray-400 dark:text-gray-500 text-sm font-bold">
                     No hay productos agregados a esta orden
                   </p>
                   <button
@@ -233,7 +233,7 @@ interface PurchaseOrderItemForm {
         </fieldset>
       </div>
 
-      <footer class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+      <footer class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
         <button mat-button (click)="close(null)" class="!rounded-full !h-12 !px-6 !font-bold">
           Cancelar
         </button>
@@ -244,7 +244,7 @@ interface PurchaseOrderItemForm {
             color="primary"
             [disabled]="form.invalid || itemsArray.length === 0"
             (click)="saveOrder()"
-            class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 shadow-xl shadow-indigo-100"
+            class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 dark:!bg-indigo-500 shadow-xl shadow-indigo-100 dark:shadow-indigo-900/50"
           >
             {{ isEditMode() ? 'Guardar Cambios' : 'Crear Orden' }}
           </button>

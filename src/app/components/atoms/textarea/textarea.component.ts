@@ -20,7 +20,7 @@ let nextId = 0;
       @if (label()) {
         <label
           [for]="inputId()"
-          class="text-xs font-black text-gray-500 uppercase tracking-widest"
+          class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
         >
           {{ label() }}
           @if (required()) { <span class="text-red-500">*</span> }
@@ -38,7 +38,7 @@ let nextId = 0;
           [style.min-height]="minHeight()"
           [attr.aria-invalid]="!!error() || null"
           [attr.aria-describedby]="error() ? inputId() + '-error' : (helperText() ? inputId() + '-helper' : null)"
-          class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed resize-y"
+          class="w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:border-indigo-400 dark:focus:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed resize-y"
           [class.resize-y]="resize() === 'vertical'"
           [class.resize-both]="resize() === 'both'"
           [class.resize-none]="resize() === 'none'"
@@ -50,7 +50,7 @@ let nextId = 0;
       @if (error()) {
         <span [id]="inputId() + '-error'" class="text-xs text-red-500 font-medium">{{ error() }}</span>
       } @else if (helperText()) {
-        <span [id]="inputId() + '-helper'" class="text-xs text-gray-400">{{ helperText() }}</span>
+        <span [id]="inputId() + '-helper'" class="text-xs text-gray-400 dark:text-gray-500">{{ helperText() }}</span>
       }
     </div>
   `

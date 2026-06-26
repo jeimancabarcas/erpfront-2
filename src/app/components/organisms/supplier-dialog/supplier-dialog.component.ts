@@ -23,18 +23,18 @@ export interface SupplierDialogData {
   template: `
     @if (loading()) {
       <div class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
       </div>
     } @else if (error()) {
       <div class="flex flex-col items-center gap-2 text-red-500 py-12">
         <span class="material-icons text-5xl">error_outline</span>
         <p>{{ error() }}</p>
-        <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+        <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mt-4">Cerrar</button>
       </div>
     } @else {
-    <div class="p-8">
+    <div class="bg-white dark:bg-gray-900 p-8">
       <header class="flex justify-between items-center mb-8">
-        <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
+        <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
         </h2>
         <ui-button variant="icon" (clicked)="onClose()" aria-label="Cerrar diálogo">

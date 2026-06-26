@@ -82,20 +82,20 @@ function stockLimitValidator(
     TextInputComponent,
   ],
   template: `
-    <div class="flex flex-col h-full max-h-[90vh] p-8">
+    <div class="flex flex-col h-full max-h-[90vh] p-8 bg-white dark:bg-gray-900">
       <!-- Header -->
       <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
           <div
-            class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600"
+            class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400"
           >
             <span class="material-icons !text-3xl">inventory_2</span>
           </div>
           <div>
-            <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
+            <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
               {{ isEditMode() ? 'Editar Producto' : 'Añadir Producto' }}
             </h2>
-            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
               {{ isEditMode() ? 'Modificar línea de factura' : 'Seleccionar producto para la venta' }}
             </p>
           </div>
@@ -118,13 +118,13 @@ function stockLimitValidator(
             @if (isEditMode()) {
               <!-- Read-only display in edit mode -->
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-black text-gray-500 uppercase tracking-widest">
+                <label class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                   Producto <span class="text-red-500">*</span>
                 </label>
                 <div
-                  class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-gray-50 flex items-center"
+                  class="w-full h-14 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center"
                 >
-                  <span class="text-sm font-bold text-gray-900">{{
+                  <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{
                     selectedProduct()?.name ?? dialogData?.lineItem?.name ?? ''
                   }}</span>
                 </div>
@@ -148,46 +148,46 @@ function stockLimitValidator(
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <!-- Costo Promedio PMP -->
                 <div
-                  class="price-card rounded-xl border border-emerald-200 bg-emerald-50 p-4"
+                  class="price-card rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 p-4"
                 >
                   <p
-                    class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1"
+                    class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1"
                   >
                     Costo Promedio PMP
                   </p>
-                  <p class="text-lg font-black text-emerald-800">
+                  <p class="text-lg font-black text-emerald-800 dark:text-emerald-300">
                     {{ selectedProduct()!.averagePurchasePrice | currency }}
                   </p>
                 </div>
 
                 <!-- Precio Recomendado -->
                 <div
-                  class="price-card rounded-xl border border-amber-200 bg-amber-50 p-4"
+                  class="price-card rounded-xl border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 p-4"
                 >
                   <p
-                    class="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1"
+                    class="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest mb-1"
                   >
                     Precio Recomendado
                   </p>
-                  <p class="text-lg font-black text-amber-800">
+                  <p class="text-lg font-black text-amber-800 dark:text-amber-300">
                     {{ recommendedPrice() | currency }}
                   </p>
                 </div>
 
                 <!-- Precio Configurado -->
                 <div
-                  class="price-card rounded-xl border border-indigo-200 bg-indigo-50 p-4"
+                  class="price-card rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 p-4"
                 >
                   <p
-                    class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1"
+                    class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1"
                   >
                     Precio Configurado
                   </p>
-                  <p class="text-lg font-black text-indigo-800">
+                  <p class="text-lg font-black text-indigo-800 dark:text-indigo-300">
                     @if (selectedProduct()!.sellingPrice > 0) {
                       {{ selectedProduct()!.sellingPrice | currency }}
                     } @else {
-                      <span class="text-indigo-400">—</span>
+                      <span class="text-indigo-400 dark:text-indigo-300">—</span>
                     }
                   </p>
                 </div>
@@ -204,7 +204,7 @@ function stockLimitValidator(
                 [error]="quantityError()"
               />
               @if (quantityError()) {
-                <p data-testid="stock-error" class="text-xs text-red-500 font-medium mt-1">
+                <p data-testid="stock-error" class="text-xs text-red-500 dark:text-red-400 font-medium mt-1">
                   {{ quantityError() }}
                 </p>
               }
@@ -221,7 +221,7 @@ function stockLimitValidator(
               />
               @if (isPriceOverridden()) {
                 <p
-                  class="text-xs font-bold text-indigo-600 flex items-center gap-1 mt-1"
+                  class="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mt-1"
                 >
                   <span class="material-icons text-sm">edit</span>
                   Precio modificado manualmente
@@ -234,7 +234,7 @@ function stockLimitValidator(
 
       <!-- Footer -->
       <footer
-        class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100"
+        class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100 dark:border-gray-700"
       >
         <ui-button variant="outline" (clicked)="onCancel()">Cancelar</ui-button>
         <ui-button variant="primary" data-testid="save-btn" [disabled]="form.invalid || loading()" (clicked)="onSave()">{{ isEditMode() ? 'Guardar Cambios' : 'Añadir Producto' }}</ui-button>

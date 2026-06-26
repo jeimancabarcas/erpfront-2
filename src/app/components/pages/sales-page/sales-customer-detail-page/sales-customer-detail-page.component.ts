@@ -45,14 +45,14 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
         </div>
 
         @if (loading() && !customer()) {
-          <div class="flex flex-col items-center justify-center p-32 space-y-6 bg-white rounded-[40px] border border-gray-100 shadow-sm">
+          <div class="flex flex-col items-center justify-center p-32 space-y-6 bg-white dark:bg-gray-900 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none">
             <div class="relative w-16 h-16">
               <div class="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
               <div class="absolute inset-0 border-4 border-t-indigo-600 rounded-full animate-spin"></div>
             </div>
             <div class="text-center">
-              <p class="text-gray-900 font-black text-lg">Cargando perfil</p>
-              <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-1">Sincronizando información del cliente...</p>
+              <p class="text-gray-900 dark:text-gray-100 font-black text-lg">Cargando perfil</p>
+              <p class="text-gray-400 dark:text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Sincronizando información del cliente...</p>
             </div>
           </div>
         } @else if (customer(); as c) {

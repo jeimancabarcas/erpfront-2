@@ -25,26 +25,26 @@ export interface CustomerDialogData {
   template: `
     @if (loading()) {
       <div class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
       </div>
     } @else if (error()) {
       <div class="flex flex-col items-center gap-2 text-red-500 py-12">
         <span class="material-icons text-5xl">error_outline</span>
         <p>{{ error() }}</p>
-        <button (click)="onClosed()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+        <button (click)="onClosed()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mt-4">Cerrar</button>
       </div>
     } @else {
-    <div class="flex flex-col h-full max-h-[90vh] p-8">
+    <div class="flex flex-col h-full max-h-[90vh] bg-white dark:bg-gray-900 p-8">
       <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
             <span class="material-icons !text-3xl">person_add</span>
           </div>
           <div>
-            <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
+            <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
               {{ isEditMode() ? 'Editar Cliente' : 'Nuevo Cliente' }}
             </h2>
-            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
               {{ isEditMode() ? 'ID: ' + (customer().id?.split('-')?.[0] || '...') : 'Registro de cliente en el sistema' }}
             </p>
           </div>
@@ -79,7 +79,7 @@ export interface CustomerDialogData {
         </form>
       </div>
 
-      <footer class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+      <footer class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
         <ui-button variant="outline" (clicked)="onClosed()">
           Cancelar
         </ui-button>
@@ -98,6 +98,7 @@ export interface CustomerDialogData {
     :host { display: block; }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+    :host-context(.dark) .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
   `]

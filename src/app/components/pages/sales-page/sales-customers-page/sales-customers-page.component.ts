@@ -12,6 +12,8 @@ import { ButtonAtom } from '../../../../components/atoms/button/button.component
 import { TextInputComponent } from '../../../../components/atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../../../components/atoms/select/select.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
+import { TableComponent, TableColumn } from '../../../../components/atoms/table/table.component';
+import { TableCellDirective } from '../../../../components/atoms/table/table-cell.directive';
 
 @Component({
   selector: 'app-sales-customers-page',
@@ -22,7 +24,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     ButtonAtom,
     TextInputComponent,
     SelectAtom,
-    RouterModule
+    RouterModule,
+    TableComponent,
+    TableCellDirective
   ],
   template: `
       <app-breadcrumb 
@@ -34,8 +38,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
 
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-6">
         <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Gestión de Clientes</h1>
-          <p class="text-gray-500 font-medium">Administra la base de datos de tus clientes y su información de contacto.</p>
+          <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Gestión de Clientes</h1>
+          <p class="text-gray-500 dark:text-gray-400 font-medium">Administra la base de datos de tus clientes y su información de contacto.</p>
         </div>
         <ui-button 
           variant="primary"
@@ -47,7 +51,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
       </header>
 
       <!-- Barra de Filtros -->
-      <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
+      <div class="bg-white dark:bg-gray-900 p-6 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ui-text-input icon="search" placeholder="Buscar por nombre..." [value]="nameFilter()" (valueChange)="nameFilter.set($event); debouncedFilter()" />
 
@@ -57,102 +61,100 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
         </div>
       </div>
 
-      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-100">
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Identificación</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Nombre / Razón Social</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Contacto</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Estado</th>
-              <th class="px-6 py-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (customer of customers(); track customer.id) {
-              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
-                <td class="px-6 py-5">
-                  <div class="flex flex-col">
-                    <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{{ customer.documentType }}</span>
-                    <span class="font-bold text-gray-900">{{ customer.documentNumber }}</span>
-                  </div>
-                </td>
-                <td class="px-6 py-5">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-indigo-600 border border-gray-100">
-                      <span class="material-icons">person</span>
-                    </div>
-                    <div>
-                      <div class="font-bold text-gray-900">{{ customer.name }}</div>
-                      <div class="text-xs text-gray-400 font-medium">{{ customer.email }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-5">
-                  <div class="flex flex-col gap-1">
-                    <div class="flex items-center gap-2 text-xs text-gray-600">
-                      <span class="material-icons !text-sm text-gray-400">phone</span>
-                      {{ customer.phone || 'Sin teléfono' }}
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-gray-600">
-                      <span class="material-icons !text-sm text-gray-400">location_on</span>
-                      <span class="line-clamp-1">{{ customer.address || 'Sin dirección' }}</span>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-5">
-                  <span 
-                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                    [ngClass]="customer.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'"
-                  >
-                    {{ customer.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
-                  </span>
-                </td>
-                <td class="px-6 py-5 text-right">
-                  <a [routerLink]="['/comercial/customers', customer.id]">
-                    <ui-button variant="icon"><!-- TODO: add variant for colored icon button -->
-                      <span class="material-icons">visibility</span>
-                    </ui-button>
-                  </a>
-                  <ui-button variant="icon" (clicked)="openCustomerDialog(customer)">
-                    <span class="material-icons">edit</span>
-                  </ui-button>
-                  <ui-button variant="icon" (clicked)="confirmDelete(customer)">
-                    <span class="material-icons">delete</span>
-                  </ui-button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="p-12 text-center">
-                  <div class="flex flex-col items-center gap-4">
-                    <span class="material-icons text-5xl text-gray-200">people</span>
-                    <h3 class="text-lg font-bold text-gray-400">No se encontraron clientes</h3>
-                    <p class="text-sm text-gray-300 max-w-xs">Aún no tienes clientes registrados o los filtros no coinciden con ninguna búsqueda.</p>
-                    <ui-button variant="primary" (clicked)="openCustomerDialog()">
-                      <span class="material-icons mr-2">person_add</span>
-                      Registrar Primer Cliente
-                    </ui-button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="bg-white dark:bg-gray-900 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <ui-table
+          [columns]="tableColumns"
+          [data]="customers()"
+          [loading]="false"
+          [clickable]="false"
+          emptyMessage="No se encontraron clientes"
+          emptyIcon="people"
+        >
+          <!-- Document -->
+          <ng-template uiTableCell="document" let-item>
+            <div class="flex flex-col">
+              <span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">{{ item.documentType }}</span>
+              <span class="font-bold text-gray-900 dark:text-gray-100">{{ item.documentNumber }}</span>
+            </div>
+          </ng-template>
+
+          <!-- Name -->
+          <ng-template uiTableCell="name" let-item>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-gray-100 dark:border-gray-700">
+                <span class="material-icons">person</span>
+              </div>
+              <div>
+                <div class="font-bold text-gray-900 dark:text-gray-100">{{ item.name }}</div>
+                <div class="text-xs text-gray-400 dark:text-gray-500 font-medium">{{ item.email }}</div>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- Contact -->
+          <ng-template uiTableCell="contact" let-item>
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <span class="material-icons !text-sm text-gray-400 dark:text-gray-500">phone</span>
+                {{ item.phone || 'Sin teléfono' }}
+              </div>
+              <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <span class="material-icons !text-sm text-gray-400 dark:text-gray-500">location_on</span>
+                <span class="line-clamp-1">{{ item.address || 'Sin dirección' }}</span>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- Status -->
+          <ng-template uiTableCell="status" let-item>
+            <span 
+              class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+              [ngClass]="item.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 dark:bg-gray-800 dark:text-gray-500'"
+            >
+              {{ item.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+            </span>
+          </ng-template>
+
+          <!-- Actions -->
+          <ng-template uiTableCell="actions" let-item>
+            <div class="flex justify-end" (click)="$event.stopPropagation()">
+              <a [routerLink]="['/comercial/customers', item.id]">
+                <ui-button variant="icon">
+                  <span class="material-icons">visibility</span>
+                </ui-button>
+              </a>
+              <ui-button variant="icon" (clicked)="openCustomerDialog(item)">
+                <span class="material-icons">edit</span>
+              </ui-button>
+              <ui-button variant="icon" (clicked)="confirmDelete(item)">
+                <span class="material-icons">delete</span>
+              </ui-button>
+            </div>
+          </ng-template>
+
+          <!-- Empty state -->
+          <ng-container empty>
+            <p class="text-sm text-gray-300 dark:text-gray-600 max-w-xs">Aún no tienes clientes registrados o los filtros no coinciden con ninguna búsqueda.</p>
+            <ui-button variant="primary" (clicked)="openCustomerDialog()">
+              <span class="material-icons mr-2">person_add</span>
+              Registrar Primer Cliente
+            </ui-button>
+          </ng-container>
+        </ui-table>
         
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 dark:border-gray-800">
           <div class="flex items-center gap-2">
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
               Anterior
             </ui-button>
-            <span class="text-xs font-bold text-gray-400">
+            <span class="text-xs font-bold text-gray-400 dark:text-gray-500">
               Página {{ pageIndex() }} de {{ totalPages() }}
             </span>
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
               Siguiente
             </ui-button>
           </div>
-          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 dark:text-gray-400 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none">
             <option value="5">5 / pág</option>
             <option value="10" selected>10 / pág</option>
             <option value="25">25 / pág</option>
@@ -166,6 +168,14 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
   `]
 })
 export class SalesCustomersPageComponent implements OnInit {
+  protected readonly tableColumns: TableColumn[] = [
+    { key: 'document', header: 'Identificación' },
+    { key: 'name', header: 'Nombre / Razón Social' },
+    { key: 'contact', header: 'Contacto' },
+    { key: 'status', header: 'Estado' },
+    { key: 'actions', header: '', width: '140px' },
+  ];
+
   private dialog = inject(MatDialog);
   private customerService = inject(CustomerService);
 
