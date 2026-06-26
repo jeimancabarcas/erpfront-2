@@ -20,7 +20,7 @@ let nextId = 0;
       @if (label()) {
         <label
           [for]="inputId()"
-          class="text-xs font-black text-gray-500 uppercase tracking-widest"
+          class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
         >
           {{ label() }}
           @if (required()) { <span class="text-red-500">*</span> }
@@ -31,7 +31,7 @@ let nextId = 0;
         @if (icon()) {
           <span
             [class]="iconClasses()"
-            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #4f46e5; pointer-events: none;"
+            class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none"
           >{{ icon() }}</span>
         }
 
@@ -47,7 +47,7 @@ let nextId = 0;
           [class.pl-12]="!!icon()"
           [class.pr-4]="!!icon()"
           [class.px-4]="!icon()"
-          class="w-full h-14 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full h-14 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:border-indigo-400 dark:focus:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           (input)="onInput($event)"
           (blur)="onBlur()"
         />
@@ -56,7 +56,7 @@ let nextId = 0;
       @if (error()) {
         <span [id]="inputId() + '-error'" class="text-xs text-red-500 font-medium">{{ error() }}</span>
       } @else if (helperText()) {
-        <span [id]="inputId() + '-helper'" class="text-xs text-gray-400">{{ helperText() }}</span>
+        <span [id]="inputId() + '-helper'" class="text-xs text-gray-400 dark:text-gray-500">{{ helperText() }}</span>
       }
     </div>
   `

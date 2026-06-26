@@ -11,6 +11,8 @@ import { InvoiceDetailDialogOrganism } from '../../organisms/invoice-detail-dial
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { TableComponent, TableColumn } from '../../atoms/table/table.component';
+import { TableCellDirective } from '../../atoms/table/table-cell.directive';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
 @Component({
@@ -23,7 +25,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     TextInputComponent,
     SelectAtom,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    TableComponent,
+    TableCellDirective
   ],
   template: `
       <app-breadcrumb 
@@ -35,8 +39,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
 
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-6">
         <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Historial de Ventas</h1>
-          <p class="text-gray-500 font-medium">Gestiona y consulta las facturas generadas por el sistema.</p>
+          <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Historial de Ventas</h1>
+          <p class="text-gray-500 dark:text-gray-400 font-medium">Gestiona y consulta las facturas generadas por el sistema.</p>
         </div>
         <ui-button 
           variant="primary"
@@ -48,7 +52,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
       </header>
 
       <!-- Barra de Filtros -->
-      <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
+      <div class="bg-white dark:bg-gray-900 p-6 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ui-text-input icon="search" placeholder="Ej: FAC-0001" [value]="invoiceNumberFilter()" (valueChange)="invoiceNumberFilter.set($event); debouncedFilter()" />
 
@@ -58,97 +62,97 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
         </div>
       </div>
 
-      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-100">
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">No. Factura</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Cliente</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Fecha</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Total Neto</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Estado</th>
-              <th class="px-6 py-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (inv of invoices(); track inv.id) {
-              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
-                <td class="px-6 py-5">
-                  <div class="flex items-center gap-2">
-                    <span class="font-bold text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50">
-                      {{ inv.invoiceNumber }}
-                    </span>
-                    @if (inv.isElectronic === false) {
-                      <span data-testid="manual-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700">
-                        MANUAL
-                      </span>
-                    } @else {
-                      <span data-testid="electronic-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700">
-                        ELECTRÓNICA
-                      </span>
-                    }
-                  </div>
-                </td>
-                <td class="px-6 py-5">
-                  <div class="font-bold text-gray-900">{{ inv.customer?.name }}</div>
-                  <div class="text-[10px] text-gray-400 font-medium tracking-wide">{{ inv.customer?.documentNumber }}</div>
-                </td>
-                <td class="px-6 py-5">
-                  <span class="text-gray-500 text-xs font-medium">{{ inv.date | date:'dd MMM, yyyy' }}</span>
-                </td>
-                <td class="px-6 py-5 text-right">
-                  <span class="font-black text-gray-900">{{ (inv.netTotal ?? inv.totalAmount) | currency }}</span>
-                </td>
-                <td class="px-6 py-5">
-                  <span 
-                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                    [ngClass]="{
-                      'bg-emerald-50 text-emerald-600': inv.status === 'PAID',
-                      'bg-amber-50 text-amber-600': inv.status === 'DRAFT',
-                      'bg-gray-100 text-gray-400': inv.status === 'CANCELLED',
-                      'bg-indigo-50 text-indigo-600': inv.status === 'ON_CREDIT'
-                    }"
-                  >
-                    {{ statusLabels[inv.status] }}
-                  </span>
-                </td>
-                <td class="px-6 py-5 text-right">
-                  <ui-button variant="icon" (clicked)="viewDetail(inv)">
-                    <span class="material-icons">visibility</span>
-                  </ui-button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="6" class="p-12 text-center">
-                  <div class="flex flex-col items-center gap-4">
-                    <span class="material-icons text-5xl text-gray-200">receipt_long</span>
-                    <h3 class="text-lg font-bold text-gray-400">No se encontraron facturas</h3>
-                    <p class="text-sm text-gray-300 max-w-xs">No hay registros que coincidan con los filtros seleccionados.</p>
-                    <ui-button variant="primary" (clicked)="openSaleForm()">
-                      <span class="material-icons mr-2">add</span>
-                      Registrar Primera Venta
-                    </ui-button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="bg-white dark:bg-gray-900 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <ui-table
+          [columns]="tableColumns"
+          [data]="invoices()"
+          [loading]="false"
+          [clickable]="true"
+          emptyMessage="No se encontraron facturas"
+          emptyIcon="receipt_long"
+          (rowClick)="viewDetail($event)"
+        >
+          <!-- Invoice Number -->
+          <ng-template uiTableCell="invoiceNumber" let-item>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50 dark:border-indigo-800/30">
+                {{ item.invoiceNumber }}
+              </span>
+              @if (item.isElectronic === false) {
+                <span data-testid="manual-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                  MANUAL
+                </span>
+              } @else {
+                <span data-testid="electronic-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                  ELECTRÓNICA
+                </span>
+              }
+            </div>
+          </ng-template>
+
+          <!-- Customer -->
+          <ng-template uiTableCell="customer" let-item>
+            <div class="font-bold text-gray-900 dark:text-gray-100">{{ item.customer?.name }}</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 font-medium tracking-wide">{{ item.customer?.documentNumber }}</div>
+          </ng-template>
+
+          <!-- Date -->
+          <ng-template uiTableCell="date" let-item>
+            <span class="text-gray-500 dark:text-gray-400 text-xs font-medium">{{ item.date | date:'dd MMM, yyyy' }}</span>
+          </ng-template>
+
+          <!-- Total -->
+          <ng-template uiTableCell="totalAmount" let-item>
+            <span class="font-black text-gray-900 dark:text-gray-100">{{ (item.netTotal ?? item.totalAmount) | currency }}</span>
+          </ng-template>
+
+          <!-- Status -->
+          <ng-template uiTableCell="status" let-item>
+            <span
+              class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+              [ngClass]="{
+                'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400': item.status === 'PAID',
+                'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400': item.status === 'DRAFT',
+                'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500': item.status === 'CANCELLED',
+                'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400': item.status === 'ON_CREDIT'
+              }"
+            >
+              {{ statusLabels[item.status] }}
+            </span>
+          </ng-template>
+
+          <!-- Actions -->
+          <ng-template uiTableCell="actions" let-item>
+            <div class="flex justify-end" (click)="$event.stopPropagation()">
+              <ui-button variant="icon" (clicked)="viewDetail(item)">
+                <span class="material-icons">visibility</span>
+              </ui-button>
+            </div>
+          </ng-template>
+
+          <!-- Empty state action -->
+          <ng-container empty>
+            <p class="text-sm text-gray-300 dark:text-gray-600 max-w-xs">No hay registros que coincidan con los filtros seleccionados.</p>
+            <ui-button variant="primary" (clicked)="openSaleForm()">
+              <span class="material-icons mr-2">add</span>
+              Registrar Primera Venta
+            </ui-button>
+          </ng-container>
+        </ui-table>
         
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 dark:border-gray-800">
           <div class="flex items-center gap-2">
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
               Anterior
             </ui-button>
-            <span class="text-xs font-bold text-gray-400">
+            <span class="text-xs font-bold text-gray-400 dark:text-gray-500">
               Página {{ pageIndex() }} de {{ totalPages() }}
             </span>
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
               Siguiente
             </ui-button>
           </div>
-          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 dark:text-gray-400 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none">
             <option value="5">5 / pág</option>
             <option value="10" selected>10 / pág</option>
             <option value="25">25 / pág</option>
@@ -165,6 +169,16 @@ export class SalesPageComponent implements OnInit {
   private dialog = inject(MatDialog);
   private invoiceService = inject(InvoiceService);
   private customerService = inject(CustomerService);
+
+  // ── Table columns ──
+  protected readonly tableColumns: TableColumn[] = [
+    { key: 'invoiceNumber', header: 'No. Factura' },
+    { key: 'customer', header: 'Cliente' },
+    { key: 'date', header: 'Fecha' },
+    { key: 'totalAmount', header: 'Total Neto', align: 'right' },
+    { key: 'status', header: 'Estado' },
+    { key: 'actions', header: '', width: '60px' },
+  ];
 
   // Señales
   invoices = this.invoiceService.invoices;

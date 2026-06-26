@@ -37,7 +37,7 @@ export interface SelectOption {
   template: `
     <div class="flex flex-col gap-1.5">
       @if (label()) {
-        <label class="text-xs font-black text-gray-500 uppercase tracking-widest">
+        <label class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
           {{ label() }}
           @if (required()) { <span class="text-red-500">*</span> }
         </label>
@@ -46,12 +46,13 @@ export interface SelectOption {
         <button
           type="button"
           role="combobox"
-          class="w-full h-14 px-4 rounded-2xl border bg-white text-sm font-bold text-gray-900
-                 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400
+          class="w-full h-14 px-4 rounded-2xl border bg-white dark:bg-gray-900 text-sm font-bold text-gray-900 dark:text-gray-100
+                 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:border-indigo-400 dark:focus:border-indigo-600
                  transition-all flex items-center justify-between
                  disabled:opacity-50 disabled:cursor-not-allowed"
           [class.border-red-500]="!!error()"
           [class.border-gray-200]="!error()"
+          [class.dark:border-gray-700]="!error()"
           [disabled]="disabled()"
           [attr.aria-expanded]="open()"
           [attr.aria-invalid]="!!error() || null"
@@ -66,26 +67,26 @@ export interface SelectOption {
 
         @if (open()) {
           <div
-            class="z-50 mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl max-h-64 overflow-hidden"
+            class="z-50 mt-2 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl max-h-64 overflow-hidden"
             [style]="panelStyle()"
           >
             @if (searchable()) {
-              <div class="p-3 border-b border-gray-100">
+              <div class="p-3 border-b border-gray-100 dark:border-gray-700">
                 <input
                   (input)="onSearch($event)"
                   placeholder="Buscar..."
-                  class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100
+                         focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
                 />
               </div>
             }
             <div class="overflow-y-auto max-h-48">
               @if (loading()) {
                 <div class="flex justify-center items-center py-6">
-                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
                 </div>
               } @else if (filteredOptions().length === 0) {
-                <div class="px-4 py-6 text-sm text-gray-400 text-center">
+                <div class="px-4 py-6 text-sm text-gray-400 dark:text-gray-500 text-center">
                   {{ emptyText() }}
                 </div>
               } @else {
@@ -95,28 +96,30 @@ export interface SelectOption {
                     role="option"
                     (click)="selectOption(opt)"
                     (mouseenter)="highlightedIndex.set(i)"
-                    class="w-full text-left px-4 py-3 text-sm font-medium hover:bg-indigo-50 transition-colors"
+                    class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
                     [class.bg-indigo-50]="highlightedIndex() === i"
+                    [class.dark:bg-indigo-900/30]="highlightedIndex() === i"
                     [class.text-indigo-600]="opt.value === value()"
+                    [class.dark:text-indigo-400]="opt.value === value()"
                   >
                     @if (opt.icon && showSubtitle()) {
-                      <span class="material-icons text-sm align-text-bottom mr-1.5 text-gray-400">{{ opt.icon }}</span>
+                      <span class="material-icons text-sm align-text-bottom mr-1.5 text-gray-400 dark:text-gray-500">{{ opt.icon }}</span>
                     }
                     <span>{{ opt.label }}</span>
                     @if (opt.subtitle && showSubtitle()) {
-                      <span class="block text-[10px] text-gray-400 font-medium mt-0.5">{{ opt.subtitle }}</span>
+                      <span class="block text-[10px] text-gray-400 dark:text-gray-500 font-medium mt-0.5">{{ opt.subtitle }}</span>
                     }
                   </button>
                 }
               }
             </div>
             @if (footerLabel()) {
-              <div class="border-t border-gray-100">
+              <div class="border-t border-gray-100 dark:border-gray-700">
                 <button
                   type="button"
                   data-testid="select-footer"
                   (click)="onFooterClick($event)"
-                  class="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition-colors"
+                  class="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
                 >
                   <span class="material-icons text-base">add</span>
                   {{ footerLabel() }}
@@ -129,7 +132,7 @@ export interface SelectOption {
       @if (error()) {
         <span class="text-xs text-red-500 font-medium">{{ error() }}</span>
       } @else if (helperText()) {
-        <span class="text-xs text-gray-400">{{ helperText() }}</span>
+        <span class="text-xs text-gray-400 dark:text-gray-500">{{ helperText() }}</span>
       }
     </div>
   `,
