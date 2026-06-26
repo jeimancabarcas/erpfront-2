@@ -13,7 +13,9 @@ import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 import { Invoice } from '../../../models/invoice.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SalesNoteService } from '../../../services/sales-note.service';
+import { FinanceService } from '../../../services/finance.service';
 import { CreateSalesNoteDto } from '../../../models/sales-note.model';
+import { CreateElectronicCreditNotePayload } from '../../../models/finance.model';
 
 export interface SalesNoteDialogData {
   invoice: Invoice;
@@ -23,6 +25,10 @@ export interface SalesNoteDialogData {
   forceElectronic?: boolean;
   /** When set, restricts correction concept to this single code (e.g. '2' for total annulment) */
   forceCorrectionCode?: string;
+  /** When true: submit routes to Factus endpoint, toggle forced ON */
+  useFactusCreditNote?: boolean;
+  /** Factus document number used as billNumber for Factus credit notes */
+  billNumber?: string;
 }
 
 @Component({
@@ -86,7 +92,7 @@ export interface SalesNoteDialogData {
               </div>
             </div>
             <mat-slide-toggle [checked]="isElectronic()" (change)="isElectronic.set($event.checked)"
-              [disabled]="data.forceElectronic || !data.invoice.isElectronic" color="primary"></mat-slide-toggle>
+              [disabled]="data.forceElectronic || data.useFactusCreditNote || !data.invoice.isElectronic" color="primary"></mat-slide-toggle>
           </div>
 
           @if (data.forceElectronic) {
@@ -94,6 +100,13 @@ export interface SalesNoteDialogData {
               <span class="material-icons text-indigo-500 mt-0.5 text-[18px]">info</span>
               <p class="text-xs text-indigo-700 leading-relaxed">
                 Emisión electrónica <strong>requerida</strong> — este documento debe ser enviado a la DIAN.
+              </p>
+            </div>
+          } @else if (data.useFactusCreditNote) {
+            <div class="flex items-start gap-3 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-3">
+              <span class="material-icons text-indigo-500 mt-0.5 text-[18px]">info</span>
+              <p class="text-xs text-indigo-700 leading-relaxed">
+                Emisión directa por Factus — la nota crédito se emitirá electrónicamente sin vínculo local.
               </p>
             </div>
           } @else if (!data.invoice.isElectronic) {
@@ -269,13 +282,14 @@ export interface SalesNoteDialogData {
 export class SalesNoteFormDialogOrganism implements OnInit {
   private fb = inject(FormBuilder);
   private salesNoteService = inject(SalesNoteService);
+  private financeService = inject(FinanceService);
 
   public dialogRef = inject(MatDialogRef<SalesNoteFormDialogOrganism>);
   public data: SalesNoteDialogData = inject(MAT_DIALOG_DATA);
 
   loading = signal(false);
   errorMsg = signal<string | null>(null);
-  isElectronic = signal(this.data.forceElectronic || this.data.invoice.isElectronic || false);
+  isElectronic = signal(this.data.forceElectronic || this.data.useFactusCreditNote || this.data.invoice.isElectronic || false);
   Number = Number; // Expose Number for template
 
   // Current scenario derived from correctionConceptCode
@@ -588,24 +602,72 @@ export class SalesNoteFormDialogOrganism implements OnInit {
       });
     }
 
-    const payload: CreateSalesNoteDto = {
-      correctionConceptCode: concept,
-      observation: formValue.observation || '',
-      isElectronic: this.isElectronic(),
-      scenarioType: scenarioTypeMap[s] || undefined,
-      items: payloadItems.length > 0 ? payloadItems : undefined,
-    };
+    if (this.data.useFactusCreditNote) {
+      // Factus path: submit to Factus endpoint exclusively
+      const factusPayload: CreateElectronicCreditNotePayload = {
+        billNumber: this.data.billNumber || this.data.invoice.invoiceNumber,
+        referenceCode: `NC-REF-${Date.now()}`,
+        correctionConceptCode: concept,
+        observation: formValue.observation || '',
+        paymentDetails: [
+          {
+            paymentForm: '1',
+            paymentMethodCode: '10',
+            amount: this.noteTotalAmount(),
+          },
+        ],
+        items:
+          payloadItems.length > 0
+            ? payloadItems.map((item: any) => ({
+                codeReference: item.codeReference,
+                name: item.name || item.codeReference,
+                quantity: item.quantity,
+                price: item.price ?? 0,
+                productId: item.productId,
+              }))
+            : [
+                {
+                  codeReference: 'ANNUL-ALL',
+                  name: 'Anulación total',
+                  quantity: 1,
+                  price: this.noteTotalAmount(),
+                },
+              ],
+      };
 
-    this.salesNoteService.createCreditNote(this.data.invoice.id, payload).subscribe({
-      next: (response) => {
-        this.loading.set(false);
-        this.dialogRef.close({ success: true, type: 'credit', note: response });
-      },
-      error: (err) => {
-        this.loading.set(false);
-        const errMsg = err.error?.message || err.message || 'Error desconocido al emitir nota.';
-        this.errorMsg.set(errMsg);
-      }
-    });
+      this.financeService.createElectronicCreditNote(factusPayload).subscribe({
+        next: (response) => {
+          this.loading.set(false);
+          this.dialogRef.close({ success: true, type: 'credit', note: response });
+        },
+        error: (err) => {
+          this.loading.set(false);
+          const errMsg =
+            err.error?.message || err.message || 'Error desconocido al emitir nota por Factus.';
+          this.errorMsg.set(errMsg);
+        },
+      });
+    } else {
+      // Manual path: local SalesNoteService (preserved unchanged)
+      const payload: CreateSalesNoteDto = {
+        correctionConceptCode: concept,
+        observation: formValue.observation || '',
+        isElectronic: this.isElectronic(),
+        scenarioType: scenarioTypeMap[s] || undefined,
+        items: payloadItems.length > 0 ? payloadItems : undefined,
+      };
+
+      this.salesNoteService.createCreditNote(this.data.invoice.id, payload).subscribe({
+        next: (response) => {
+          this.loading.set(false);
+          this.dialogRef.close({ success: true, type: 'credit', note: response });
+        },
+        error: (err) => {
+          this.loading.set(false);
+          const errMsg = err.error?.message || err.message || 'Error desconocido al emitir nota.';
+          this.errorMsg.set(errMsg);
+        },
+      });
+    }
   }
 }

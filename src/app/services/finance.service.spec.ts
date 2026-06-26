@@ -203,4 +203,46 @@ describe('FinanceService', () => {
       });
     });
   });
+
+  describe('createElectronicCreditNote', () => {
+    it('should POST to /finance/electronic-bills/credit-note with correct payload', () => {
+      const payload = {
+        billNumber: 'SETP990000123',
+        referenceCode: 'NC-REF-001',
+        correctionConceptCode: '2',
+        observation: 'Anulación total',
+        paymentDetails: [{ paymentForm: '1', paymentMethodCode: '10', amount: 100000 }],
+        items: [{ codeReference: 'P001', name: 'Producto', quantity: 1, price: 100000 }],
+      };
+
+      service.createElectronicCreditNote(payload).subscribe(response => {
+        expect(response.status).toBe('OK');
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/finance/electronic-bills/credit-note`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(payload);
+
+      req.flush({ status: 'OK', message: 'Created', data: { number: 'NC-001' } });
+    });
+
+    it('should propagate error response', () => {
+      const payload = {
+        billNumber: 'INVALID',
+        referenceCode: 'NC-REF-002',
+        correctionConceptCode: '2',
+        paymentDetails: [{ paymentForm: '1', paymentMethodCode: '10', amount: 100 }],
+        items: [{ codeReference: 'P001', name: 'P', quantity: 1, price: 100 }],
+      };
+
+      service.createElectronicCreditNote(payload).subscribe({
+        error: (err) => {
+          expect(err.status).toBe(422);
+        },
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/finance/electronic-bills/credit-note`);
+      req.flush({ message: 'Validation error' }, { status: 422, statusText: 'Unprocessable Entity' });
+    });
+  });
 });

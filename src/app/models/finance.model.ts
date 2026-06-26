@@ -149,4 +149,45 @@ export interface CreateElectronicBillResponse {
   warning?: string;
 }
 
+export interface CreateElectronicCreditNotePayload {
+  billNumber: string;
+  referenceCode: string;
+  correctionConceptCode: string;
+  observation?: string;
+  paymentDetails: {
+    paymentForm: string;
+    paymentMethodCode: string;
+    amount: number;
+  }[];
+  customer?: {
+    identification: string;
+    names: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+  };
+  items: {
+    codeReference: string;
+    name: string;
+    quantity: number;
+    price: number;
+    discountRate?: number;
+    productId?: string;
+  }[];
+}
+
+export interface CreateElectronicCreditNoteResponse {
+  status: string;
+  message: string;
+  data: {
+    referenceCode: string;
+    number: string;
+    cude: string;
+    qrUrl?: string;
+    publicUrl?: string;
+    isValidated: boolean;
+    createdAt: string;
+  };
+}
+
 

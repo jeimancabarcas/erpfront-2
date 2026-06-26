@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { FinanceInvoice, AdjustmentNote, FinancialMetric, FinanceCustomer, FinanceProduct, FinanceDocumentDto, FinanceDocumentsResponse, CreateElectronicBillPayload, CreateElectronicBillResponse } from '../models/finance.model';
+import { FinanceInvoice, AdjustmentNote, FinancialMetric, FinanceCustomer, FinanceProduct, FinanceDocumentDto, FinanceDocumentsResponse, CreateElectronicBillPayload, CreateElectronicBillResponse, CreateElectronicCreditNotePayload, CreateElectronicCreditNoteResponse } from '../models/finance.model';
 import { SalesNoteService } from './sales-note.service';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -168,6 +168,13 @@ export class FinanceService {
 
   createElectronicBill(payload: CreateElectronicBillPayload): Observable<CreateElectronicBillResponse> {
     return this.http.post<CreateElectronicBillResponse>(`${this.apiUrl}/electronic-bills`, payload);
+  }
+
+  createElectronicCreditNote(payload: CreateElectronicCreditNotePayload): Observable<CreateElectronicCreditNoteResponse> {
+    return this.http.post<CreateElectronicCreditNoteResponse>(
+      `${this.apiUrl}/electronic-bills/credit-note`,
+      payload,
+    );
   }
 
   loadAdjustments(): Observable<any> {

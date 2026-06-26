@@ -245,21 +245,27 @@ export class FinanceInvoicingViewComponent implements OnInit {
       this.financeService.lookupLocalInvoiceId(documentNumber).subscribe({
         next: (result) => {
           if (result?.invoiceId) {
-            // Has local invoice — open with full options, electronic forced ON
+            // Has local invoice — open with full options, Factus path
             this.invoiceService.getInvoiceById(result.invoiceId).subscribe({
               next: (invoice) => {
-                this.openAdjustmentDialog(invoice, { forceElectronic: true });
+                this.openAdjustmentDialog(invoice, {
+                  useFactusCreditNote: true,
+                  forceElectronic: true,
+                  billNumber: documentNumber,
+                });
               },
               error: () => {
                 this.financeService.error.set('No se pudo cargar la factura local asociada.');
               },
             });
           } else {
-            // No local invoice — build synthetic invoice from Factus data, restrict to Anulación total
+            // No local invoice — build synthetic invoice from Factus data, Factus path
             const syntheticInvoice = this.buildSyntheticInvoice(event.invoice);
             this.openAdjustmentDialog(syntheticInvoice, {
+              useFactusCreditNote: true,
               forceElectronic: true,
               forceCorrectionCode: '2',
+              billNumber: documentNumber,
             });
           }
         },
@@ -270,10 +276,15 @@ export class FinanceInvoicingViewComponent implements OnInit {
     }
   }
 
-  /** Open the credit-note dialog with optional force flags */
+  /** Open the credit-note dialog with optional flags */
   private openAdjustmentDialog(
     invoice: Invoice,
-    opts: { forceElectronic?: boolean; forceCorrectionCode?: string },
+    opts: {
+      forceElectronic?: boolean;
+      forceCorrectionCode?: string;
+      useFactusCreditNote?: boolean;
+      billNumber?: string;
+    },
   ): void {
     setTimeout(() => {
       this.dialog.open(SalesNoteFormDialogOrganism, {
