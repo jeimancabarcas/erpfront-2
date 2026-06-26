@@ -8,11 +8,8 @@ import { filter } from 'rxjs/operators';
 export class SidebarService {
   private router = inject(Router);
 
-  inventoryExpanded = false;
   financeExpanded = false;
   pediatricsExpanded = false;
-  comercialExpanded = false;
-  abastecimientoExpanded = false;
 
   constructor() {
     // Listen to router events to auto-expand the section corresponding to the active route
@@ -27,20 +24,11 @@ export class SidebarService {
   }
 
   private autoExpandActiveRoute() {
-    if (this.isInventoryActive()) {
-      this.inventoryExpanded = true;
-    }
     if (this.isFinanceActive()) {
       this.financeExpanded = true;
     }
     if (this.isPediatricsActive()) {
       this.pediatricsExpanded = true;
-    }
-    if (this.isComercialActive()) {
-      this.comercialExpanded = true;
-    }
-    if (this.isAbastecimientoActive()) {
-      this.abastecimientoExpanded = true;
     }
   }
 

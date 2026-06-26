@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../../atoms/button/button.component';
 import { TextInputComponent } from '../../../atoms/text-input/text-input.component';
 import { FinanceService } from '../../../../services/finance.service';
@@ -22,14 +21,12 @@ import { DIALOG_DEFAULTS, DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../../
   imports: [
     CommonModule,
     FormsModule,
-    DashboardLayoutComponent,
     ButtonAtom,
     TextInputComponent,
     GeneralInvoiceTableOrganism,
     MatPaginatorModule,
   ],
   template: `
-    <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">Facturación Electrónica</h1>
@@ -135,7 +132,6 @@ import { DIALOG_DEFAULTS, DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../../
           </mat-paginator>
         }
       }
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

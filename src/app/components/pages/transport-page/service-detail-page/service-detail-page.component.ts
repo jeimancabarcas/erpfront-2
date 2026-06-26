@@ -6,7 +6,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
 import { TransportService } from '../../../../services/transport.service';
 import { TransportRoute } from '../../../../models/transport.model';
 import { BreadcrumbItem, BreadcrumbMolecule } from '../../../molecules/breadcrumb/breadcrumb.component';
-import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../../atoms/button/button.component';
 import { TransportOperationDialogOrganism } from '../../../organisms/transport-operation-dialog/transport-operation-dialog.component';
 import { TransportExpenseDialogOrganism } from '../../../organisms/transport-expense-dialog/transport-expense-dialog.component';
@@ -25,12 +24,10 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
     CommonModule,
     RouterModule,
     BreadcrumbMolecule,
-    DashboardLayoutComponent,
     ButtonAtom,
     EmptyStateAtom
   ],
   template: `
-    <app-dashboard-layout>
       <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
         
         <!-- Breadcrumb -->
@@ -537,7 +534,6 @@ import { TransportStandbyDialogOrganism } from '../../../organisms/transport-sta
           </div>
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

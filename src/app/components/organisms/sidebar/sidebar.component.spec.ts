@@ -1,20 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SidebarComponent } from './sidebar.component';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { of } from 'rxjs';
-import { vi } from 'vitest';
 
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
   let fixture: ComponentFixture<SidebarComponent>;
-  let router: Router;
-  let urlMock = '/dashboard';
 
   beforeEach(async () => {
-    urlMock = '/dashboard';
-
     await TestBed.configureTestingModule({
       imports: [SidebarComponent, NoopAnimationsModule],
       providers: [provideRouter([])],
@@ -22,13 +16,6 @@ describe('SidebarComponent', () => {
 
     fixture = TestBed.createComponent(SidebarComponent);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router);
-
-    Object.defineProperty(router, 'url', {
-      get: () => urlMock,
-      configurable: true,
-    });
-
     fixture.detectChanges();
   });
 
@@ -39,16 +26,25 @@ describe('SidebarComponent', () => {
   it('should display items in the correct order', () => {
     const expectedOrder = [
       'Inicio',
-      'Clientes',
+      'Gestión Comercial',
       'Ventas',
+      'Clientes',
       'Compras',
+      'Proveedores',
       'Inventario',
+      'Dashboard Inventario',
+      'Categorías',
+      'Productos',
       'Finanzas',
+      'Resumen',
+      'Facturación (Electronica)',
       'Pediatría',
+      'Pacientes',
+      'Agenda Médica',
+      'Facturación Médica',
       'Transporte',
     ];
 
-    // Find all spans in the main navigation
     const textEls = fixture.debugElement.queryAll(By.css('nav.flex-1 span'));
     const foundTexts = textEls
       .map((el) => el.nativeElement.textContent?.trim())
@@ -57,42 +53,35 @@ describe('SidebarComponent', () => {
     expect(foundTexts).toEqual(expectedOrder);
   });
 
-  it('should have Ventas and Compras nested inside their accordion panels', () => {
-    const ventasLink = fixture.debugElement.query(By.css('a[routerLink="/comercial/sales"]'));
-    const comprasLink = fixture.debugElement.query(By.css('a[routerLink="/abastecimiento/purchases"]'));
-
-    expect(ventasLink).toBeTruthy();
-    expect(comprasLink).toBeTruthy();
-
-    // They are now nested inside expansion panels (Gestión Comercial, Abastecimiento)
-    expect(ventasLink.nativeElement.closest('mat-expansion-panel')).not.toBeNull();
-    expect(comprasLink.nativeElement.closest('mat-expansion-panel')).not.toBeNull();
+  it('should have all sections as static placeholders (no expansion panels)', () => {
+    const expansionPanels = fixture.debugElement.queryAll(By.css('mat-expansion-panel'));
+    expect(expansionPanels.length).toBe(0);
   });
 
-  it('should collapse the Inventario accordion by default', () => {
-    const panels = fixture.debugElement.queryAll(By.css('mat-expansion-panel'));
-    // The Inventario panel is the first expansion panel in our template
-    const inventarioPanel = panels[0].componentInstance;
-    expect(inventarioPanel.expanded).toBeFalsy();
+  it('should have Gestión Comercial with all 4 sub-items visible', () => {
+    expect(fixture.debugElement.query(By.css('a[routerLink="/comercial/sales"]'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('a[routerLink="/comercial/customers"]'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('a[routerLink="/abastecimiento/purchases"]'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('a[routerLink="/abastecimiento/suppliers"]'))).toBeTruthy();
   });
 
-  it('should test isInventoryActive() helper logic', () => {
-    const activeUrls = [
-      '/inventory',
-      '/inventory/categories',
-      '/inventory/products',
-      '/inventory/categories/123',
-    ];
-    const inactiveUrls = ['/abastecimiento/purchases', '/comercial/sales', '/dashboard'];
+  it('should have Dashboard Inventario renamed from Resumen', () => {
+    const dashLink = fixture.debugElement.query(By.css('a[routerLink="/inventory"]'));
+    expect(dashLink).toBeTruthy();
+    expect(dashLink.nativeElement.textContent).toContain('Dashboard Inventario');
+  });
 
-    for (const url of activeUrls) {
-      urlMock = url;
-      expect(component.isInventoryActive()).toBe(true);
-    }
+  it('should NOT render Notas Crédito/Débito link', () => {
+    const notesLink = fixture.debugElement.query(By.css('a[routerLink="/finance/adjustments"]'));
+    expect(notesLink).toBeNull();
+  });
 
-    for (const url of inactiveUrls) {
-      urlMock = url;
-      expect(component.isInventoryActive()).toBe(false);
-    }
+  it('should have Finanzas and Pediatría as static placeholders', () => {
+    const finanzasLink = fixture.debugElement.query(By.css('a[routerLink="/finance"]'));
+    const pediatricsLink = fixture.debugElement.query(By.css('a[routerLink="/pediatrics/patients"]'));
+    expect(finanzasLink).toBeTruthy();
+    expect(pediatricsLink).toBeTruthy();
+    expect(finanzasLink.nativeElement.closest('mat-expansion-panel')).toBeNull();
+    expect(pediatricsLink.nativeElement.closest('mat-expansion-panel')).toBeNull();
   });
 });

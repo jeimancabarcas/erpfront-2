@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { PurchaseOrderDialogOrganism } from '../../../../components/organisms/purchase-order-dialog/purchase-order-dialog.component';
 import { PurchaseOrderDetailDialogOrganism } from '../../../../components/organisms/purchase-order-detail-dialog/purchase-order-detail-dialog.component';
@@ -18,7 +17,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
     SelectAtom,
@@ -26,7 +24,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     DatePipe
   ],
   template: `
-    <app-dashboard-layout>
       <app-breadcrumb 
         [items]="[
           { label: 'Abastecimiento', link: '/abastecimiento' },
@@ -150,7 +147,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
           </select>
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

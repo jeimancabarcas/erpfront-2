@@ -1,7 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { PediatricsService, Appointment } from '../../../services/pediatrics.service';
 import { BillingService } from '../../../services/billing.service';
@@ -17,13 +16,11 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent, 
     ButtonAtom,
     AppointmentFiltersMolecule,
     AppointmentTableOrganism
   ],
   template: `
-    <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Agenda Médica</h1>
@@ -55,7 +52,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
         (confirmRequest)="handleConfirmRequest($event)"
         (clearFilters)="clearFilters()"
       />
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

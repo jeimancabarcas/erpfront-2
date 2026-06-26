@@ -1,6 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { CardAtom } from '../../atoms/card/card.component';
 import { FinanceService } from '../../../services/finance.service';
 
@@ -9,11 +8,9 @@ import { FinanceService } from '../../../services/finance.service';
   standalone: true,
   imports: [
     CommonModule, 
-    DashboardLayoutComponent, 
     CardAtom
   ],
   template: `
-    <app-dashboard-layout>
       <header class="mb-10 animate-in fade-in slide-in-from-top duration-500">
         <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">Finanzas Generales</h1>
         <p class="text-gray-500 font-medium">Resumen financiero de productos y servicios no médicos.</p>
@@ -98,7 +95,6 @@ import { FinanceService } from '../../../services/finance.service';
           </div>
         </div>
       </div>
-    </app-dashboard-layout>
 
     <!-- Inline notifications -->
     @if (notification(); as notif) {

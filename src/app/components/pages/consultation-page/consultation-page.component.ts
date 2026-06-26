@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../shared/constants/dialog.config';
 
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 import { BreadcrumbMolecule, BreadcrumbItem } from '../../molecules/breadcrumb/breadcrumb.component';
 import { 
@@ -36,14 +35,12 @@ import { ButtonAtom } from '../../atoms/button/button.component';
   imports: [
     CommonModule,
     FormsModule,
-    DashboardLayoutComponent,
     BreadcrumbMolecule,
     ConsultationActionMolecule,
     ConsultationSummaryOrganism,
     ButtonAtom
   ],
   template: `
-    <app-dashboard-layout>
       <header class="mb-10 print:hidden">
         <app-breadcrumb 
           [items]="breadcrumbItems" 
@@ -150,7 +147,6 @@ import { ButtonAtom } from '../../atoms/button/button.component';
           />
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

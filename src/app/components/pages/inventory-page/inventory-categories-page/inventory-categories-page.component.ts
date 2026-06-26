@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { InventoryCategoryDialogOrganism } from '../../../../components/organisms/inventory-category-dialog/inventory-category-dialog.component';
 import { CategoryService, InventoryCategory } from '../../../../services/category.service';
@@ -16,13 +15,11 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
     TextInputComponent
   ],
   template: `
-    <app-dashboard-layout>
       <app-breadcrumb 
         [items]="[
           { label: 'Inventario', link: '/inventory' },
@@ -132,7 +129,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
           </select>
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

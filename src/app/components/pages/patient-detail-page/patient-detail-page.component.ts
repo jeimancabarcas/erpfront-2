@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { PediatricsService, Patient } from '../../../services/pediatrics.service';
 import { BreadcrumbMolecule, BreadcrumbItem } from '../../molecules/breadcrumb/breadcrumb.component';
@@ -14,7 +13,6 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
   standalone: true,
   imports: [
     CommonModule, 
-    DashboardLayoutComponent, 
     ButtonAtom,
     BreadcrumbMolecule,
     PatientSummaryOrganism,
@@ -22,7 +20,6 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
     PatientClinicalHistoryOrganism
   ],
   template: `
-    <app-dashboard-layout>
       <header class="mb-10">
         <app-breadcrumb 
           [items]="breadcrumbItems" 
@@ -96,7 +93,6 @@ import { PatientClinicalHistoryOrganism } from '../../organisms/patient-clinical
           <app-patient-clinical-history [patient]="patient()" />
         }
       }
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

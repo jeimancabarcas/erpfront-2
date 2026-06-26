@@ -5,7 +5,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 import { TransportService } from '../../../../services/transport.service';
 import { Vehicle, VehicleMaintenance } from '../../../../models/transport.model';
-import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { StatusTagAtom } from '../../../../components/atoms/status-tag/status-tag.component';
 import { EmptyStateAtom } from '../../../../components/atoms/empty-state/empty-state.component';
@@ -17,13 +16,11 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
   imports: [
     CommonModule,
     RouterModule,
-    DashboardLayoutComponent,
     ButtonAtom,
     StatusTagAtom,
     EmptyStateAtom
   ],
   template: `
-    <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div class="flex items-center gap-6">
           <a 
@@ -239,7 +236,6 @@ import { TransportMaintenanceDialogOrganism } from '../../../../components/organ
           </div>
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

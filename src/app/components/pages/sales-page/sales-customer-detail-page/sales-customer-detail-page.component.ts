@@ -2,7 +2,6 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { CustomerService } from '../../../../services/customer.service';
 import { InvoiceService } from '../../../../services/invoice.service';
 import { Customer, CreditPortfolio, PaymentRecord } from '../../../../models/customer.model';
@@ -27,7 +26,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     CommonModule,
     RouterModule,
     ButtonAtom,
-    DashboardLayoutComponent,
     CustomerInfoMolecule,
     CustomerStatsMolecule,
     CustomerInvoicesTableOrganism,
@@ -36,7 +34,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     PaymentHistoryTableOrganism,
   ],
   template: `
-    <app-dashboard-layout title="Detalle del Cliente" subtitle="Información histórica y facturación">
       <div class="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom duration-500">
         
         <!-- Action Bar -->
@@ -104,7 +101,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
           </div>
         }
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

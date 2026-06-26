@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../molecules/breadcrumb/breadcrumb.component';
 import { InvoiceService } from '../../../services/invoice.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -19,7 +18,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
     TextInputComponent,
@@ -28,7 +26,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     DatePipe
   ],
   template: `
-    <app-dashboard-layout>
       <app-breadcrumb 
         [items]="[
           { label: 'Gestión Comercial', link: '/comercial' },
@@ -159,7 +156,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
           </select>
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

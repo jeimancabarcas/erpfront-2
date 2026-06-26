@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { CardAtom } from '../../atoms/card/card.component';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [DashboardLayoutComponent, CardAtom],
+  imports: [CardAtom],
   template: `
-    <app-dashboard-layout>
       <header class="mb-10">
         <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Bienvenido al Panel de Control</h1>
         <p class="text-gray-500 dark:text-gray-400 font-medium">Gestiona todos tus módulos y servicios desde aquí.</p>
@@ -32,7 +30,6 @@ import { CardAtom } from '../../atoms/card/card.component';
           </ui-card>
         }
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host {

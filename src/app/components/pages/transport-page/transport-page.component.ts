@@ -1,6 +1,5 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TransportDashboardViewComponent } from './transport-dashboard-view/transport-dashboard-view.component';
 import { TransportTrackingViewComponent } from './transport-tracking-view/transport-tracking-view.component';
@@ -11,14 +10,12 @@ import { TransportSettlementViewComponent } from './transport-settlement-view/tr
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
     ButtonAtom,
     TransportDashboardViewComponent,
     TransportTrackingViewComponent,
     TransportSettlementViewComponent
   ],
   template: `
-    <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">Gestión de Transporte</h1>
@@ -80,7 +77,6 @@ import { TransportSettlementViewComponent } from './transport-settlement-view/tr
           </div>
         }
       }
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

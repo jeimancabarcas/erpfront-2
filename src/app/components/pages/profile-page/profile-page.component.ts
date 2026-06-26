@@ -1,5 +1,4 @@
 import { Component, signal } from '@angular/core';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { ProfilePersonalMolecule } from '../../molecules/profile-personal/profile-personal.component';
 import { ProfileAccountMolecule } from '../../molecules/profile-account/profile-account.component';
@@ -8,13 +7,11 @@ import { ProfileAccountMolecule } from '../../molecules/profile-account/profile-
   selector: 'app-profile-page',
   standalone: true,
   imports: [
-    DashboardLayoutComponent, 
     ButtonAtom,
     ProfilePersonalMolecule, 
     ProfileAccountMolecule
   ],
   template: `
-    <app-dashboard-layout>
       <header class="mb-10">
         <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Mi Perfil</h1>
         <p class="text-gray-500 font-medium">Gestiona tu información personal y configuración de seguridad.</p>
@@ -52,7 +49,6 @@ import { ProfileAccountMolecule } from '../../molecules/profile-account/profile-
           </div>
         }
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host {

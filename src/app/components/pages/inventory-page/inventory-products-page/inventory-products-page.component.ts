@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { ProductService } from '../../../../services/product.service';
 import { CategoryService } from '../../../../services/category.service';
@@ -20,7 +19,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
     TextInputComponent,
@@ -28,7 +26,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     CurrencyPipe
   ],
   template: `
-    <app-dashboard-layout>
       <app-breadcrumb 
         [items]="[
           { label: 'Inventario', link: '/inventory' },
@@ -163,7 +160,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
           </select>
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

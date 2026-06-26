@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { MovementsTableMolecule } from '../../molecules/movements-table/movements-table.component';
 import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventory-stats.component';
 
@@ -7,12 +6,10 @@ import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventor
   selector: 'app-inventory-page',
   standalone: true,
   imports: [
-    DashboardLayoutComponent,
     MovementsTableMolecule,
     InventoryStatsOrganism
   ],
   template: `
-    <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Inventario</h1>
@@ -46,7 +43,6 @@ import { InventoryStatsOrganism } from '../../organisms/inventory-stats/inventor
           </div>
         </section>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host {

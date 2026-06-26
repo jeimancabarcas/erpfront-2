@@ -1,10 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
-import { SidebarService } from '../../../services/sidebar.service';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'app-sidebar',
@@ -13,7 +11,6 @@ import { SidebarService } from '../../../services/sidebar.service';
     MatListModule,
     MatIconModule,
     MatButtonModule,
-    MatExpansionModule,
     RouterLink,
     RouterLinkActive,
   ],
@@ -27,320 +24,195 @@ import { SidebarService } from '../../../services/sidebar.service';
           <a
             mat-list-item
             routerLink="/dashboard"
-            routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
+            routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="!rounded-full !h-14 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-1"
+            class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
           >
-            <div class="flex items-center gap-4 px-4">
-              <mat-icon class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[24px]"
-                >dashboard</mat-icon
-              >
-              <span class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200">Inicio</span>
+            <div class="flex items-center gap-3 px-4">
+              <mat-icon class="!text-[20px]">dashboard</mat-icon>
+              <span class="text-xs font-bold tracking-wide">Inicio</span>
             </div>
           </a>
-          <!-- Gestión Comercial Collapsible -->
-          <mat-accordion class="sidebar-accordion" multi>
-            <mat-expansion-panel
-              class="!shadow-none !bg-transparent !border-none mb-1"
-              [expanded]="sidebarService.comercialExpanded"
-              (opened)="sidebarService.comercialExpanded = true"
-              (closed)="sidebarService.comercialExpanded = false"
+        <!-- Gestión Comercial Placeholder -->
+        <div class="sidebar__placeholder mb-1">
+          <div class="px-4 pt-3 pb-2">
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-200">Gestión Comercial</span>
+          </div>
+          <div class="flex flex-col gap-1 pl-2 pr-1 pb-1">
+            <a
+              mat-list-item
+              routerLink="/comercial/sales"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
             >
-              <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 dark:hover:!bg-gray-800 !rounded-full group">
-                <mat-panel-title class="flex items-center gap-4">
-                  <mat-icon
-                    class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 !text-[24px]"
-                    [class.!text-indigo-900]="sidebarService.isComercialActive()"
-                    >store</mat-icon
-                  >
-                  <span
-                    class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200"
-                    [class.!text-indigo-900]="sidebarService.isComercialActive()"
-                    >Gestión Comercial</span
-                  >
-                </mat-panel-title>
-              </mat-expansion-panel-header>
-              <div class="flex flex-col gap-1 pl-2 pr-1 pt-1">
-                <a
-                  mat-list-item
-                  routerLink="/comercial/sales"
-                  routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
-                  [routerLinkActiveOptions]="{ exact: true }"
-                  class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
-                >
-                  <div class="flex items-center gap-4 px-4">
-                    <mat-icon class="!text-gray-400 dark:!text-gray-500 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[20px]"
-                      >payments</mat-icon
-                    >
-                    <span class="text-sm font-bold tracking-wide text-gray-600 dark:text-gray-300 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200">Ventas</span>
-                  </div>
-                </a>
-                <a
-                  mat-list-item
-                  routerLink="/comercial/customers"
-                  routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
-                  class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
-                >
-                  <div class="flex items-center gap-4 px-4">
-                    <mat-icon class="!text-gray-400 dark:!text-gray-500 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[20px]"
-                      >people</mat-icon
-                    >
-                    <span class="text-sm font-bold tracking-wide text-gray-600 dark:text-gray-300 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200">Clientes</span>
-                  </div>
-                </a>
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">payments</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Ventas</span>
               </div>
-            </mat-expansion-panel>
-          </mat-accordion>
-
-          <!-- Abastecimiento Collapsible -->
-          <mat-accordion class="sidebar-accordion" multi>
-            <mat-expansion-panel
-              class="!shadow-none !bg-transparent !border-none mb-1"
-              [expanded]="sidebarService.abastecimientoExpanded"
-              (opened)="sidebarService.abastecimientoExpanded = true"
-              (closed)="sidebarService.abastecimientoExpanded = false"
+            </a>
+            <a
+              mat-list-item
+              routerLink="/comercial/customers"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
             >
-              <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 dark:hover:!bg-gray-800 !rounded-full group">
-                <mat-panel-title class="flex items-center gap-4">
-                  <mat-icon
-                    class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 !text-[24px]"
-                    [class.!text-indigo-900]="sidebarService.isAbastecimientoActive()"
-                    >local_shipping</mat-icon
-                  >
-                  <span
-                    class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200"
-                    [class.!text-indigo-900]="sidebarService.isAbastecimientoActive()"
-                    >Abastecimiento</span
-                  >
-                </mat-panel-title>
-              </mat-expansion-panel-header>
-              <div class="flex flex-col gap-1 pl-2 pr-1 pt-1">
-                <a
-                  mat-list-item
-                  routerLink="/abastecimiento/purchases"
-                  routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
-                  class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
-                >
-                  <div class="flex items-center gap-4 px-4">
-                    <mat-icon class="!text-gray-400 dark:!text-gray-500 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[20px]"
-                      >shopping_cart</mat-icon
-                    >
-                    <span class="text-sm font-bold tracking-wide text-gray-600 dark:text-gray-300 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200">Compras</span>
-                  </div>
-                </a>
-                <a
-                  mat-list-item
-                  routerLink="/abastecimiento/suppliers"
-                  routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
-                  class="!rounded-full !h-12 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-0.5"
-                >
-                  <div class="flex items-center gap-4 px-4">
-                    <mat-icon class="!text-gray-400 dark:!text-gray-500 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[20px]"
-                      >business</mat-icon
-                    >
-                    <span class="text-sm font-bold tracking-wide text-gray-600 dark:text-gray-300 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200">Proveedores</span>
-                  </div>
-                </a>
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">people</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Clientes</span>
               </div>
-            </mat-expansion-panel>
-          </mat-accordion>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/abastecimiento/purchases"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">shopping_cart</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Compras</span>
+              </div>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/abastecimiento/suppliers"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">business</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Proveedores</span>
+              </div>
+            </a>
+          </div>
+        </div>
 
-        <!-- Inventory Module Collapsible -->
-        <mat-accordion class="sidebar-accordion" multi>
-          <mat-expansion-panel
-            class="!shadow-none !bg-transparent !border-none mb-1"
-            [expanded]="sidebarService.inventoryExpanded"
-            (opened)="sidebarService.inventoryExpanded = true"
-            (closed)="sidebarService.inventoryExpanded = false"
-          >
-            <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 dark:hover:!bg-gray-800 !rounded-full group">
-              <mat-panel-title class="flex items-center gap-4">
-                <mat-icon
-                  class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 !text-[24px]"
-                  [class.!text-indigo-900]="isInventoryActive()"
-                  >inventory_2</mat-icon
-                >
-                <span
-                  class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200"
-                  [class.text-indigo-900]="isInventoryActive()"
-                  >Inventario</span
-                >
-              </mat-panel-title>
-            </mat-expansion-panel-header>
+        <!-- Inventario Placeholder -->
+        <div class="sidebar__placeholder mb-1">
+          <div class="px-4 pt-3 pb-2">
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-200">Inventario</span>
+          </div>
+          <div class="flex flex-col gap-1 pl-2 pr-1 pb-1">
+            <a
+              mat-list-item
+              routerLink="/inventory"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">analytics</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Dashboard Inventario</span>
+              </div>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/inventory/categories"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">category</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Categorías</span>
+              </div>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/inventory/products"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">inventory_2</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Productos</span>
+              </div>
+            </a>
+          </div>
+        </div>
 
-            <nav class="flex flex-col gap-2 mt-2 pl-4">
-              <a
-                mat-list-item
-                routerLink="/inventory"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                [routerLinkActiveOptions]="{ exact: true }"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">analytics</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Resumen</span>
-                </div>
-              </a>
+        <!-- Finanzas Placeholder -->
+        <div class="sidebar__placeholder mb-1">
+          <div class="px-4 pt-3 pb-2">
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-200">Finanzas</span>
+          </div>
+          <div class="flex flex-col gap-1 pl-2 pr-1 pb-1">
+            <a
+              mat-list-item
+              routerLink="/finance"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">insights</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Resumen</span>
+              </div>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/finance/invoicing"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">point_of_sale</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Facturación (Electronica)</span>
+              </div>
+            </a>
+          </div>
+        </div>
 
-              <a
-                mat-list-item
-                routerLink="/inventory/categories"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">category</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Categorías</span>
-                </div>
-              </a>
-
-              <a
-                mat-list-item
-                routerLink="/inventory/products"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">inventory_2</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Productos</span>
-                </div>
-              </a>
-            </nav>
-          </mat-expansion-panel>
-        </mat-accordion>
-
-        <!-- Finance Module Collapsible -->
-        <mat-accordion class="sidebar-accordion" multi>
-          <mat-expansion-panel
-            class="!shadow-none !bg-transparent !border-none mb-1"
-            [expanded]="sidebarService.financeExpanded"
-            (opened)="sidebarService.financeExpanded = true"
-            (closed)="sidebarService.financeExpanded = false"
-          >
-            <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 dark:hover:!bg-gray-800 !rounded-full group">
-              <mat-panel-title class="flex items-center gap-4">
-                <mat-icon
-                  class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 !text-[24px]"
-                  [class.!text-indigo-900]="isFinanceActive()"
-                  >account_balance</mat-icon
-                >
-                <span
-                  class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200"
-                  [class.text-indigo-900]="isFinanceActive()"
-                  >Finanzas</span
-                >
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-
-            <nav class="flex flex-col gap-2 mt-2 pl-4">
-              <a
-                mat-list-item
-                routerLink="/finance"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                [routerLinkActiveOptions]="{ exact: true }"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">insights</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Resumen</span>
-                </div>
-              </a>
-              <a
-                mat-list-item
-                routerLink="/finance/invoicing"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">point_of_sale</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Facturación (Electronica)</span>
-                </div>
-              </a>
-              <a
-                mat-list-item
-                routerLink="/finance/adjustments"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">request_quote</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Notas Crédito/Débito</span>
-                </div>
-              </a>
-            </nav>
-          </mat-expansion-panel>
-
-          <!-- Pediatric Module Collapsible -->
-          <mat-expansion-panel
-            class="!shadow-none !bg-transparent !border-none mb-1"
-            [expanded]="sidebarService.pediatricsExpanded"
-            (opened)="sidebarService.pediatricsExpanded = true"
-            (closed)="sidebarService.pediatricsExpanded = false"
-          >
-            <mat-expansion-panel-header class="!h-14 !px-4 hover:!bg-gray-100 dark:hover:!bg-gray-800 !rounded-full group">
-              <mat-panel-title class="flex items-center gap-4">
-                <mat-icon
-                  class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 !text-[24px]"
-                  [class.!text-indigo-900]="isPediatricsActive()"
-                  >child_care</mat-icon
-                >
-                <span
-                  class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200"
-                  [class.text-indigo-900]="isPediatricsActive()"
-                  >Pediatría</span
-                >
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-
-            <nav class="flex flex-col gap-2 mt-2 pl-4">
-              <a
-                mat-list-item
-                routerLink="/pediatrics/patients"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">groups</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Pacientes</span>
-                </div>
-              </a>
-              <a
-                mat-list-item
-                routerLink="/pediatrics/agenda"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">calendar_today</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Agenda Médica</span>
-                </div>
-              </a>
-              <a
-                mat-list-item
-                routerLink="/pediatrics/billing"
-                routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
-                class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center group"
-              >
-                <div class="flex items-center gap-3 px-4">
-                  <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">receipt_long</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Facturación Médica</span>
-                </div>
-              </a>
-            </nav>
-          </mat-expansion-panel>
-        </mat-accordion>
+        <!-- Pediatría Placeholder -->
+        <div class="sidebar__placeholder mb-1">
+          <div class="px-4 pt-3 pb-2">
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-200">Pediatría</span>
+          </div>
+          <div class="flex flex-col gap-1 pl-2 pr-1 pb-1">
+            <a
+              mat-list-item
+              routerLink="/pediatrics/patients"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">groups</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Pacientes</span>
+              </div>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/pediatrics/agenda"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">calendar_today</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Agenda Médica</span>
+              </div>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/pediatrics/billing"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">receipt_long</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Facturación Médica</span>
+              </div>
+            </a>
+          </div>
+        </div>
 
         <a
           mat-list-item
           routerLink="/transport"
-          routerLinkActive="!bg-indigo-100 dark:!bg-indigo-900/30 !text-indigo-900 dark:!text-indigo-200"
-          class="!rounded-full !h-14 hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-all flex items-center group mb-1"
+          routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+          class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
         >
-          <div class="flex items-center gap-4 px-4">
-            <mat-icon class="!text-gray-500 dark:!text-gray-400 group-[.active]:!text-indigo-900 dark:group-[.active]:!text-indigo-200 !text-[24px]"
-              >local_shipping</mat-icon
-            >
-            <span class="text-sm font-bold tracking-wide text-gray-700 dark:text-gray-200">Transporte</span>
+          <div class="flex items-center gap-3 px-4">
+            <mat-icon class="!text-[20px]">local_shipping</mat-icon>
+            <span class="text-xs font-bold tracking-wide">Transporte</span>
           </div>
         </a>
       </nav>
@@ -362,37 +234,7 @@ import { SidebarService } from '../../../services/sidebar.service';
         display: block;
         height: 100%;
       }
-      ::ng-deep .sidebar-accordion .mat-expansion-panel-body {
-        padding: 0 !important;
-      }
-      ::ng-deep .sidebar-accordion .mat-expansion-indicator::after {
-        color: #94a3b8;
-      }
-      ::ng-deep .sidebar-accordion .mat-expansion-panel-header-title {
-        margin-right: 0;
-      }
     `,
   ],
 })
-export class SidebarComponent {
-  private router = inject(Router);
-  protected sidebarService = inject(SidebarService);
-
-  isInventoryActive(): boolean {
-    const url = this.router.url;
-    const paths = [
-      '/inventory',
-      '/inventory/categories',
-      '/inventory/products',
-    ];
-    return paths.some((path) => url === path || url.startsWith(path + '/'));
-  }
-
-  isPediatricsActive(): boolean {
-    return this.router.url.includes('/pediatrics');
-  }
-
-  isFinanceActive(): boolean {
-    return this.router.url.includes('/finance');
-  }
-}
+export class SidebarComponent {}

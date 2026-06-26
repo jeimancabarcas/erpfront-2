@@ -1,6 +1,7 @@
-import { Component, inject, viewChild, signal, computed } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../../organisms/navbar/navbar.component';
 import { SidebarComponent } from '../../organisms/sidebar/sidebar.component';
 import { map } from 'rxjs';
@@ -9,7 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [MatSidenavModule, NavbarComponent, SidebarComponent],
+  imports: [MatSidenavModule, NavbarComponent, SidebarComponent, RouterOutlet],
   template: `
     <div class="h-screen flex flex-col bg-gray-50 dark:bg-gray-950 overflow-hidden">
       <app-navbar (toggleSidebar)="sideNav.toggle()" [showMenuButton]="isMobile()" />
@@ -24,11 +25,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
           <app-sidebar />
         </mat-sidenav>
 
-        <mat-sidenav-content class="!p-6 md:!p-10 overflow-y-auto">
-          <div class="max-w-7xl mx-auto">
-            <ng-content />
-          </div>
-        </mat-sidenav-content>
+	        <mat-sidenav-content class="!p-6 md:!p-10 overflow-y-auto">
+	          <div class="max-w-7xl mx-auto">
+	            <router-outlet />
+	          </div>
+	        </mat-sidenav-content>
       </mat-sidenav-container>
     </div>
   `,

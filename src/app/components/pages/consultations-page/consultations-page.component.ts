@@ -1,5 +1,4 @@
 import { Component, inject } from '@angular/core';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { PediatricsService } from '../../../services/pediatrics.service';
 import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
@@ -7,9 +6,8 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
 @Component({
   selector: 'app-consultations-page',
   standalone: true,
-  imports: [DashboardLayoutComponent, ButtonAtom, StatusTagAtom],
+  imports: [ButtonAtom, StatusTagAtom],
   template: `
-    <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Consultas Médicas</h1>
@@ -47,7 +45,6 @@ import { StatusTagAtom } from '../../atoms/status-tag/status-tag.component';
           </tbody>
         </table>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }

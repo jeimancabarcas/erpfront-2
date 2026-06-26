@@ -1,7 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../templates/dashboard-layout/dashboard-layout.component';
 import { BillingService } from '../../../services/billing.service';
 import { BillingFiltersMolecule } from '../../molecules/billing-filters/billing-filters.component';
 import { BillingTableOrganism } from '../../organisms/billing-table/billing-table.component';
@@ -14,13 +13,11 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
     BillingFiltersMolecule,
     BillingTableOrganism,
     ButtonAtom
   ],
   template: `
-    <app-dashboard-layout>
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div class="animate-in fade-in slide-in-from-left duration-700">
           <div class="flex items-center gap-3 mb-2">
@@ -92,7 +89,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
         (markAsPaid)="handleMarkAsPaid($event)"
         (markPatientAsPaid)="handleMarkPatientAsPaid($event)"
       />
-    </app-dashboard-layout>
 
     <!-- Inline notification -->
     @if (notification(); as notif) {

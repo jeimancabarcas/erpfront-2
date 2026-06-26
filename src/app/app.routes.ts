@@ -93,10 +93,7 @@ export const routes: Routes = [
         path: 'invoicing',
         loadComponent: () => import('./components/pages/finance-page/finance-invoicing-view/finance-invoicing-view.component').then(m => m.FinanceInvoicingViewComponent)
       },
-      {
-        path: 'adjustments',
-        loadComponent: () => import('./components/pages/finance-page/finance-adjustments-view/finance-adjustments-view.component').then(m => m.FinanceAdjustmentsViewComponent)
-      }
+
     ]
   },
   { 

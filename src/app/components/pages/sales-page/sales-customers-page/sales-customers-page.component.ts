@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { DashboardLayoutComponent } from '../../../../components/templates/dashboard-layout/dashboard-layout.component';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { CustomerService } from '../../../../services/customer.service';
 import { Customer } from '../../../../models/customer.model';
@@ -19,7 +18,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
   standalone: true,
   imports: [
     CommonModule,
-    DashboardLayoutComponent,
     BreadcrumbMolecule,
     ButtonAtom,
     TextInputComponent,
@@ -27,7 +25,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     RouterModule
   ],
   template: `
-    <app-dashboard-layout>
       <app-breadcrumb 
         [items]="[
           { label: 'Ventas', link: '/comercial/sales' },
@@ -163,7 +160,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
           </select>
         </div>
       </div>
-    </app-dashboard-layout>
   `,
   styles: [`
     :host { display: block; }
