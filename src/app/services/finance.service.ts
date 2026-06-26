@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { FinanceInvoice, AdjustmentNote, FinancialMetric, FinanceCustomer, FinanceProduct, FinanceDocumentDto, FinanceDocumentsResponse, CreateElectronicBillPayload, CreateElectronicBillResponse, ElectronicBillDto, ElectronicBillListResponse } from '../models/finance.model';
+import { FinanceInvoice, AdjustmentNote, FinancialMetric, FinanceCustomer, FinanceProduct, FinanceDocumentDto, FinanceDocumentsResponse, CreateElectronicBillPayload, CreateElectronicBillResponse } from '../models/finance.model';
 import { SalesNoteService } from './sales-note.service';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -33,9 +33,12 @@ export class FinanceService {
 
   private _adjustments = signal<AdjustmentNote[]>([]);
 
-  // Local electronic emissions (from POST /finance/electronic-bills)
-  private _localEmissions = signal<ElectronicBillDto[]>([]);
-  public localEmissions = this._localEmissions.asReadonly();
+  // Factus paginated table data (currently displayed page)
+  private _factusTableData = signal<FinanceInvoice[]>([]);
+  public factusTableData = this._factusTableData.asReadonly();
+
+  private _factusTotal = signal<number>(0);
+  public factusTotal = this._factusTotal.asReadonly();
 
   // Read-only signals
   public invoices = this._invoices;
@@ -97,7 +100,10 @@ export class FinanceService {
     this.http.get<FinanceDocumentsResponse>(`${this.apiUrl}/bills`, { params: queryParams }).pipe(
       tap({
         next: (response) => {
-          this._bills.set(response.data.map(dto => this.mapDocumentToInvoice(dto)));
+          const mapped = response.data.map((dto) => this.mapDocumentToInvoice(dto));
+          this._bills.set(mapped);
+          this._factusTableData.set(mapped);
+          this._factusTotal.set(response.meta.total);
           this._meta.set(response.meta);
           this.loading.set(false);
         },
@@ -125,7 +131,10 @@ export class FinanceService {
     this.http.get<FinanceDocumentsResponse>(`${this.apiUrl}/credit-notes`, { params: queryParams }).pipe(
       tap({
         next: (response) => {
-          this._creditNotes.set(response.data.map(dto => this.mapDocumentToInvoice(dto)));
+          const mapped = response.data.map((dto) => this.mapDocumentToInvoice(dto));
+          this._creditNotes.set(mapped);
+          this._factusTableData.set(mapped);
+          this._factusTotal.set(response.meta.total);
           this._meta.set(response.meta);
           this.loading.set(false);
         },
@@ -139,65 +148,26 @@ export class FinanceService {
 
   private mapDocumentToInvoice(dto: FinanceDocumentDto): FinanceInvoice {
     return {
-      id: dto.number,
-      dbId: dto.id,
-      customerName: dto.clientName,
-      customerTaxId: dto.clientIdentification,
-      date: dto.createdAt,
-      dueDate: dto.createdAt,
-      subtotal: dto.total,
+      id: dto.number || dto.reference_code || dto.id,
+      dbId: dto.reference_code || dto.id,
+      customerName: dto.customer?.names || dto.clientName || '',
+      customerTaxId: dto.customer?.identification || dto.clientIdentification || '',
+      date: dto.created_at || dto.createdAt || '',
+      dueDate: dto.created_at || dto.createdAt || '',
+      subtotal: parseFloat(dto.total || '0'),
       tax: 0,
-      total: dto.total,
-      status: dto.status === '1' ? 'Paid' : 'Sent',
-      electronicId: dto.id,
+      total: parseFloat(dto.total || '0'),
+      status: dto.is_validated ? 'Paid' : 'Sent',
+      electronicId: dto.reference_code || dto.id,
+      isElectronic: true,
       items: [],
       type: dto.type,
+      raw: dto,
     };
-  }
-
-  loadElectronicBills(params?: { page?: number; perPage?: number }): void {
-    this.loading.set(true);
-    this.error.set(null);
-    const queryParams: any = {
-      page: params?.page ?? 1,
-      perPage: params?.perPage ?? 10,
-    };
-
-    this.http.get<ElectronicBillListResponse>(`${this.apiUrl}/electronic-bills`, { params: queryParams }).pipe(
-      tap({
-        next: (response) => {
-          this._localEmissions.set(response.data);
-          this._meta.set(response.meta);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.error.set(err?.error?.message || err?.message || 'Error al cargar emisiones locales');
-          this.loading.set(false);
-        }
-      })
-    ).subscribe();
   }
 
   createElectronicBill(payload: CreateElectronicBillPayload): Observable<CreateElectronicBillResponse> {
-    return this.http.post<CreateElectronicBillResponse>(`${this.apiUrl}/electronic-bills`, payload).pipe(
-      tap({
-        next: (response) => {
-          if (response.status === 'emitted') {
-            this._localEmissions.update(items => [
-              {
-                id: response.id,
-                number: response.number,
-                status: response.status,
-                cufe: response.cufe,
-                invoiceId: null,
-                createdAt: new Date().toISOString(),
-              },
-              ...items,
-            ]);
-          }
-        },
-      })
-    );
+    return this.http.post<CreateElectronicBillResponse>(`${this.apiUrl}/electronic-bills`, payload);
   }
 
   loadAdjustments(): Observable<any> {
@@ -253,6 +223,13 @@ export class FinanceService {
       // Store mappedInvoice directly inside note object so detail component can render customer info easily
       mappedInvoice
     } as any;
+  }
+
+  /** Look up the local invoice ID behind a Factus document number */
+  lookupLocalInvoiceId(documentNumber: string): Observable<{ invoiceId: string | null } | null> {
+    return this.http.get<{ invoiceId: string | null } | null>(
+      `${this.apiUrl}/electronic-bills/by-document/${encodeURIComponent(documentNumber)}`,
+    );
   }
 }
 

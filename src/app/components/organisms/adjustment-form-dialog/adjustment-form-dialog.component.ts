@@ -18,6 +18,8 @@ export interface AdjustmentFormData {
   type?: 'Credit';
   invoice?: FinanceInvoice;
   invoiceIsElectronic?: boolean;
+  /** When true, the electronic toggle is forced ON and disabled (e.g., from Factus documents) */
+  forceElectronic?: boolean;
 }
 
 @Component({
@@ -205,8 +207,9 @@ export class AdjustmentFormDialogOrganism implements OnInit {
 
   selectedInvoice = signal<FinanceInvoice | null>(null);
   isSubmitting = signal<boolean>(false);
-  isElectronic = signal(this.data.invoice?.isElectronic ?? false);
+  isElectronic = signal(this.data.forceElectronic || this.data.invoice?.isElectronic || false);
   isElectronicDisabled = computed(() => {
+    if (this.data.forceElectronic) return true;
     const inv = this.selectedInvoice();
     return inv ? !inv.isElectronic : true;
   });

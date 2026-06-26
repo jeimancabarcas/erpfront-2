@@ -33,6 +33,7 @@ export interface FinanceInvoice {
   isElectronic?: boolean; // Whether the invoice is electronic (DIAN)
   adjustments?: AdjustmentNote[];
   type?: 'bill' | 'credit-note'; // Document type from Radian/Factus
+  raw?: FinanceDocumentDto; // Raw Factus response for detail view
 }
 
 export interface InvoiceItem {
@@ -66,15 +67,50 @@ export interface FinancialMetric {
 }
 
 // Backend DTOs for Radian/Factus documents
+export interface FinanceDocumentCustomer {
+  identification?: string;
+  names?: string;
+  graphic_representation_name?: string;
+  trade_name?: string | null;
+  company?: string | null;
+  address?: string;
+  email?: string | null;
+  phone?: string | null;
+}
+
 export interface FinanceDocumentDto {
+  // Normalized by backend
   id: string;
   number: string;
-  clientName: string;
-  clientIdentification: string;
-  total: number;
-  status: string; // '1' = validated, '0' = pending
-  createdAt: string;
   type: 'bill' | 'credit-note';
+  // Factus raw fields (snake_case from API)
+  reference_code?: string;
+  api_client_name?: string;
+  customer?: FinanceDocumentCustomer;
+  payment_details?: Array<{
+    payment_form?: { code: string; name: string };
+    payment_method?: { code: string; name: string };
+    reference_code?: string | null;
+    amount?: string;
+    due_date?: string | null;
+  }>;
+  document?: { code: string; name: string };
+  operation_type?: { code: string; name: string };
+  total?: string;
+  is_validated?: boolean;
+  is_negotiable_instrument?: boolean;
+  has_claim?: boolean;
+  send_email?: boolean;
+  validated_at?: string | null;
+  created_at?: string;
+  errors?: Record<string, string> | null;
+  credit_notes?: any[];
+  debit_notes?: any[];
+  // Legacy flat fields (for backward compat)
+  clientName?: string;
+  clientIdentification?: string;
+  createdAt?: string;
+  status?: string;
 }
 
 export interface FinanceDocumentsResponse {
@@ -113,16 +149,4 @@ export interface CreateElectronicBillResponse {
   warning?: string;
 }
 
-export interface ElectronicBillDto {
-  id: string;
-  number: string;
-  status: 'pending' | 'emitted' | 'failed';
-  cufe?: string;
-  invoiceId: string | null;
-  createdAt: string;
-}
 
-export interface ElectronicBillListResponse {
-  data: ElectronicBillDto[];
-  meta: import('./pagination.model').PaginatedMeta;
-}

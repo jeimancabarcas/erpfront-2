@@ -94,10 +94,12 @@ import { FinanceInvoice } from '../../../models/finance.model';
                 <span class="font-bold">Imprimir PDF</span>
               </button>
               <div class="h-px bg-gray-100 my-2"></div>
-              <button mat-menu-item (click)="onAction.emit({invoice: inv, action: 'adjustment'})">
-                <mat-icon class="!text-amber-500">history_edu</mat-icon>
-                <span class="font-bold">Crear Nota Crédito/Débito</span>
-              </button>
+              @if (showAdjustmentAction()) {
+                <button mat-menu-item (click)="onAction.emit({invoice: inv, action: 'adjustment'})">
+                  <mat-icon class="!text-amber-500">history_edu</mat-icon>
+                  <span class="font-bold">Crear Nota Crédito</span>
+                </button>
+              }
             </mat-menu>
           </td>
         </ng-container>
@@ -131,6 +133,8 @@ import { FinanceInvoice } from '../../../models/finance.model';
 export class GeneralInvoiceTableOrganism {
   invoices = input.required<FinanceInvoice[]>();
   onAction = output<{invoice: FinanceInvoice, action: string}>();
+  /** Show the "Crear Nota Crédito" action — hidden for credit notes tab */
+  showAdjustmentAction = input(true);
 
   displayedColumns: string[] = ['id', 'customer', 'date', 'total', 'status', 'actions'];
 }

@@ -5,10 +5,16 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { ButtonAtom } from '../../../atoms/button/button.component';
+import { TextInputComponent } from '../../../atoms/text-input/text-input.component';
 import { FinanceService } from '../../../../services/finance.service';
 import { GeneralInvoiceTableOrganism } from '../../../organisms/general-invoice-table/general-invoice-table.component';
 import { ElectronicBillFormDialogOrganism } from '../../../organisms/electronic-bill-form-dialog/electronic-bill-form-dialog.component';
-import { FinanceInvoice, ElectronicBillDto } from '../../../../models/finance.model';
+import { FactusDocumentDetailDialogOrganism } from '../../../organisms/factus-document-detail-dialog/factus-document-detail-dialog.component';
+import { SalesNoteFormDialogOrganism } from '../../../organisms/sales-note-form-dialog/sales-note-form-dialog.component';
+import { InvoiceService } from '../../../../services/invoice.service';
+import { FinanceInvoice } from '../../../../models/finance.model';
+import { Invoice } from '../../../../models/invoice.model';
+import { DIALOG_DEFAULTS, DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-finance-invoicing-view',
@@ -18,6 +24,7 @@ import { FinanceInvoice, ElectronicBillDto } from '../../../../models/finance.mo
     FormsModule,
     DashboardLayoutComponent,
     ButtonAtom,
+    TextInputComponent,
     GeneralInvoiceTableOrganism,
     MatPaginatorModule,
   ],
@@ -33,11 +40,7 @@ import { FinanceInvoice, ElectronicBillDto } from '../../../../models/finance.mo
             <span class="material-icons mr-2">add_circle</span>
             Nueva Factura Electrónica
           </ui-button>
-          <ui-button variant="outline" (clicked)="searchDocuments()">
-            <span class="material-icons mr-2">search</span>
-            Buscar
-          </ui-button>
-          <ui-button variant="outline" (clicked)="loadAllDocuments()">
+          <ui-button variant="outline" (clicked)="loadFactusDocuments()">
             <span class="material-icons mr-2">refresh</span>
             Actualizar
           </ui-button>
@@ -45,19 +48,33 @@ import { FinanceInvoice, ElectronicBillDto } from '../../../../models/finance.mo
       </header>
 
       <!-- Filter Bar -->
-      <div class="flex gap-4 mb-8">
-        <div class="flex-1 relative">
-          <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
+      <div class="flex flex-wrap items-end gap-4 mb-8">
+        <div class="flex-1 min-w-[200px]">
+          <ui-text-input
+            label="Identificación"
+            [(ngModel)]="filterIdentification"
             (keyup.enter)="searchDocuments()"
-            placeholder="Buscar por cliente, identificación o número de documento..."
-            class="w-full h-[56px] pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            placeholder="NIT / CC..."
+          />
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <ui-text-input
+            label="Nombre / Razón Social"
+            [(ngModel)]="filterNames"
+            (keyup.enter)="searchDocuments()"
+            placeholder="Nombre del cliente..."
+          />
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <ui-text-input
+            label="Nº Documento"
+            [(ngModel)]="filterNumber"
+            (keyup.enter)="searchDocuments()"
+            placeholder="Número de factura..."
           />
         </div>
         <ui-button variant="outline" (clicked)="searchDocuments()">
-          <span class="material-icons mr-2 text-gray-400">filter_list</span>
+          <span class="material-icons mr-2">search</span>
           Buscar
         </ui-button>
       </div>
@@ -70,105 +87,54 @@ import { FinanceInvoice, ElectronicBillDto } from '../../../../models/finance.mo
             <p class="text-sm font-medium text-gray-400">Cargando documentos desde Factus...</p>
           </div>
         </div>
-      }
-
-      <!-- Error state -->
-      @if (error(); as err) {
-        <div class="bg-red-50 border border-red-100 rounded-2xl p-6 mb-8 flex items-start gap-4">
-          <span class="material-icons text-red-500 mt-0.5">error_outline</span>
-          <div>
-            <h4 class="text-sm font-black text-red-800 mb-1">Error al cargar documentos</h4>
-            <p class="text-xs font-medium text-red-600">{{ err }}</p>
-            <button class="mt-3 text-xs font-bold text-red-700 underline hover:no-underline" (click)="loadAllDocuments()">
-              Reintentar
-            </button>
+      } @else {
+        <!-- Error state -->
+        @if (error(); as err) {
+          <div class="bg-red-50 border border-red-100 rounded-2xl p-6 mb-8 flex items-start gap-4">
+            <span class="material-icons text-red-500 mt-0.5">error_outline</span>
+            <div>
+              <h4 class="text-sm font-black text-red-800 mb-1">Error al cargar documentos</h4>
+              <p class="text-xs font-medium text-red-600">{{ err }}</p>
+              <button class="mt-3 text-xs font-bold text-red-700 underline hover:no-underline" (click)="loadFactusDocuments()">
+                Reintentar
+              </button>
+            </div>
           </div>
-        </div>
-      }
+        }
 
-      <!-- Factus Documents Table -->
-      <div class="mb-4">
-        <h3 class="text-lg font-black text-gray-800 mb-4">Documentos Factus</h3>
-        <app-general-invoice-table
-          [invoices]="financeService.invoices()"
-          (onAction)="handleAction($event)"
-        />
-      </div>
-
-      <!-- Local Electronic Emissions -->
-      <div class="mt-10">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-black text-gray-800">Emisiones Locales</h3>
-          <ui-button variant="ghost" (clicked)="loadLocalEmissions()">
-            <span class="material-icons mr-1">refresh</span>
-            Recargar
+        <!-- Type Toggle -->
+        <div class="flex gap-2 mb-4">
+          <ui-button [variant]="factusType() === 'bill' ? 'primary' : 'outline'" (clicked)="switchFactusType('bill')">
+            Facturas
+          </ui-button>
+          <ui-button [variant]="factusType() === 'credit-note' ? 'primary' : 'outline'" (clicked)="switchFactusType('credit-note')">
+            Notas Crédito
           </ui-button>
         </div>
 
-        @if (localEmissions().length === 0) {
-          <div class="bg-white rounded-[32px] border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
-            <div class="w-16 h-16 bg-gray-50 rounded-[32px] flex items-center justify-center mb-4">
-              <span class="material-icons !text-[32px] text-gray-300">receipt_long</span>
-            </div>
-            <h5 class="text-lg font-black text-gray-900 mb-1">Sin emisiones locales</h5>
-            <p class="text-sm text-gray-400 max-w-sm">
-              Las facturas electrónicas emitidas directamente desde el módulo de Finanzas aparecerán aquí.
-            </p>
-          </div>
-        } @else {
-          <div class="bg-white rounded-[32px] border border-gray-100 overflow-hidden shadow-sm">
-            <table class="w-full">
-              <thead>
-                <tr class="bg-gray-50/50">
-                  <th class="text-left !py-6 !px-6 !text-[10px] !font-black !uppercase !tracking-widest !text-gray-400">Número</th>
-                  <th class="text-left !py-6 !px-6 !text-[10px] !font-black !uppercase !tracking-widest !text-gray-400">Estado</th>
-                  <th class="text-left !py-6 !px-6 !text-[10px] !font-black !uppercase !tracking-widest !text-gray-400">CUFE</th>
-                  <th class="text-left !py-6 !px-6 !text-[10px] !font-black !uppercase !tracking-widest !text-gray-400">Vinculada</th>
-                  <th class="text-left !py-6 !px-6 !text-[10px] !font-black !uppercase !tracking-widest !text-gray-400">Creada</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (em of localEmissions(); track em.id) {
-                  <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-b-0">
-                    <td class="!py-4 !px-6">
-                      <span class="text-sm font-black text-indigo-600 tracking-tight">{{ em.number || '—' }}</span>
-                    </td>
-                    <td class="!py-4 !px-6">
-                      <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                            [ngClass]="{
-                              'bg-amber-50 text-amber-600 border border-amber-100': em.status === 'pending',
-                              'bg-green-50 text-green-600 border border-green-100': em.status === 'emitted',
-                              'bg-red-50 text-red-600 border border-red-100': em.status === 'failed'
-                            }">
-                        {{ em.status }}
-                      </span>
-                    </td>
-                    <td class="!py-4 !px-6">
-                      <span class="text-xs font-mono text-gray-500">{{ em.cufe || '—' }}</span>
-                    </td>
-                    <td class="!py-4 !px-6">
-                      <span class="text-xs font-medium text-gray-500">{{ em.invoiceId ? 'Sí' : 'No' }}</span>
-                    </td>
-                    <td class="!py-4 !px-6">
-                      <span class="text-xs font-bold text-gray-700">{{ em.createdAt | date:'short' }}</span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+        <!-- Factus Documents Table -->
+        <div class="mb-4">
+          <h3 class="text-lg font-black text-gray-800 mb-4">Documentos Factus</h3>
+          <app-general-invoice-table
+            [invoices]="financeService.factusTableData()"
+            [showAdjustmentAction]="factusType() === 'bill'"
+            (onAction)="handleAction($event)"
+          />
+        </div>
 
-            <mat-paginator
-              [length]="localMeta()?.total ?? 0"
-              [pageSize]="localPerPage()"
-              [pageIndex]="localPage() - 1"
-              [pageSizeOptions]="[5, 10, 20, 50]"
-              (page)="onPageChange($event)"
-              showFirstLastButtons
-              aria-label="Paginar emisiones locales">
-            </mat-paginator>
-          </div>
+        <!-- Paginator -->
+        @if (factusTotal() > 0) {
+          <mat-paginator
+            [length]="factusTotal()"
+            [pageSize]="factusPerPage()"
+            [pageIndex]="factusPage() - 1"
+            [pageSizeOptions]="[5, 10, 20, 50]"
+            (page)="onFactusPageChange($event)"
+            showFirstLastButtons
+            aria-label="Paginar documentos Factus">
+          </mat-paginator>
         }
-      </div>
+      }
     </app-dashboard-layout>
   `,
   styles: [`
@@ -177,43 +143,70 @@ import { FinanceInvoice, ElectronicBillDto } from '../../../../models/finance.mo
 })
 export class FinanceInvoicingViewComponent implements OnInit {
   public financeService = inject(FinanceService);
+  private invoiceService = inject(InvoiceService);
   private dialog = inject(MatDialog);
 
-  searchTerm = '';
+  filterIdentification = '';
+  filterNames = '';
+  filterNumber = '';
   loading = this.financeService.loading;
   error = this.financeService.error;
-  localEmissions = this.financeService.localEmissions;
-  localMeta = this.financeService.meta;
 
-  localPage = signal(1);
-  localPerPage = signal(10);
+  factusPage = signal(1);
+  factusPerPage = signal(10);
+  factusTotal = this.financeService.factusTotal;
+  factusType = signal<'bill' | 'credit-note'>('bill');
+  /** Active search filters — preserved across pagination navigation */
+  private activeFilters = signal<Record<string, string | number> | null>(null);
 
   ngOnInit(): void {
-    this.loadAllDocuments();
-    this.loadLocalEmissions();
+    this.loadFactusDocuments();
   }
 
-  loadAllDocuments(): void {
-    this.financeService.loadBills({ perPage: 50 });
-    this.financeService.loadCreditNotes({ perPage: 50 });
+  /** Build params merging pagination + active filters */
+  private buildLoadParams(): Record<string, string | number> {
+    return {
+      page: this.factusPage(),
+      perPage: this.factusPerPage(),
+      ...(this.activeFilters() ?? {}),
+    };
   }
 
-  loadLocalEmissions(): void {
-    this.financeService.loadElectronicBills({
-      page: this.localPage(),
-      perPage: this.localPerPage(),
-    });
+  loadFactusDocuments(): void {
+    const params = this.buildLoadParams();
+    if (this.factusType() === 'bill') {
+      this.financeService.loadBills(params);
+    } else {
+      this.financeService.loadCreditNotes(params);
+    }
   }
 
   searchDocuments(): void {
-    const term = this.searchTerm.trim();
-    const params = {
-      perPage: 50,
-      ...(term && (term.match(/^\d/) ? { identification: term } : { names: term })),
-      ...(term && !term.match(/^\d/) && { number: term }),
-    };
-    this.financeService.loadBills(params);
-    this.financeService.loadCreditNotes(params);
+    // Build filter params from individual inputs
+    const filters: Record<string, string> = {};
+    const id = this.filterIdentification.trim();
+    const names = this.filterNames.trim();
+    const number = this.filterNumber.trim();
+    if (id) filters['identification'] = id;
+    if (names) filters['names'] = names;
+    if (number) filters['number'] = number;
+
+    // Store filters so pagination preserves them; reset to page 1
+    this.activeFilters.set(Object.keys(filters).length > 0 ? filters : null);
+    this.factusPage.set(1);
+    this.loadFactusDocuments();
+  }
+
+  switchFactusType(type: 'bill' | 'credit-note'): void {
+    this.factusType.set(type);
+    this.factusPage.set(1);
+    this.loadFactusDocuments();
+  }
+
+  onFactusPageChange(event: PageEvent): void {
+    this.factusPage.set(event.pageIndex + 1);
+    this.factusPerPage.set(event.pageSize);
+    this.loadFactusDocuments(); // activeFilters are automatically included via buildLoadParams()
   }
 
   openNewElectronicBill(): void {
@@ -226,20 +219,97 @@ export class FinanceInvoicingViewComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        // Reload both tables after successful emission
-        this.loadAllDocuments();
-        this.loadLocalEmissions();
+        this.loadFactusDocuments();
       }
     });
   }
 
-  onPageChange(event: PageEvent): void {
-    this.localPage.set(event.pageIndex + 1);
-    this.localPerPage.set(event.pageSize);
-    this.loadLocalEmissions();
+  handleAction(event: { invoice: FinanceInvoice; action: string }) {
+    if (event.action === 'view') {
+      const factusDoc = event.invoice.raw;
+      if (factusDoc) {
+        // setTimeout avoids ExpressionChangedAfterItHasBeenCheckedError from mat-icon's font host binding
+        setTimeout(() => {
+          this.dialog.open(FactusDocumentDetailDialogOrganism, {
+            width: DIALOG_WIDTHS.lg,
+            panelClass: DIALOG_PANEL_CLASS,
+            ...DIALOG_DEFAULTS,
+            data: { document: factusDoc },
+          });
+        });
+      }
+    } else if (event.action === 'adjustment') {
+      // Look up the local invoice behind this Factus document, then open the credit-note dialog
+      const documentNumber = event.invoice.id; // Factus document number (e.g. "SETP990000123")
+      const factusRaw = event.invoice.raw; // Raw Factus data for synthetic invoice fallback
+      this.financeService.lookupLocalInvoiceId(documentNumber).subscribe({
+        next: (result) => {
+          if (result?.invoiceId) {
+            // Has local invoice — open with full options, electronic forced ON
+            this.invoiceService.getInvoiceById(result.invoiceId).subscribe({
+              next: (invoice) => {
+                this.openAdjustmentDialog(invoice, { forceElectronic: true });
+              },
+              error: () => {
+                this.financeService.error.set('No se pudo cargar la factura local asociada.');
+              },
+            });
+          } else {
+            // No local invoice — build synthetic invoice from Factus data, restrict to Anulación total
+            const syntheticInvoice = this.buildSyntheticInvoice(event.invoice);
+            this.openAdjustmentDialog(syntheticInvoice, {
+              forceElectronic: true,
+              forceCorrectionCode: '2',
+            });
+          }
+        },
+        error: () => {
+          this.financeService.error.set('Error al buscar la factura local asociada.');
+        },
+      });
+    }
   }
 
-  handleAction(event: { invoice: FinanceInvoice; action: string }) {
-    // Dialog functionality will be restored when dialog organisms are migrated
+  /** Open the credit-note dialog with optional force flags */
+  private openAdjustmentDialog(
+    invoice: Invoice,
+    opts: { forceElectronic?: boolean; forceCorrectionCode?: string },
+  ): void {
+    setTimeout(() => {
+      this.dialog.open(SalesNoteFormDialogOrganism, {
+        width: DIALOG_WIDTHS.xl,
+        panelClass: DIALOG_PANEL_CLASS,
+        ...DIALOG_DEFAULTS,
+        data: { invoice, ...opts },
+      });
+    });
+  }
+
+  /** Build a minimal Invoice from FinanceInvoice + raw Factus data for credit-note creation */
+  private buildSyntheticInvoice(fi: FinanceInvoice): Invoice {
+    const raw = fi.raw;
+    return {
+      id: fi.dbId || fi.id,
+      invoiceNumber: fi.id,
+      sequentialNumber: 0,
+      date: fi.date || new Date().toISOString().split('T')[0],
+      customerId: '',
+      totalAmount: fi.total,
+      status: 'DRAFT',
+      isElectronic: true,
+      items: [],
+      customer: raw?.customer ? {
+        id: '',
+        name: raw.customer.names || fi.customerName,
+        documentType: 'NIT' as const,
+        documentNumber: raw.customer.identification || fi.customerTaxId,
+        email: raw.customer.email || '',
+        phone: raw.customer.phone || '',
+        address: raw.customer.address || '',
+        status: 'ACTIVE' as const,
+        createdAt: fi.date || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } : undefined,
+    };
   }
 }

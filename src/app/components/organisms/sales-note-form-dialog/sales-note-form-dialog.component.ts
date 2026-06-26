@@ -19,6 +19,10 @@ export interface SalesNoteDialogData {
   invoice: Invoice;
   returnedQuantities?: Record<string, number>; // productId → already returned qty
   adjustedPrices?: Record<string, number>; // productId → current price after previous NC adjustments
+  /** When true, the electronic toggle is forced ON and disabled */
+  forceElectronic?: boolean;
+  /** When set, restricts correction concept to this single code (e.g. '2' for total annulment) */
+  forceCorrectionCode?: string;
 }
 
 @Component({
@@ -41,7 +45,7 @@ export interface SalesNoteDialogData {
     TextareaComponent
   ],
   template: `
-    <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full max-w-[850px] shadow-2xl">
+    <div class="relative overflow-hidden rounded-[32px] bg-white flex flex-col max-h-[95vh] w-full shadow-2xl">
       <!-- Background Glow Decoration -->
       <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
       
@@ -82,10 +86,17 @@ export interface SalesNoteDialogData {
               </div>
             </div>
             <mat-slide-toggle [checked]="isElectronic()" (change)="isElectronic.set($event.checked)"
-              [disabled]="!data.invoice.isElectronic" color="primary"></mat-slide-toggle>
+              [disabled]="data.forceElectronic || !data.invoice.isElectronic" color="primary"></mat-slide-toggle>
           </div>
 
-          @if (!data.invoice.isElectronic) {
+          @if (data.forceElectronic) {
+            <div class="flex items-start gap-3 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-3">
+              <span class="material-icons text-indigo-500 mt-0.5 text-[18px]">info</span>
+              <p class="text-xs text-indigo-700 leading-relaxed">
+                Emisión electrónica <strong>requerida</strong> — este documento debe ser enviado a la DIAN.
+              </p>
+            </div>
+          } @else if (!data.invoice.isElectronic) {
             <div class="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
               <span class="material-icons text-blue-500 mt-0.5 text-[18px]">info</span>
               <p class="text-xs text-blue-700 leading-relaxed">
@@ -264,7 +275,7 @@ export class SalesNoteFormDialogOrganism implements OnInit {
 
   loading = signal(false);
   errorMsg = signal<string | null>(null);
-  isElectronic = signal(this.data.invoice.isElectronic ?? false);
+  isElectronic = signal(this.data.forceElectronic || this.data.invoice.isElectronic || false);
   Number = Number; // Expose Number for template
 
   // Current scenario derived from correctionConceptCode
@@ -349,7 +360,7 @@ export class SalesNoteFormDialogOrganism implements OnInit {
 
   noteForm = this.fb.group({
     noteType: ['credit', Validators.required],
-    correctionConceptCode: ['2', Validators.required],
+    correctionConceptCode: [this.data.forceCorrectionCode || '2', Validators.required],
     observation: ['', Validators.required],
     items: this.fb.array([])
   });
@@ -360,13 +371,26 @@ export class SalesNoteFormDialogOrganism implements OnInit {
     { value: 'credit', label: 'Nota de Crédito (Anular / Devolver)' },
   ];
 
-  correctionOptions = computed<SelectOption[]>(() => [
-    { value: '1', label: '1 - Devolución parcial de los bienes' },
-    { value: '2', label: '2 - Anulación total de factura' },
-    { value: '3', label: '3 - Rebaja o descuento parcial' },
-    { value: '4', label: '4 - Ajuste de precio' },
-    { value: '5', label: '5 - Otros' },
-  ]);
+  correctionOptions = computed<SelectOption[]>(() => {
+    if (this.data.forceCorrectionCode) {
+      const forced = this.data.forceCorrectionCode;
+      const allOptions: SelectOption[] = [
+        { value: '1', label: '1 - Devolución parcial de los bienes' },
+        { value: '2', label: '2 - Anulación total de factura' },
+        { value: '3', label: '3 - Rebaja o descuento parcial' },
+        { value: '4', label: '4 - Ajuste de precio' },
+        { value: '5', label: '5 - Otros' },
+      ];
+      return allOptions.filter(o => o.value === forced);
+    }
+    return [
+      { value: '1', label: '1 - Devolución parcial de los bienes' },
+      { value: '2', label: '2 - Anulación total de factura' },
+      { value: '3', label: '3 - Rebaja o descuento parcial' },
+      { value: '4', label: '4 - Ajuste de precio' },
+      { value: '5', label: '5 - Otros' },
+    ];
+  });
 
   get itemsFormArray(): FormArray {
     return this.noteForm.get('items') as FormArray;

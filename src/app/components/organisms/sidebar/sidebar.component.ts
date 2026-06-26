@@ -253,7 +253,7 @@ import { SidebarService } from '../../../services/sidebar.service';
               >
                 <div class="flex items-center gap-3 px-4">
                   <mat-icon class="!text-gray-400 dark:!text-gray-500 !text-[20px]">point_of_sale</mat-icon>
-                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Facturación</span>
+                  <span class="text-xs font-bold tracking-wide text-gray-700 dark:text-gray-300">Facturación (Electronica)</span>
                 </div>
               </a>
               <a
