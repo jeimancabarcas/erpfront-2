@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CommonModule, CurrencyPipe, PercentPipe } from '@angular/common';
 import {
   FormsModule,
   ReactiveFormsModule,
@@ -15,8 +16,10 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dial
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
 import { InvoiceService } from '../../../services/invoice.service';
+import { PaymentMethodsService } from '../../../services/payment-methods.service';
+import { PaymentTypesService } from '../../../services/payment-types.service';
 import { Product } from '../../../models/product.model';
-import { Customer } from '../../../models/customer.model';
+import { Customer, CreditPortfolio } from '../../../models/customer.model';
 import { CreateInvoiceDto } from '../../../models/invoice.model';
 import { Subject, debounceTime, Subscription } from 'rxjs';
 import { CustomerDialogOrganism } from '../../organisms/customer-dialog/customer-dialog.component';
@@ -39,6 +42,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     MatTableModule,
     MatSlideToggleModule,
     CurrencyPipe,
+    PercentPipe,
     ButtonAtom,
     TextareaComponent,
     SelectAtom,
@@ -129,6 +133,92 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
               Añadir Producto
             </ui-button>
           </div>
+
+          <!-- Payment Method & Payment Type -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ui-select
+              label="Método de Pago"
+              placeholder="Seleccione un método de pago"
+              [options]="paymentMethodOptions()"
+              formControlName="paymentMethodId"
+            />
+            <ui-select
+              label="Forma de Pago"
+              placeholder="Seleccione una forma de pago"
+              [options]="paymentTypeOptions()"
+              formControlName="paymentTypeId"
+            />
+          </div>
+
+          <!-- Installments Selector (only when payment type is Crédito) -->
+          @if (isCreditPayment()) {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom duration-300">
+              <ui-select
+                label="Número de Cuotas"
+                placeholder="Seleccione las cuotas"
+                [options]="installmentOptions()"
+                formControlName="installments"
+              />
+              <div class="flex items-end pb-4">
+                <p class="text-xs text-gray-400">
+                  @if (toNumber(installmentsValue()) > 1) {
+                    {{ totalAmount() | currency }} ÷ {{ installmentsValue() }} = {{ totalAmount() / toNumber(installmentsValue()) | currency }}/cuota
+                  } @else {
+                    Pago único al contado
+                  }
+                </p>
+              </div>
+            </div>
+
+            <!-- Credit Summary Widget -->
+            <div class="animate-in fade-in slide-in-from-bottom duration-300">
+              @if (creditLoading()) {
+                <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-[20px]">
+                  <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
+                  <span class="text-xs text-gray-500 font-medium">Consultando crédito...</span>
+                </div>
+              } @else if (creditError()) {
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-[20px] flex items-start gap-3">
+                  <span class="material-icons text-amber-500 text-sm mt-0.5">info</span>
+                  <p class="text-xs text-amber-700 font-medium">Crédito no configurado</p>
+                </div>
+              } @else if (creditSummary(); as credit) {
+                <div class="p-4 bg-gray-50 rounded-[20px] space-y-3">
+                  <div class="flex items-center gap-2">
+                    <span class="material-icons text-indigo-500 text-[16px]">credit_score</span>
+                    <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Resumen de Crédito</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Saldo Actual</span>
+                      <p class="font-black text-gray-900 text-sm">{{ credit.currentBalance | currency }}</p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Límite</span>
+                      <p class="font-black text-gray-900 text-sm">{{ credit.creditLimit | currency }}</p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Disponible</span>
+                      <p class="font-black text-sm"
+                         [class.text-gray-900]="credit.availableCredit !== null && credit.availableCredit > 0"
+                         [class.text-red-600]="credit.availableCredit === null || credit.availableCredit <= 0">
+                        {{ credit.availableCredit !== null ? (credit.availableCredit | currency) : 'N/A' }}
+                      </p>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Utilización</span>
+                      <p class="font-black text-sm"
+                         [class.text-emerald-600]="(credit.utilizationPercent ?? 0) <= 70"
+                         [class.text-amber-600]="(credit.utilizationPercent ?? 0) > 70 && (credit.utilizationPercent ?? 0) <= 90"
+                         [class.text-red-600]="(credit.utilizationPercent ?? 0) > 90">
+                        {{ credit.utilizationPercent !== null ? (credit.utilizationPercent / 100 | percent:'1.0-0') : 'N/A' }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
 
           <!-- Added Products Table -->
           @if (itemsCount() > 0) {
@@ -290,7 +380,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
               Descartar
             </ui-button>
             <ui-button variant="primary" type="submit" [disabled]="saleForm.invalid || itemsCount() === 0 || isSubmitting()">
-              @if (isSubmitting()) { Procesando... } @else { Generar Factura (PAID) }
+              @if (isSubmitting()) { Procesando... } @else { Generar Factura @if (isCreditPayment()) { (Crédito - {{ installmentsValue() }} cuota{{ installmentsValue() !== '1' ? 's' : '' }}) } @else { (PAID) } }
             </ui-button>
           </div>
         </form>
@@ -338,6 +428,8 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   private productService = inject(ProductService);
   private customerService = inject(CustomerService);
   private invoiceService = inject(InvoiceService);
+  private paymentMethodsService = inject(PaymentMethodsService);
+  private paymentTypesService = inject(PaymentTypesService);
   notification = signal<{message: string; type: 'success' | 'error'} | null>(null);
   private notifTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -360,10 +452,84 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   isSubmitting = signal(false);
   isElectronic = signal(false);
 
+  // Payment method/type state
+  paymentMethodOptions = computed<SelectOption[]>(() =>
+    this.paymentMethodsService.data().map(pm => ({ value: pm.id, label: pm.name }))
+  );
+  paymentTypeOptions = computed<SelectOption[]>(() =>
+    this.paymentTypesService.data().map(pt => ({ value: pt.id, label: pt.name }))
+  );
+
+  // Installments state
+  installmentOptions = computed<SelectOption[]>(() => [
+    { value: '1', label: '1 cuota' },
+    { value: '2', label: '2 cuotas' },
+    { value: '3', label: '3 cuotas' },
+    { value: '6', label: '6 cuotas' },
+    { value: '12', label: '12 cuotas' },
+  ]);
+
   saleForm = this.fb.group({
     customerId: ['', Validators.required],
     notes: [''],
     items: this.fb.array([]),
+    paymentMethodId: [''],
+    paymentTypeId: [''],
+    installments: ['1'],
+  });
+
+  // Bridge installments FormControl to signal
+  private installmentsSignal = toSignal(
+    this.saleForm.get('installments')!.valueChanges,
+    { initialValue: '1' }
+  );
+
+  installmentsValue = computed(() => String(this.installmentsSignal() ?? '1'));
+
+  // Bridge FormControl to signal so computed re-evaluates reactively
+  private paymentTypeIdSignal = toSignal(
+    this.saleForm.get('paymentTypeId')!.valueChanges,
+    { initialValue: '' }
+  );
+
+  // Customer ID signal — tracks selected customer for credit fetch
+  private customerIdSignal = toSignal(
+    this.saleForm.get('customerId')!.valueChanges,
+    { initialValue: '' }
+  );
+
+  // Credit summary state
+  creditSummary = signal<CreditPortfolio | null>(null);
+  creditLoading = signal(false);
+  creditError = signal(false);
+  private creditFetchEffect = effect(() => {
+    const customerId = this.customerIdSignal();
+    const paymentTypeId = this.paymentTypeIdSignal();
+
+    // Reset when conditions change
+    this.creditSummary.set(null);
+    this.creditError.set(false);
+
+    if (!customerId || !this.isCreditPayment()) return;
+
+    this.creditLoading.set(true);
+    this.customerService.getCustomerCredit(customerId).subscribe({
+      next: (portfolio) => {
+        this.creditSummary.set(portfolio);
+        this.creditLoading.set(false);
+      },
+      error: () => {
+        this.creditError.set(true);
+        this.creditLoading.set(false);
+      },
+    });
+  });
+
+  isCreditPayment = computed(() => {
+    const id = this.paymentTypeIdSignal();
+    if (!id) return false;
+    const selected = this.paymentTypesService.data().find(pt => pt.id === id);
+    return selected?.name?.toLowerCase().includes('credito') || selected?.code === '2';
   });
 
   // Total Amount — plain signal updated explicitly after FormArray changes
@@ -422,6 +588,10 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
 
     // Initial customer load
     this._fetchCustomers('');
+
+    // Load payment methods/types for dropdowns
+    this.paymentMethodsService.loadData({}).subscribe();
+    this.paymentTypesService.loadData({}).subscribe();
 
     // Debounced customer search
     this.searchSub = this.customerSearch$.pipe(debounceTime(300)).subscribe(query => {
@@ -609,6 +779,9 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
       const dto: CreateInvoiceDto = {
         customerId: formValue.customerId!,
         notes: formValue.notes || undefined,
+        paymentMethodId: formValue.paymentMethodId || undefined,
+        paymentTypeId: formValue.paymentTypeId || undefined,
+        installments: this.isCreditPayment() ? Number(this.saleForm.get('installments')?.value ?? 1) : undefined,
         items: (formValue.items || []).map((item: any) => {
           const itemPayload: any = {
             productId: item.productId,

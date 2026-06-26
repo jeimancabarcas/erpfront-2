@@ -1,10 +1,11 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { DashboardLayoutComponent } from '../../../templates/dashboard-layout/dashboard-layout.component';
 import { CustomerService } from '../../../../services/customer.service';
 import { InvoiceService } from '../../../../services/invoice.service';
-import { Customer } from '../../../../models/customer.model';
+import { Customer, CreditPortfolio, PaymentRecord } from '../../../../models/customer.model';
 import { Invoice } from '../../../../models/invoice.model';
 import { QueryParams } from '../../../../models/pagination.model';
 
@@ -13,6 +14,11 @@ import { ButtonAtom } from '../../../atoms/button/button.component';
 import { CustomerInfoMolecule } from '../../../molecules/customer-info/customer-info.component';
 import { CustomerStatsMolecule } from '../../../molecules/customer-stats/customer-stats.component';
 import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoices-table/customer-invoices-table.component';
+import { CreditPortfolioOrganism } from '../../../organisms/credit-portfolio/credit-portfolio.component';
+import { CreditConfigDialogOrganism } from '../../../organisms/credit-config-dialog/credit-config-dialog.component';
+import { PaymentHistoryTableOrganism } from '../../../organisms/payment-history-table/payment-history-table.component';
+import { RecordPaymentFormMolecule } from '../../../molecules/record-payment-form/record-payment-form.component';
+import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
 @Component({
   selector: 'app-sales-customer-detail-page',
@@ -24,7 +30,10 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
     DashboardLayoutComponent,
     CustomerInfoMolecule,
     CustomerStatsMolecule,
-    CustomerInvoicesTableOrganism
+    CustomerInvoicesTableOrganism,
+    CreditPortfolioOrganism,
+    CreditConfigDialogOrganism,
+    PaymentHistoryTableOrganism,
   ],
   template: `
     <app-dashboard-layout title="Detalle del Cliente" subtitle="Información histórica y facturación">
@@ -50,7 +59,7 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
             </div>
           </div>
         } @else if (customer(); as c) {
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             <!-- Left: Sidebar Info & Quick Stats -->
             <div class="lg:col-span-4 space-y-8 flex flex-col">
@@ -61,8 +70,27 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
               />
             </div>
 
-            <!-- Right: Detailed History -->
-            <div class="lg:col-span-8">
+            <!-- Right: Detailed History + Credit Portfolio -->
+            <div class="lg:col-span-8 space-y-8">
+              <!-- Credit Portfolio Section -->
+              @if (creditPortfolio(); as portfolio) {
+                <app-credit-portfolio
+                  [portfolio]="portfolio"
+                  (recordPayment)="openRecordPayment()"
+                  (configureCredit)="openCreditConfig()"
+                />
+              }
+
+              <!-- Payment History -->
+              <app-payment-history-table
+                [payments]="payments()"
+                [totalCount]="paymentTotal()"
+                [pageSize]="paymentPageSize()"
+                [pageIndex]="paymentPageIndex()"
+                (pageChange)="onPaymentPageChange($event)"
+              />
+
+              <!-- Invoices Table -->
               <app-customer-invoices-table-organism 
                 [invoices]="invoices()"
                 [totalCount]="totalInvoices()"
@@ -84,6 +112,7 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
 })
 export class SalesCustomerDetailPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
   private customerService = inject(CustomerService);
   private invoiceService = inject(InvoiceService);
 
@@ -91,6 +120,9 @@ export class SalesCustomerDetailPageComponent implements OnInit {
   invoices = signal<Invoice[]>([]);
   totalBilled = signal<number>(0);
   totalInvoices = signal<number>(0);
+  creditPortfolio = signal<CreditPortfolio | null>(null);
+  payments = signal<PaymentRecord[]>([]);
+  paymentTotal = signal(0);
   
   loading = signal(true);
   loadingInvoices = signal(false);
@@ -99,6 +131,10 @@ export class SalesCustomerDetailPageComponent implements OnInit {
   currentFilter = signal<string>('');
   pageSize = signal(10);
   pageIndex = signal(1);
+
+  // Payment History Pagination (server-side)
+  paymentPageSize = signal(5);
+  paymentPageIndex = signal(0);
 
   ngOnInit() {
     const customerId = this.route.snapshot.paramMap.get('id');
@@ -115,13 +151,38 @@ export class SalesCustomerDetailPageComponent implements OnInit {
       next: (stats) => {
         this.customer.set(stats.customer);
         this.totalBilled.set(stats.totalInvoiced || 0);
-        // Note: Initial total invoices count comes from stats, 
-        // but table handles its own count from paginated responses
         this.totalInvoices.set(stats.invoiceCount || 0);
         this.loadInvoices();
+        this.loadCreditData(id);
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  loadCreditData(id: string) {
+    // Load credit portfolio
+    this.customerService.getCustomerCredit(id).subscribe({
+      next: (portfolio) => this.creditPortfolio.set(portfolio),
+      error: () => {/* portfolio not available */}
+    });
+
+    // Load payment history (paginated)
+    this.loadPayments(id);
+  }
+
+  private loadPayments(customerId: string) {
+    this.customerService.getPaymentHistory(
+      customerId,
+      undefined,
+      this.paymentPageIndex() + 1,
+      this.paymentPageSize(),
+    ).subscribe({
+      next: (res) => {
+        this.payments.set(res.data);
+        this.paymentTotal.set(res.meta.total);
+      },
+      error: () => {/* no payment history */}
     });
   }
 
@@ -148,6 +209,57 @@ export class SalesCustomerDetailPageComponent implements OnInit {
       },
       error: () => this.loadingInvoices.set(false)
     });
+  }
+
+  openCreditConfig() {
+    const customerId = this.route.snapshot.paramMap.get('id');
+    if (!customerId) return;
+
+    const portfolio = this.creditPortfolio();
+
+    const dialogRef = this.dialog.open(CreditConfigDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        customerId,
+        creditLimit: portfolio?.creditLimit ?? null,
+        paymentTermsDays: portfolio?.paymentTermsDays ?? 30,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        this.loadCreditData(customerId);
+      }
+    });
+  }
+
+  openRecordPayment() {
+    const customerId = this.route.snapshot.paramMap.get('id');
+    if (!customerId) return;
+
+    const dialogRef = this.dialog.open(RecordPaymentFormMolecule, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { customerId },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        this.loadCreditData(customerId);
+      }
+    });
+  }
+
+  onPaymentPageChange(event: any) {
+    this.paymentPageSize.set(event.pageSize);
+    this.paymentPageIndex.set(event.pageIndex);
+    const customerId = this.route.snapshot.paramMap.get('id');
+    if (customerId) {
+      this.loadPayments(customerId);
+    }
   }
 
   onFilterChanged(filter: string) {

@@ -9,11 +9,15 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Customer } from '../../../models/customer.model';
 import { CustomerDialogOrganism } from '../../../components/organisms/customer-dialog/customer-dialog.component';
 import { ProductSelectionDialogComponent, ProductSelectionDialogResult } from '../../organisms/product-selection-dialog/product-selection-dialog.component';
+import { PaymentTypesService } from '../../../services/payment-types.service';
+import { PaymentMethodsService } from '../../../services/payment-methods.service';
+import { PaymentType } from '../../../models/payment-type.model';
+import { CreditPortfolio } from '../../../models/customer.model';
 
 // Initialize Angular testing environment if not already initialized by Angular test builder
 try {
@@ -553,5 +557,184 @@ describe('SaleFormMolecule — Tax Breakdown Display (TDD)', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('Subtotal');
     expect(el.textContent).toContain('Total Facturado');
+  });
+});
+
+describe('SaleFormMolecule — Credit Summary Visibility (TDD)', () => {
+  let component: SaleFormMolecule;
+  let fixture: ComponentFixture<SaleFormMolecule>;
+  let mockProductService: any;
+  let mockCustomerService: any;
+  let mockInvoiceService: any;
+  let mockDialogRef: any;
+  let mockMatDialog: any;
+  let mockPaymentTypesService: any;
+  let mockPaymentMethodsService: any;
+
+  const mockCustomers: Customer[] = [
+    {
+      id: 'cust-1',
+      name: 'John Doe',
+      documentNumber: '111',
+      documentType: 'CC',
+      email: 'j@example.com',
+      status: 'ACTIVE',
+      phone: '123',
+      address: 'Calle 1',
+      createdAt: '2026-06-21T09:00:00.000Z',
+      updatedAt: '2026-06-21T09:00:00.000Z',
+    },
+  ];
+
+  const mockCreditPortfolio: CreditPortfolio = {
+    creditLimit: 5000000,
+    currentBalance: 1000000,
+    availableCredit: 4000000,
+    utilizationPercent: 20,
+    creditStatus: 'GOOD',
+    paymentTermsDays: 30,
+  };
+
+  const mockPaymentTypes: PaymentType[] = [
+    {
+      id: 'pt-cred',
+      name: 'Crédito',
+      code: '2',
+      isActive: true,
+      sortOrder: 1,
+      createdAt: '',
+      updatedAt: '',
+    },
+    {
+      id: 'pt-cash',
+      name: 'Contado',
+      code: '1',
+      isActive: true,
+      sortOrder: 2,
+      createdAt: '',
+      updatedAt: '',
+    },
+  ];
+
+  beforeEach(async () => {
+    mockProductService = {
+      products: signal([]),
+      loadProducts: vi.fn().mockReturnValue(of([])),
+    } as any;
+
+    mockCustomerService = {
+      customers: signal(mockCustomers),
+      loadCustomers: vi.fn().mockReturnValue(of({ data: mockCustomers, meta: { total: 1, page: 1, limit: 10, lastPage: 1 } })),
+      getCustomerCredit: vi.fn().mockReturnValue(of(mockCreditPortfolio)),
+    };
+
+    mockInvoiceService = {
+      createInvoice: vi.fn().mockReturnValue(of({})),
+    };
+
+    mockDialogRef = {
+      close: vi.fn(),
+    };
+
+    mockMatDialog = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => of(null),
+      }),
+    };
+
+    mockPaymentTypesService = {
+      data: signal(mockPaymentTypes),
+      loadData: vi.fn().mockReturnValue(of(mockPaymentTypes)),
+    };
+
+    mockPaymentMethodsService = {
+      data: signal([]),
+      loadData: vi.fn().mockReturnValue(of([])),
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [SaleFormMolecule, NoopAnimationsModule],
+      providers: [
+        { provide: MatDialogRef, useValue: mockDialogRef },
+        { provide: MAT_DIALOG_DATA, useValue: null },
+        { provide: ProductService, useValue: mockProductService },
+        { provide: CustomerService, useValue: mockCustomerService },
+        { provide: InvoiceService, useValue: mockInvoiceService },
+        { provide: MatDialog, useValue: mockMatDialog },
+        { provide: PaymentTypesService, useValue: mockPaymentTypesService },
+        { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
+      ],
+    }).overrideComponent(SaleFormMolecule, {
+      set: {
+        providers: [
+          { provide: MatDialog, useValue: mockMatDialog },
+          { provide: PaymentTypesService, useValue: mockPaymentTypesService },
+          { provide: PaymentMethodsService, useValue: mockPaymentMethodsService },
+        ],
+      },
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SaleFormMolecule);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should NOT show credit summary when no customer and payment type is not credit', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).not.toContain('Resumen de Crédito');
+  });
+
+  it('should NOT show credit summary when customer selected but payment type is not credit', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1', paymentTypeId: 'pt-cash' });
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).not.toContain('Resumen de Crédito');
+  });
+
+  it('should fetch and display credit summary when customer selected and payment type is Crédito', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1', paymentTypeId: 'pt-cred' });
+    fixture.detectChanges();
+
+    expect(mockCustomerService.getCustomerCredit).toHaveBeenCalledWith('cust-1');
+  });
+
+  it('should display "Crédito no configurado" when credit API errors', () => {
+    mockCustomerService.getCustomerCredit.mockReturnValue(
+      throwError(() => new Error('Not found'))
+    );
+
+    component.saleForm.patchValue({ customerId: 'cust-1', paymentTypeId: 'pt-cred' });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Crédito no configurado');
+  });
+
+  it('should show credit balance, limit, and available amount', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1', paymentTypeId: 'pt-cred' });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Resumen de Crédito');
+    // CurrencyPipe formats as $1,000,000.00, $5,000,000.00, $4,000,000.00
+    expect(el.textContent).toContain('1,000,000.00');
+    expect(el.textContent).toContain('5,000,000.00');
+    expect(el.textContent).toContain('4,000,000.00');
+    expect(el.textContent).toContain('20%');
+  });
+
+  it('should reset credit summary when payment type changes away from Crédito', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1', paymentTypeId: 'pt-cred' });
+    fixture.detectChanges();
+
+    expect(mockCustomerService.getCustomerCredit).toHaveBeenCalledTimes(1);
+
+    component.saleForm.patchValue({ customerId: 'cust-1', paymentTypeId: 'pt-cash' });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).not.toContain('Resumen de Crédito');
   });
 });

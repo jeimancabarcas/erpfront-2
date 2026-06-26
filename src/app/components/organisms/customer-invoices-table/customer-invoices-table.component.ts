@@ -35,7 +35,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dia
     TextInputComponent
   ],
   template: `
-    <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+    <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
       <header class="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-indigo-600">

@@ -1,7 +1,7 @@
 import { Product } from './product.model';
 import { Customer } from './customer.model';
 
-export type InvoiceStatus = 'DRAFT' | 'PAID' | 'CANCELLED';
+export type InvoiceStatus = 'DRAFT' | 'PAID' | 'CANCELLED' | 'ON_CREDIT';
 
 export interface InvoiceItemTax {
   id: string;
@@ -44,6 +44,8 @@ export interface Invoice {
   notes?: string;
   isElectronic?: boolean;
   emission?: EmissionInfo; // Metadata de emisión electrónica Factus
+  installments?: number;
+  paymentTypeId?: string;
   items: InvoiceItem[];
   customer?: Customer; // Incluido en respuestas GET
 }
@@ -52,6 +54,9 @@ export interface CreateInvoiceDto {
   customerId: string;
   notes?: string;
   isElectronic?: boolean;
+  paymentMethodId?: string;
+  paymentTypeId?: string;
+  installments?: number;
   items: {
     productId: string;
     quantity: number;

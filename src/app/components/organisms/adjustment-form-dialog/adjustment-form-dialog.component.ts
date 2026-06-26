@@ -15,7 +15,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 
 export interface AdjustmentFormData {
-  type?: 'Credit' | 'Debit';
+  type?: 'Credit';
   invoice?: FinanceInvoice;
   invoiceIsElectronic?: boolean;
 }
@@ -84,17 +84,6 @@ export interface AdjustmentFormData {
                 (click)="adjustmentForm.get('type')?.setValue('Credit')"
               >
                 Nota Crédito
-              </button>
-              <button 
-                type="button" 
-                class="flex-1 py-3.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all duration-300"
-                [class.bg-white]="adjustmentForm.get('type')?.value === 'Debit'"
-                [class.text-indigo-600]="adjustmentForm.get('type')?.value === 'Debit'"
-                [class.shadow-md]="adjustmentForm.get('type')?.value === 'Debit'"
-                [class.text-gray-400]="adjustmentForm.get('type')?.value !== 'Debit'"
-                (click)="adjustmentForm.get('type')?.setValue('Debit')"
-              >
-                Nota Débito
               </button>
             </div>
           </div>
@@ -262,26 +251,14 @@ export class AdjustmentFormDialogOrganism implements OnInit {
       }));
   });
 
-  // Dynamic Correction Concepts list based on Type (Credit or Debit)
-  correctionConcepts = computed(() => {
-    const type = this.adjustmentForm.get('type')?.value;
-    if (type === 'Credit') {
-      return [
-        { code: '1', label: '1 - Devolución parcial de los bienes o no aceptación del servicio' },
-        { code: '2', label: '2 - Anulación de factura electrónica' },
-        { code: '3', label: '3 - Rebaja o descuento parcial o total' },
-        { code: '4', label: '4 - Ajuste de precio' },
-        { code: '5', label: '5 - Otros' }
-      ];
-    } else {
-      return [
-        { code: '1', label: '1 - Intereses' },
-        { code: '2', label: '2 - Gastos por cobrar' },
-        { code: '3', label: '3 - Cambio del valor' },
-        { code: '4', label: '4 - Otros' }
-      ];
-    }
-  });
+  // Correction concepts for credit notes
+  correctionConcepts = computed(() => [
+    { code: '1', label: '1 - Devolución parcial de los bienes o no aceptación del servicio' },
+    { code: '2', label: '2 - Anulación de factura electrónica' },
+    { code: '3', label: '3 - Rebaja o descuento parcial o total' },
+    { code: '4', label: '4 - Ajuste de precio' },
+    { code: '5', label: '5 - Otros' }
+  ]);
 
   correctionConceptOptions = computed<SelectOption[]>(() =>
     this.correctionConcepts().map(c => ({ value: c.code, label: c.label }))
@@ -376,15 +353,11 @@ export class AdjustmentFormDialogOrganism implements OnInit {
         }));
       }
 
-      const request$ = val.type === 'Credit'
-        ? this.salesNoteService.createCreditNote(invoiceId, dto)
-        : this.salesNoteService.createDebitNote(invoiceId, dto);
-
-      request$.subscribe({
+      this.salesNoteService.createCreditNote(invoiceId, dto).subscribe({
         next: (response) => {
           this.isSubmitting.set(false);
           this.snackBar.open(
-            `Nota de ${val.type === 'Credit' ? 'Crédito' : 'Débito'} emitida con éxito ante la DIAN!`,
+            'Nota de Crédito emitida con éxito ante la DIAN!',
             'Cerrar',
             { duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
           );

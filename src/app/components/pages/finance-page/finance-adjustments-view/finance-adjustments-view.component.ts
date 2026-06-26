@@ -31,14 +31,6 @@ import { AdjustmentNote } from '../../../../models/finance.model';
             <span class="material-icons mr-2">remove_circle</span>
             Nueva Nota Crédito
           </ui-button>
-          <ui-button 
-            variant="primary"
-            (clicked)="openAdjustment('Debit')"
-            class="rounded-full h-12 px-8 font-black bg-indigo-600 text-white shadow-xl shadow-indigo-100 hover:scale-105 transition-transform"
-          >
-            <span class="material-icons mr-2">add_circle</span>
-            Nueva Nota Débito
-          </ui-button>
         </div>
       </header>
 
@@ -46,10 +38,6 @@ import { AdjustmentNote } from '../../../../models/finance.model';
         <div class="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm">
           <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Notas Crédito</p>
           <p class="text-2xl font-black text-amber-600 tabular-nums">{{ totalCredit() | currency:'USD':'symbol':'1.0-0' }}</p>
-        </div>
-        <div class="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Notas Débito</p>
-          <p class="text-2xl font-black text-indigo-600 tabular-nums">{{ totalDebit() | currency:'USD':'symbol':'1.0-0' }}</p>
         </div>
       </div>
 
@@ -72,17 +60,11 @@ export class FinanceAdjustmentsViewComponent implements OnInit {
       .reduce((sum, a) => sum + a.amount, 0);
   });
 
-  totalDebit = computed(() => {
-    return this.financeService.adjustments()
-      .filter(a => a.type === 'Debit')
-      .reduce((sum, a) => sum + a.amount, 0);
-  });
-
   ngOnInit() {
     this.financeService.loadAdjustments().subscribe();
   }
 
-  openAdjustment(type: 'Credit' | 'Debit') {
+  openAdjustment(type: 'Credit') {
     // Dialog functionality will be restored when dialog organisms are migrated
     this.financeService.loadAdjustments().subscribe();
   }

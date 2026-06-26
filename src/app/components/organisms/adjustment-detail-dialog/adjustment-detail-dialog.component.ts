@@ -43,13 +43,13 @@ export interface AdjustmentDetailData {
           <div class="flex items-center gap-5">
             <div 
               class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
-              [ngClass]="note.type === 'Credit' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'">
-              <span class="material-icons !text-[28px] !w-7 !h-7">{{ note.type === 'Credit' ? 'remove_circle' : 'add_circle' }}</span>
+              class="bg-amber-50 text-amber-600">
+              <span class="material-icons !text-[28px] !w-7 !h-7">remove_circle</span>
             </div>
             <div>
               <div class="flex items-center gap-3">
                 <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">
-                  Nota {{ note.type === 'Credit' ? 'Crédito' : 'Débito' }}
+                  Nota Crédito
                 </h2>
                 <span 
                   class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
@@ -221,11 +221,7 @@ export class AdjustmentDetailDialogOrganism implements OnInit {
 
     this.pdfLoading.set(true);
 
-    const pdfObservable = this.note.type === 'Credit'
-      ? this.salesNoteService.getCreditNotePdf(noteId)
-      : this.salesNoteService.getDebitNotePdf(noteId);
-
-    pdfObservable.subscribe({
+    this.salesNoteService.getCreditNotePdf(noteId).subscribe({
       next: (res) => {
         this.pdfLoading.set(false);
         try {

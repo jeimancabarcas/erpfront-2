@@ -4,14 +4,16 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dial
 import { InvoiceService } from '../../../services/invoice.service';
 import { Invoice, InvoiceItemTax } from '../../../models/invoice.model';
 import { SalesNoteService } from '../../../services/sales-note.service';
-import { CreditNote, DebitNote } from '../../../models/sales-note.model';
+import { CreditNote } from '../../../models/sales-note.model';
 import { downloadBase64Pdf } from '../../../utils/pdf-utils';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 import { SalesNoteFormDialogOrganism, SalesNoteDialogData } from '../sales-note-form-dialog/sales-note-form-dialog.component';
+import { CustomerService } from '../../../services/customer.service';
+import { PaymentRecord } from '../../../models/customer.model';
 
 interface TraceEvent {
-  type: 'Emisión Inicial' | 'Emisión Electrónica' | 'Nota Crédito' | 'Nota Débito';
+  type: 'Emisión Inicial' | 'Emisión Electrónica' | 'Nota Crédito' | 'Abono';
   number: string;
   date: string;
   concept: string;
@@ -59,16 +61,23 @@ interface TraceEvent {
             <div class="flex items-center gap-5">
               <div [className]="inv.status === 'CANCELLED' 
                 ? 'w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center shadow-sm'
+                : inv.status === 'ON_CREDIT'
+                ? 'w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm'
                 : 'w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm'">
-                <span class="material-icons !text-[28px] !w-7 !h-7">{{ inv.status === 'CANCELLED' ? 'cancel' : 'verified' }}</span>
+                <span class="material-icons !text-[28px] !w-7 !h-7">{{ 
+                  inv.status === 'CANCELLED' ? 'cancel' : 
+                  inv.status === 'ON_CREDIT' ? 'credit_card' : 'verified' 
+                }}</span>
               </div>
               <div>
                 <div class="flex items-center gap-3">
                   <h2 class="text-2xl font-black text-gray-900 tracking-tight !m-0 leading-tight">Factura {{ inv.invoiceNumber }}</h2>
                   <span [className]="inv.status === 'CANCELLED'
                     ? 'px-3 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wider'
+                    : inv.status === 'ON_CREDIT'
+                    ? 'px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-wider'
                     : 'px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider'">
-                    {{ inv.status === 'CANCELLED' ? 'ANULADA' : inv.status }}
+                    {{ inv.status === 'CANCELLED' ? 'ANULADA' : inv.status === 'ON_CREDIT' ? 'A CRÉDITO' : inv.status }}
                   </span>
                 </div>
                 <p class="text-gray-400 text-sm font-semibold uppercase tracking-widest mt-1">Detalle de Operación</p>
@@ -128,6 +137,36 @@ interface TraceEvent {
               </div>
             </div>
           </div>
+
+          <!-- Credit Balance Card -->
+          @if (showBalanceCard()) {
+            <div class="mb-8 animate-in fade-in duration-300">
+              <div class="p-6 bg-teal-50/50 rounded-[28px] border border-teal-100/50 space-y-3">
+                <label class="text-[10px] text-teal-700 font-black uppercase tracking-widest">Estado de Crédito</label>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-bold text-gray-500">Total Facturado</span>
+                  <span class="text-xs font-black text-gray-900">{{ totalAmount() | currency }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-bold text-gray-500">Total Abonado</span>
+                  <span class="text-xs font-black text-emerald-600">{{ totalPaid() | currency }}</span>
+                </div>
+                <hr class="border-t border-teal-200">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-bold text-gray-600">Saldo Pendiente</span>
+                  <span class="text-lg font-black" [class.text-red-600]="remainingBalance() > 0" [class.text-emerald-600]="remainingBalance() <= 0">
+                    {{ remainingBalance() | currency }}
+                  </span>
+                </div>
+                @if (remainingBalance() <= 0) {
+                  <div class="flex items-center gap-2">
+                    <span class="material-icons text-emerald-500 text-sm">check_circle</span>
+                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-wider">Pagada</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
 
           <!-- Items Table -->
           <div class="space-y-4 mb-8">
@@ -209,9 +248,9 @@ interface TraceEvent {
                               ? 'w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0'
                               : event.type === 'Nota Crédito'
                               ? 'w-8 h-8 bg-red-100 text-red-600 rounded-xl flex items-center justify-center shrink-0'
-                              : 'w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0'">
+                              : 'w-8 h-8 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center shrink-0'">
                               <span class="material-icons scale-75">
-                                {{ event.type === 'Emisión Inicial' ? 'receipt' : event.type === 'Emisión Electrónica' ? 'rocket_launch' : event.type === 'Nota Crédito' ? 'assignment_returned' : 'assignment_turned_in' }}
+                                {{ event.type === 'Emisión Inicial' ? 'receipt' : event.type === 'Emisión Electrónica' ? 'rocket_launch' : event.type === 'Nota Crédito' ? 'assignment_returned' : 'payments' }}
                               </span>
                             </span>
                             <span class="text-xs font-black text-gray-900">{{ event.type }}</span>
@@ -227,10 +266,8 @@ interface TraceEvent {
                           <span class="text-xs text-gray-600">{{ event.concept }}</span>
                         </td>
                         <td class="py-4 px-6 text-right">
-                          <span [class]="event.type === 'Nota Crédito'
+                          <span [class]="event.type === 'Nota Crédito' || event.type === 'Abono'
                             ? 'text-xs font-black text-red-600'
-                            : event.type === 'Nota Débito'
-                            ? 'text-xs font-black text-blue-600'
                             : 'text-xs font-black text-gray-900'">
                             {{ event.isCredit ? '-' : '+' }}{{ event.amount | currency }}
                           </span>
@@ -320,7 +357,7 @@ interface TraceEvent {
             @if (inv.status !== 'CANCELLED') {
               <ui-button variant="outline" (clicked)="openAdjustmentDialog(inv)">
                 <span class="material-icons">post_add</span>
-                Emitir Nota (Crédito/Débito)
+                Emitir Nota de Crédito
               </ui-button>
             }
 
@@ -358,18 +395,39 @@ export class InvoiceDetailDialogOrganism implements OnInit {
   private dialogData = inject(MAT_DIALOG_DATA);
   private invoiceService = inject(InvoiceService);
   private salesNoteService = inject(SalesNoteService);
+  private customerService = inject(CustomerService);
 
   invoice = signal<Invoice | null>(null);
   loading = signal(true);
   error = signal(false);
-  notes = signal<{ creditNotes: CreditNote[], debitNotes: DebitNote[] }>({ creditNotes: [], debitNotes: [] });
+  notes = signal<{ creditNotes: CreditNote[] }>({ creditNotes: [] });
+  payments = signal<PaymentRecord[]>([]);
   pdfLoading = signal(false);
   emitLoading = signal(false);
   emitError = signal<string | null>(null);
 
+  totalPaid = computed(() =>
+    this.payments().reduce((sum, p) => sum + Number(p.amount), 0)
+  );
+  remainingBalance = computed(() => {
+    const inv = this.invoice();
+    return inv ? Number(inv.totalAmount) - this.totalPaid() : 0;
+  });
+  totalAmount = computed(() => {
+    const inv = this.invoice();
+    return inv ? Number(inv.totalAmount) : 0;
+  });
+  showBalanceCard = computed(() => {
+    const inv = this.invoice();
+    if (!inv) return false;
+    // Show for ON_CREDIT invoices, or if payments have been recorded
+    return inv.status === 'ON_CREDIT' || this.payments().length > 0;
+  });
+
   traceEvents = computed(() => {
     const inv = this.invoice();
-    const { creditNotes, debitNotes } = this.notes();
+    const { creditNotes } = this.notes();
+    const paymentRecords = this.payments();
     const events: TraceEvent[] = [];
 
     if (inv) {
@@ -413,17 +471,15 @@ export class InvoiceDetailDialogOrganism implements OnInit {
       });
     }
 
-    for (const dn of debitNotes) {
+    for (const pm of paymentRecords) {
       events.push({
-        type: 'Nota Débito',
-        number: dn.noteNumber || dn.referenceCode,
-        date: dn.createdAt,
-        concept: dn.correctionConceptCode,
-        observation: dn.observation,
-        amount: Number(dn.amount) || 0,
-        isCredit: false,
-        cude: dn.cude,
-        publicUrl: dn.publicUrl,
+        type: 'Abono',
+        number: pm.id.slice(0, 8),
+        date: pm.paymentDate,
+        concept: pm.notes || 'Abono a cuenta',
+        observation: pm.notes || null,
+        amount: Number(pm.amount) || 0,
+        isCredit: true,
       });
     }
 
@@ -486,6 +542,7 @@ export class InvoiceDetailDialogOrganism implements OnInit {
           this.invoice.set(inv);
           this.loading.set(false);
           this.loadNotes(inv.id);
+          this.loadPayments(inv.id);
         },
         error: () => {
           this.loading.set(false);
@@ -498,6 +555,7 @@ export class InvoiceDetailDialogOrganism implements OnInit {
       this.invoice.set(inv);
       this.loading.set(false);
       this.loadNotes(inv.id);
+      this.loadPayments(inv.id);
     }
   }
 
@@ -533,6 +591,17 @@ export class InvoiceDetailDialogOrganism implements OnInit {
     });
   }
 
+  private loadPayments(invoiceId: string) {
+    const inv = this.invoice();
+    if (!inv?.customerId) return;
+    this.customerService.getPaymentHistory(inv.customerId, invoiceId, 1, 50).subscribe({
+      next: (res) => {
+        this.payments.set(res.data);
+      },
+      error: (err) => console.error('Error cargando abonos:', err),
+    });
+  }
+
   runningBalance(index: number): number {
     const events = this.traceEvents();
     let balance = 0;
@@ -542,8 +611,8 @@ export class InvoiceDetailDialogOrganism implements OnInit {
         balance = e.amount;
       } else if (e.type === 'Nota Crédito') {
         balance -= e.amount;
-      } else if (e.type === 'Nota Débito') {
-        balance += e.amount;
+      } else if (e.type === 'Abono') {
+        balance -= e.amount;
       }
       // Emisión Electrónica no modifica el saldo
     }
@@ -607,6 +676,7 @@ export class InvoiceDetailDialogOrganism implements OnInit {
       next: (inv) => {
         this.invoice.set(inv);
         this.loadNotes(inv.id);
+        this.loadPayments(inv.id);
       },
     });
   }

@@ -9,7 +9,7 @@ import { Customer } from '../../../models/customer.model';
   standalone: true,
   imports: [CommonModule, MatIconModule, MatDividerModule],
   template: `
-    <div class="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm h-full flex flex-col">
+    <div class="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm flex flex-col">
       <div class="flex flex-col items-center text-center space-y-4 mb-8">
         <div class="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-[32px] flex items-center justify-center shadow-inner transition-transform hover:scale-105 duration-300">
           <mat-icon class="!text-[48px] !w-12 !h-12">person</mat-icon>

@@ -72,6 +72,14 @@ export class InvoiceService {
   }
 
   /**
+   * Busca facturas manuales por número (para enlazar con emisión electrónica)
+   */
+  searchManualBills(number: string): Observable<any[]> {
+    const searchUrl = `${environment.apiUrl}/sales/invoices/search`;
+    return this.http.get<any[]>(searchUrl, { params: { number } });
+  }
+
+  /**
    * Obtiene el PDF con historial de una factura (manuales generan historial, electrónicas PDF local con notas)
    */
   getInvoicePdf(id: string): Observable<{ pdfBase64Encoded: string; fileName: string }> {

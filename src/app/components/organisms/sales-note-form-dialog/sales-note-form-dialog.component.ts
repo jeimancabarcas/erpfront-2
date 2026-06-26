@@ -128,9 +128,6 @@ export interface SalesNoteDialogData {
                       @if (scenario() === 'B' || scenario() === 'C') {
                         <th class="py-3 px-4 text-center w-28">Nuevo Precio</th>
                       }
-                      @if (scenario() === 'F') {
-                        <th class="py-3 px-4 text-center w-28">Precio Corregido</th>
-                      }
                       <th class="py-3 px-4 text-right">Subtotal</th>
                     </tr>
                   </thead>
@@ -159,19 +156,12 @@ export interface SalesNoteDialogData {
                             <ui-text-input type="number" formControlName="quantity" />
                           </td>
                         }
-                        @if (scenario() === 'B' || scenario() === 'C' || scenario() === 'F') {
+                        @if (scenario() === 'B' || scenario() === 'C') {
                           <td class="py-1 px-1 text-center">
                             <ui-text-input type="number" formControlName="price" />
-                            @if (scenario() === 'B' || scenario() === 'C') {
-                              <div class="text-[9px] mt-0.5" [class.text-green-600]="Number(itemForm.value.price) > 0 && Number(itemForm.value.price) < itemForm.value.unitPrice" [class.text-red-500]="Number(itemForm.value.price) >= itemForm.value.unitPrice">
-                                {{ Number(itemForm.value.price) > 0 ? (itemForm.value.unitPrice - Number(itemForm.value.price) | currency) + ' de descuento' : '' }}
-                              </div>
-                            }
-                            @if (scenario() === 'F') {
-                              <div class="text-[9px] mt-0.5" [class.text-green-600]="Number(itemForm.value.price) > itemForm.value.unitPrice" [class.text-red-500]="Number(itemForm.value.price) > 0 && Number(itemForm.value.price) <= itemForm.value.unitPrice">
-                                {{ Number(itemForm.value.price) > itemForm.value.unitPrice ? '+' + (Number(itemForm.value.price) - itemForm.value.unitPrice | currency) + ' adicional' : '' }}
-                              </div>
-                            }
+                            <div class="text-[9px] mt-0.5" [class.text-green-600]="Number(itemForm.value.price) > 0 && Number(itemForm.value.price) < itemForm.value.unitPrice" [class.text-red-500]="Number(itemForm.value.price) >= itemForm.value.unitPrice">
+                              {{ Number(itemForm.value.price) > 0 ? (itemForm.value.unitPrice - Number(itemForm.value.price) | currency) + ' de descuento' : '' }}
+                            </div>
                           </td>
                         }
                         <td class="py-3 px-4 text-right font-black text-xs text-gray-900">
@@ -204,26 +194,7 @@ export interface SalesNoteDialogData {
             </div>
           }
 
-          <!-- Scenario E: Financial Interest - simple amount + description -->
-          @if (scenario() === 'E') {
-            <div class="p-6 bg-blue-50/50 rounded-[24px] border border-blue-100/50 space-y-4 animate-in fade-in duration-300">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
-                  <mat-icon>account_balance</mat-icon>
-                </div>
-                <div>
-                  <p class="text-xs font-black text-gray-900">Intereses Financieros</p>
-                  <p class="text-[10px] text-gray-500 font-medium">Cargo por mora o interés financiero — no afecta inventario</p>
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ui-text-input label="Monto del Interés" type="number" icon="attach_money" placeholder="0.00"
-                  [formControl]="noteForm.controls.financialAmount" />
-                <ui-text-input label="Descripción del Concepto" icon="description" placeholder="Ej: Interés por mora en pago"
-                  [formControl]="noteForm.controls.financialDescription" />
-              </div>
-            </div>
-          }
+
 
           <!-- Dynamic Totals Summary -->
           <div class="p-6 bg-indigo-50/50 rounded-[24px] border border-indigo-100/50 flex justify-between items-center group transition-all hover:bg-indigo-50 animate-in zoom-in duration-300">
@@ -318,7 +289,7 @@ export class SalesNoteFormDialogOrganism implements OnInit {
   // Whether to show the items table
   showItemsTable = computed(() => {
     const s = this.scenario();
-    return s === 'A' || s === 'B' || s === 'C' || s === 'F';
+    return s === 'A' || s === 'B' || s === 'C';
   });
 
   // Scenario info message
@@ -337,16 +308,12 @@ export class SalesNoteFormDialogOrganism implements OnInit {
 
   dialogTitle = computed(() => {
     const s = this.scenario();
-    const type = this.noteForm.get('noteType')?.value;
-    const prefix = type === 'credit' ? 'Nota Crédito' : 'Nota Débito';
     switch (s) {
-      case 'A': return `${prefix} — Devolución Parcial`;
-      case 'B': return `${prefix} — Descuento Comercial`;
-      case 'C': return `${prefix} — Corrección de Precio`;
-      case 'D': return `${prefix} — Anulación Total`;
-      case 'E': return `${prefix} — Intereses Financieros`;
-      case 'F': return `${prefix} — Corrección por Undercharge`;
-      default: return `Emitir ${prefix}`;
+      case 'A': return 'Nota Crédito — Devolución Parcial';
+      case 'B': return 'Nota Crédito — Descuento Comercial';
+      case 'C': return 'Nota Crédito — Corrección de Precio';
+      case 'D': return 'Nota Crédito — Anulación Total';
+      default: return 'Emitir Nota Crédito';
     }
   });
 
@@ -384,35 +351,22 @@ export class SalesNoteFormDialogOrganism implements OnInit {
     noteType: ['credit', Validators.required],
     correctionConceptCode: ['2', Validators.required],
     observation: ['', Validators.required],
-    financialAmount: [0],
-    financialDescription: [''],
     items: this.fb.array([])
   });
 
-  noteType = signal<'credit' | 'debit'>('credit');
+  noteType = signal<'credit'>('credit');
 
   noteTypeOptions: SelectOption[] = [
     { value: 'credit', label: 'Nota de Crédito (Anular / Devolver)' },
-    { value: 'debit', label: 'Nota de Débito (Cobro adicional)' },
   ];
 
-  correctionOptions = computed<SelectOption[]>(() => {
-    if (this.noteType() === 'credit') {
-      return [
-        { value: '1', label: '1 - Devolución parcial de los bienes' },
-        { value: '2', label: '2 - Anulación total de factura' },
-        { value: '3', label: '3 - Rebaja o descuento parcial' },
-        { value: '4', label: '4 - Ajuste de precio' },
-        { value: '5', label: '5 - Otros' },
-      ];
-    }
-    return [
-      { value: '1', label: '1 - Intereses' },
-      { value: '2', label: '2 - Gastos por cobrar' },
-      { value: '3', label: '3 - Cambio del valor' },
-      { value: '4', label: '4 - Otros' },
-    ];
-  });
+  correctionOptions = computed<SelectOption[]>(() => [
+    { value: '1', label: '1 - Devolución parcial de los bienes' },
+    { value: '2', label: '2 - Anulación total de factura' },
+    { value: '3', label: '3 - Rebaja o descuento parcial' },
+    { value: '4', label: '4 - Ajuste de precio' },
+    { value: '5', label: '5 - Otros' },
+  ]);
 
   get itemsFormArray(): FormArray {
     return this.noteForm.get('items') as FormArray;
@@ -421,11 +375,9 @@ export class SalesNoteFormDialogOrganism implements OnInit {
   ngOnInit() {
     this.setupItemsForm();
 
-    this.noteForm.get('noteType')?.valueChanges.subscribe(val => {
-      const type = val as 'credit' | 'debit';
-      this.noteType.set(type);
-      const conceptCode = type === 'credit' ? '2' : '1';
-      this.noteForm.get('correctionConceptCode')?.setValue(conceptCode);
+    this.noteForm.get('noteType')?.valueChanges.subscribe(() => {
+      this.noteType.set('credit');
+      this.noteForm.get('correctionConceptCode')?.setValue('2');
     });
 
     // Sync disabled states when scenario changes
@@ -482,7 +434,7 @@ export class SalesNoteFormDialogOrganism implements OnInit {
         else qtyCtrl.disable({ emitEvent: false });
       }
       if (priceCtrl) {
-        if (s === 'B' || s === 'C' || s === 'F') priceCtrl.enable({ emitEvent: false });
+        if (s === 'B' || s === 'C') priceCtrl.enable({ emitEvent: false });
         else priceCtrl.disable({ emitEvent: false });
       }
     });
@@ -505,10 +457,6 @@ export class SalesNoteFormDialogOrganism implements OnInit {
       const prc = Number(itemForm.get('price')?.value || 0);
       return (Number(itemForm.get('unitPrice')?.value || 0) - prc) * Number(itemForm.get('originalQty')?.value || 0);
     }
-    if (s === 'F') {
-      const prc = Number(itemForm.get('price')?.value || 0);
-      return (prc - Number(itemForm.get('unitPrice')?.value || 0)) * Number(itemForm.get('originalQty')?.value || 0);
-    }
     return 0;
   }
 
@@ -520,10 +468,7 @@ export class SalesNoteFormDialogOrganism implements OnInit {
     // D: full invoice total
     if (s === 'D') return Number(this.data.invoice.totalAmount) || 0;
 
-    // E: financial amount
-    if (s === 'E') return Number(this.noteForm.get('financialAmount')?.value || 0);
-
-    // A, B, C, F: sum of selected items
+    // A, B, C: sum of selected items
     let sum = 0;
     this.itemsFormArray.controls.forEach(control => {
       sum += this.calculateItemSubtotal(control);
@@ -586,30 +531,10 @@ export class SalesNoteFormDialogOrganism implements OnInit {
       }
     }
 
-    // Validate price > original (Scenario F)
-    if (s === 'F') {
-      let invalid = false;
-      this.itemsFormArray.controls.forEach(control => {
-        if (control.get('selected')?.value) {
-          const price = Number(control.get('price')?.value || 0);
-          const original = Number(control.get('unitPrice')?.value || 0);
-          if (price <= original) {
-            invalid = true;
-          }
-        }
-      });
-      if (invalid) {
-        this.errorMsg.set('El precio corregido debe ser mayor al precio original.');
-        this.loading.set(false);
-        return;
-      }
-    }
-
     this.loading.set(true);
     this.errorMsg.set(null);
 
     const formValue = this.noteForm.value;
-    const type = formValue.noteType as 'credit' | 'debit';
     const concept = formValue.correctionConceptCode || '2';
 
     // Map scenario type for backend
@@ -618,13 +543,11 @@ export class SalesNoteFormDialogOrganism implements OnInit {
       'B': 'discount',
       'C': 'price_correction',
       'D': 'total_annulment',
-      'E': 'financial_interest',
-      'F': 'undercharge',
     };
 
     const payloadItems: any[] = [];
 
-    if (s === 'A' || s === 'B' || s === 'C' || s === 'F') {
+    if (s === 'A' || s === 'B' || s === 'C') {
       this.itemsFormArray.controls.forEach(control => {
         if (control.get('selected')?.value) {
           const item: any = {
@@ -633,7 +556,7 @@ export class SalesNoteFormDialogOrganism implements OnInit {
             productId: control.get('productId')?.value,
           };
           // For discount, overcharge, undercharge: send the new price
-          if (s === 'B' || s === 'C' || s === 'F') {
+          if (s === 'B' || s === 'C') {
             item.price = Number(control.get('price')?.value);
           }
           payloadItems.push(item);
@@ -646,27 +569,13 @@ export class SalesNoteFormDialogOrganism implements OnInit {
       observation: formValue.observation || '',
       isElectronic: this.isElectronic(),
       scenarioType: scenarioTypeMap[s] || undefined,
-      items: s === 'E' ? undefined : payloadItems,
+      items: payloadItems.length > 0 ? payloadItems : undefined,
     };
 
-    // For scenario E (financial interest), add a virtual item
-    if (s === 'E') {
-      payload.items = [{
-        codeReference: 'FINANCIAL',
-        quantity: 1,
-        price: Number(formValue.financialAmount || 0),
-        // No productId — virtual item
-      }];
-    }
-
-    const action$ = type === 'credit'
-      ? this.salesNoteService.createCreditNote(this.data.invoice.id, payload)
-      : this.salesNoteService.createDebitNote(this.data.invoice.id, payload);
-
-    action$.subscribe({
+    this.salesNoteService.createCreditNote(this.data.invoice.id, payload).subscribe({
       next: (response) => {
         this.loading.set(false);
-        this.dialogRef.close({ success: true, type, note: response });
+        this.dialogRef.close({ success: true, type: 'credit', note: response });
       },
       error: (err) => {
         this.loading.set(false);

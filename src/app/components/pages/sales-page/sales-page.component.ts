@@ -108,7 +108,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                     [ngClass]="{
                       'bg-emerald-50 text-emerald-600': inv.status === 'PAID',
                       'bg-amber-50 text-amber-600': inv.status === 'DRAFT',
-                      'bg-gray-100 text-gray-400': inv.status === 'CANCELLED'
+                      'bg-gray-100 text-gray-400': inv.status === 'CANCELLED',
+                      'bg-indigo-50 text-indigo-600': inv.status === 'ON_CREDIT'
                     }"
                   >
                     {{ statusLabels[inv.status] }}
@@ -197,12 +198,14 @@ export class SalesPageComponent implements OnInit {
     { value: 'PAID', label: 'Pagada' },
     { value: 'DRAFT', label: 'Borrador' },
     { value: 'CANCELLED', label: 'Anulada' },
+    { value: 'ON_CREDIT', label: 'A Crédito' },
   ];
 
   statusLabels: any = {
     'PAID': 'Pagada',
     'DRAFT': 'Borrador',
-    'CANCELLED': 'Anulada'
+    'CANCELLED': 'Anulada',
+    'ON_CREDIT': 'A Crédito'
   };
 
   ngOnInit() {

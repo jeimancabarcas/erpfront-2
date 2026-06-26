@@ -1,53 +1,44 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { FinanceInvoice, AdjustmentNote, FinancialMetric, FinanceCustomer, FinanceProduct } from '../models/finance.model';
+import { HttpClient } from '@angular/common/http';
+import { FinanceInvoice, AdjustmentNote, FinancialMetric, FinanceCustomer, FinanceProduct, FinanceDocumentDto, FinanceDocumentsResponse, CreateElectronicBillPayload, CreateElectronicBillResponse, ElectronicBillDto, ElectronicBillListResponse } from '../models/finance.model';
 import { SalesNoteService } from './sales-note.service';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { PaginatedMeta } from '../models/pagination.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FinanceService {
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/finance`;
   private salesNoteService = inject(SalesNoteService);
 
-  // Mock Customers Catalog
-  private _customers = signal<FinanceCustomer[]>([
-    { id: 'C-001', name: 'Limpiezas Industriales S.A.', taxId: '900.111.222-3', email: 'contabilidad@limpiezas.com', phone: '300 123 4567', address: 'Calle 100 #15-20' },
-    { id: 'C-002', name: 'Dotaciones Médicas Corp', taxId: '860.000.999-1', email: 'ventas@dotaciones.co', phone: '315 999 8877', address: 'Carrera 7 #72-10' },
-    { id: 'C-003', name: 'Alimentos Saludables Ltda', taxId: '800.555.444-0', email: 'facturacion@alimentos.com', phone: '320 444 5566', address: 'Avenida Chile #11-45' }
-  ]);
+  // Mock Customers Catalog — populated from backend
+  private _customers = signal<FinanceCustomer[]>([]);
 
-  // Mock Products/Services Catalog
-  private _catalog = signal<FinanceProduct[]>([
-    { id: 'P-001', name: 'Mantenimiento Preventivo Mensual', price: 1200000, taxRate: 0.19, category: 'Service' },
-    { id: 'P-002', name: 'Kit de Papelería Administrativa', price: 45000, taxRate: 0.19, category: 'Product' },
-    { id: 'P-003', name: 'Servicio de Desinfección Profunda', price: 350000, taxRate: 0.19, category: 'Service' },
-    { id: 'P-004', name: 'Consultoría en Procesos', price: 2500000, taxRate: 0.19, category: 'Service' },
-    { id: 'P-005', name: 'Paquete de Insumos de Aseo', price: 85000, taxRate: 0.19, category: 'Product' }
-  ]);
+  // Mock Products/Services Catalog — populated from backend
+  private _catalog = signal<FinanceProduct[]>([]);
 
-  private _invoices = signal<FinanceInvoice[]>([
-    {
-      id: 'FE-1001',
-      customerName: 'Limpiezas Industriales S.A.',
-      customerTaxId: '900.111.222-3',
-      date: '2026-04-20',
-      dueDate: '2026-05-20',
-      status: 'Paid',
-      subtotal: 1000000,
-      tax: 190000,
-      total: 1190000,
-      electronicId: 'cufe-abcd-1234',
-      items: [
-        { id: '1', description: 'Servicio de mantenimiento', quantity: 1, unitPrice: 1000000, taxRate: 0.19, total: 1190000 }
-      ]
-    }
-  ]);
+  private _meta = signal<PaginatedMeta | null>(null);
+  public meta = this._meta.asReadonly();
+
+  public loading = signal(false);
+  public error = signal<string | null>(null);
+
+  private _bills = signal<FinanceInvoice[]>([]);
+  private _creditNotes = signal<FinanceInvoice[]>([]);
+
+  private _invoices = computed(() => [...this._bills(), ...this._creditNotes()]);
 
   private _adjustments = signal<AdjustmentNote[]>([]);
 
+  // Local electronic emissions (from POST /finance/electronic-bills)
+  private _localEmissions = signal<ElectronicBillDto[]>([]);
+  public localEmissions = this._localEmissions.asReadonly();
 
   // Read-only signals
-  public invoices = this._invoices.asReadonly();
+  public invoices = this._invoices;
   public adjustments = this._adjustments.asReadonly();
   public customers = this._customers.asReadonly();
   public catalog = this._catalog.asReadonly();
@@ -58,18 +49,16 @@ export class FinanceService {
     const activeInvoices = this._invoices().filter(inv => inv.status?.toUpperCase() !== 'CANCELLED');
     const totalSales = activeInvoices.reduce((acc, inv) => acc + inv.total, 0);
 
-    // Separar notas de crédito y débito
+    // Filter credit notes only
     const creditNotes = this._adjustments().filter(adj => adj.type === 'Credit');
-    const debitNotes = this._adjustments().filter(adj => adj.type === 'Debit');
 
     const totalCredit = creditNotes.reduce((acc, adj) => acc + adj.amount, 0);
-    const totalDebit = debitNotes.reduce((acc, adj) => acc + adj.amount, 0);
 
-    // Impacto neto de las notas de ajuste: las notas de crédito reducen el saldo y las de débito lo aumentan
-    const netAdjustments = totalCredit - totalDebit;
+    // Impacto neto de las notas de ajuste: las notas de crédito reducen el saldo
+    const netAdjustments = -totalCredit;
 
-    // Saldo pendiente por cobrar: Facturación Total - Notas de Crédito + Notas de Débito
-    const pendingCollection = totalSales - totalCredit + totalDebit;
+    // Saldo pendiente por cobrar: Facturación Total - Notas de Crédito
+    const pendingCollection = totalSales - totalCredit;
     
     return [
       { label: 'Facturación Total', value: totalSales, trend: 12.5, icon: 'account_balance_wallet', color: 'indigo' },
@@ -79,7 +68,7 @@ export class FinanceService {
   });
 
   addInvoice(invoice: FinanceInvoice) {
-    this._invoices.update(items => [invoice, ...items]);
+    this._bills.update(items => [invoice, ...items]);
   }
 
   addAdjustment(adjustment: AdjustmentNote) {
@@ -87,8 +76,127 @@ export class FinanceService {
   }
 
   updateInvoiceStatus(invoiceId: string, status: 'Paid' | 'Sent' | 'Draft' | 'Overdue') {
-    this._invoices.update(items => 
+    this._bills.update(items => 
       items.map(inv => inv.id === invoiceId ? { ...inv, status } : inv)
+    );
+  }
+
+  loadBills(params?: { identification?: string; names?: string; number?: string; status?: string; startDate?: string; endDate?: string; page?: number; perPage?: number }): void {
+    this.loading.set(true);
+    this.error.set(null);
+    const queryParams: any = {};
+    if (params) {
+      Object.keys(params).forEach(key => {
+        const value = (params as any)[key];
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams[key] = value;
+        }
+      });
+    }
+
+    this.http.get<FinanceDocumentsResponse>(`${this.apiUrl}/bills`, { params: queryParams }).pipe(
+      tap({
+        next: (response) => {
+          this._bills.set(response.data.map(dto => this.mapDocumentToInvoice(dto)));
+          this._meta.set(response.meta);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(err?.error?.message || err?.message || 'Error al cargar facturas desde Factus');
+          this.loading.set(false);
+        }
+      })
+    ).subscribe();
+  }
+
+  loadCreditNotes(params?: { identification?: string; names?: string; number?: string; status?: string; startDate?: string; endDate?: string; page?: number; perPage?: number }): void {
+    this.loading.set(true);
+    this.error.set(null);
+    const queryParams: any = {};
+    if (params) {
+      Object.keys(params).forEach(key => {
+        const value = (params as any)[key];
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams[key] = value;
+        }
+      });
+    }
+
+    this.http.get<FinanceDocumentsResponse>(`${this.apiUrl}/credit-notes`, { params: queryParams }).pipe(
+      tap({
+        next: (response) => {
+          this._creditNotes.set(response.data.map(dto => this.mapDocumentToInvoice(dto)));
+          this._meta.set(response.meta);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(err?.error?.message || err?.message || 'Error al cargar notas crédito desde Factus');
+          this.loading.set(false);
+        }
+      })
+    ).subscribe();
+  }
+
+  private mapDocumentToInvoice(dto: FinanceDocumentDto): FinanceInvoice {
+    return {
+      id: dto.number,
+      dbId: dto.id,
+      customerName: dto.clientName,
+      customerTaxId: dto.clientIdentification,
+      date: dto.createdAt,
+      dueDate: dto.createdAt,
+      subtotal: dto.total,
+      tax: 0,
+      total: dto.total,
+      status: dto.status === '1' ? 'Paid' : 'Sent',
+      electronicId: dto.id,
+      items: [],
+      type: dto.type,
+    };
+  }
+
+  loadElectronicBills(params?: { page?: number; perPage?: number }): void {
+    this.loading.set(true);
+    this.error.set(null);
+    const queryParams: any = {
+      page: params?.page ?? 1,
+      perPage: params?.perPage ?? 10,
+    };
+
+    this.http.get<ElectronicBillListResponse>(`${this.apiUrl}/electronic-bills`, { params: queryParams }).pipe(
+      tap({
+        next: (response) => {
+          this._localEmissions.set(response.data);
+          this._meta.set(response.meta);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(err?.error?.message || err?.message || 'Error al cargar emisiones locales');
+          this.loading.set(false);
+        }
+      })
+    ).subscribe();
+  }
+
+  createElectronicBill(payload: CreateElectronicBillPayload): Observable<CreateElectronicBillResponse> {
+    return this.http.post<CreateElectronicBillResponse>(`${this.apiUrl}/electronic-bills`, payload).pipe(
+      tap({
+        next: (response) => {
+          if (response.status === 'emitted') {
+            this._localEmissions.update(items => [
+              {
+                id: response.id,
+                number: response.number,
+                status: response.status,
+                cufe: response.cufe,
+                invoiceId: null,
+                createdAt: new Date().toISOString(),
+              },
+              ...items,
+            ]);
+          }
+        },
+      })
     );
   }
 
@@ -96,12 +204,10 @@ export class FinanceService {
     return this.salesNoteService.getNotes().pipe(
       tap((res: any) => {
         const creditNotes = res.creditNotes || [];
-        const debitNotes = res.debitNotes || [];
 
         const mappedCredits = creditNotes.map((note: any) => this.mapBackendNoteToAdjustment(note, 'Credit'));
-        const mappedDebits = debitNotes.map((note: any) => this.mapBackendNoteToAdjustment(note, 'Debit'));
 
-        const allAdjustments = [...mappedCredits, ...mappedDebits];
+        const allAdjustments = [...mappedCredits];
         this._adjustments.set(allAdjustments);
 
         // Map and update local invoices state with the note's invoices
@@ -109,7 +215,7 @@ export class FinanceService {
           .map((adj: any) => (adj as any).mappedInvoice)
           .filter(Boolean) as FinanceInvoice[];
           
-        this._invoices.update(invs => {
+        this._bills.update(invs => {
           const existingIds = new Set(invs.map(i => i.id));
           const newInvs = associatedInvoices.filter((i: any) => !existingIds.has(i.id));
           return [...invs, ...newInvs];
@@ -118,7 +224,7 @@ export class FinanceService {
     );
   }
 
-  private mapBackendNoteToAdjustment(note: any, type: 'Credit' | 'Debit'): AdjustmentNote {
+  private mapBackendNoteToAdjustment(note: any, type: 'Credit'): AdjustmentNote {
     const invoiceNumber = note.invoice?.invoiceNumber || note.invoiceId;
     const mappedInvoice: FinanceInvoice = {
       id: invoiceNumber,

@@ -1,4 +1,4 @@
-export type AdjustmentType = 'Credit' | 'Debit';
+export type AdjustmentType = 'Credit';
 
 export interface FinanceCustomer {
   id: string;
@@ -32,6 +32,7 @@ export interface FinanceInvoice {
   electronicId?: string; // CUFE / UUID for electronic invoicing
   isElectronic?: boolean; // Whether the invoice is electronic (DIAN)
   adjustments?: AdjustmentNote[];
+  type?: 'bill' | 'credit-note'; // Document type from Radian/Factus
 }
 
 export interface InvoiceItem {
@@ -62,4 +63,66 @@ export interface FinancialMetric {
   trend: number; // percentage
   icon: string;
   color: string;
+}
+
+// Backend DTOs for Radian/Factus documents
+export interface FinanceDocumentDto {
+  id: string;
+  number: string;
+  clientName: string;
+  clientIdentification: string;
+  total: number;
+  status: string; // '1' = validated, '0' = pending
+  createdAt: string;
+  type: 'bill' | 'credit-note';
+}
+
+export interface FinanceDocumentsResponse {
+  data: FinanceDocumentDto[];
+  meta: import('./pagination.model').PaginatedMeta;
+}
+
+// --- Electronic billing models ---
+
+export interface CreateElectronicBillPayload {
+  manualInvoiceId?: string;
+  customer: {
+    identification: string;
+    names: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+  };
+  items: {
+    codeReference: string;
+    name: string;
+    quantity: number;
+    price: number;
+    discountRate?: number;
+    productId?: string;
+  }[];
+}
+
+export interface CreateElectronicBillResponse {
+  id: string;
+  number: string;
+  cufe?: string;
+  qrUrl?: string;
+  publicUrl?: string;
+  status: 'pending' | 'emitted' | 'failed';
+  warning?: string;
+}
+
+export interface ElectronicBillDto {
+  id: string;
+  number: string;
+  status: 'pending' | 'emitted' | 'failed';
+  cufe?: string;
+  invoiceId: string | null;
+  createdAt: string;
+}
+
+export interface ElectronicBillListResponse {
+  data: ElectronicBillDto[];
+  meta: import('./pagination.model').PaginatedMeta;
 }

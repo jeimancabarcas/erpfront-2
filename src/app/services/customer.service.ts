@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { PaginatedMeta, QueryParams } from '../models/pagination.model';
-import { Customer, CreateCustomerDto, UpdateCustomerDto } from '../models/customer.model';
+import { Customer, CreateCustomerDto, UpdateCustomerDto, CreditPortfolio, RecordPaymentDto, PaymentRecord } from '../models/customer.model';
 
 @Injectable({
   providedIn: 'root'
@@ -70,5 +70,29 @@ export class CustomerService {
 
   getCustomerStats(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}/stats`);
+  }
+
+  // === Credit Portfolio Methods ===
+
+  getCustomerCredit(id: string): Observable<CreditPortfolio> {
+    return this.http.get<CreditPortfolio>(`${this.apiUrl}/${id}/credit`);
+  }
+
+  setCustomerCredit(id: string, dto: { creditLimit: number | null; paymentTermsDays?: number }): Observable<Customer> {
+    return this.http.patch<Customer>(`${this.apiUrl}/${id}/credit`, dto);
+  }
+
+  recordPayment(id: string, dto: RecordPaymentDto): Observable<{ newBalance: number; invoiceStatus: string; paymentRecord: PaymentRecord }> {
+    return this.http.post<{ newBalance: number; invoiceStatus: string; paymentRecord: PaymentRecord }>(
+      `${this.apiUrl}/${id}/credit/payment`, dto
+    );
+  }
+
+  getPaymentHistory(id: string, invoiceId?: string, page: number = 1, limit: number = 10): Observable<{ data: PaymentRecord[]; meta: { total: number; page: number; lastPage: number; limit: number } }> {
+    const params: any = {};
+    if (invoiceId) params.invoiceId = invoiceId;
+    if (page) params.page = page;
+    if (limit) params.limit = limit;
+    return this.http.get<{ data: PaymentRecord[]; meta: { total: number; page: number; lastPage: number; limit: number } }>(`${this.apiUrl}/${id}/credit/payments`, { params });
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
-import { CreateSalesNoteDto, CreditNote, DebitNote, InvoiceNotesResponse } from '../models/sales-note.model';
+import { CreateSalesNoteDto, CreditNote, InvoiceNotesResponse } from '../models/sales-note.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,21 +19,14 @@ export class SalesNoteService {
   }
 
   /**
-   * Generates a Debit Note for a specific invoice
-   */
-  createDebitNote(invoiceId: string, dto: CreateSalesNoteDto): Observable<DebitNote> {
-    return this.http.post<DebitNote>(`${this.baseUrl}/${invoiceId}/debit-note`, dto);
-  }
-
-  /**
-   * Retrieves all credit and debit notes associated with an invoice
+   * Retrieves all credit notes associated with an invoice
    */
   getNotesByInvoiceId(invoiceId: string): Observable<InvoiceNotesResponse> {
     return this.http.get<InvoiceNotesResponse>(`${this.baseUrl}/${invoiceId}/notes`);
   }
 
   /**
-   * Retrieves all credit and debit notes across all invoices in the system
+   * Retrieves all credit notes across all invoices in the system
    */
   getNotes(): Observable<InvoiceNotesResponse> {
     return this.http.get<InvoiceNotesResponse>(`${environment.apiUrl}/sales/notes`);
@@ -46,10 +39,4 @@ export class SalesNoteService {
     return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(`${environment.apiUrl}/sales/credit-notes/${id}/pdf`);
   }
 
-  /**
-   * Retrieves Debit Note PDF in Base64
-   */
-  getDebitNotePdf(id: string): Observable<{ pdfBase64Encoded: string; fileName: string }> {
-    return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(`${environment.apiUrl}/sales/debit-notes/${id}/pdf`);
-  }
 }
