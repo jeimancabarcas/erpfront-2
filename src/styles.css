@@ -153,3 +153,19 @@
     scrollbar-color: var(--color-border) transparent;
   }
 }
+
+/* ── Material Dialog dark mode ── */
+.dark .mat-mdc-dialog-container {
+  --mdc-dialog-container-color: #111827;
+  --mdc-dialog-supporting-text-color: #d1d5db;
+}
+
+.dark .mat-mdc-dialog-surface {
+  background-color: #111827 !important;
+  color: #f3f4f6;
+}
+
+/* ── Material Dialog: remove rounded corners ── */
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: 0 !important;
+}

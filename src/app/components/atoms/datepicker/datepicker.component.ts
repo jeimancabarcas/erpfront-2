@@ -26,14 +26,14 @@ let nextId = 0;
   template: `
     <div class="flex flex-col gap-1.5">
       @if (label()) {
-        <label [for]="inputId()" class="text-xs font-black text-gray-500 uppercase tracking-widest">
+        <label [for]="inputId()" class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
           {{ label() }}
-          @if (required()) { <span class="text-red-500">*</span> }
+          @if (required()) { <span class="text-red-500 dark:text-red-400">*</span> }
         </label>
       }
 
       <div class="relative">
-        <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none">calendar_today</span>
+        <span class="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 dark:text-indigo-400 pointer-events-none">calendar_today</span>
         <input
           type="date"
           [id]="inputId()"
@@ -43,15 +43,15 @@ let nextId = 0;
           [attr.min]="min() || null"
           [attr.max]="max() || null"
           [attr.aria-invalid]="!!error() || null"
-          class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          [class.border-red-500]="!!error()"
+          class="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:border-indigo-400 dark:focus:border-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          [ngClass]="{'border-red-500': !!error(), 'dark:border-red-400': !!error()}"
           (input)="onInput($event)"
           (blur)="onBlur()"
         />
       </div>
 
       @if (error()) {
-        <span [id]="inputId() + '-error'" class="text-xs text-red-500 font-medium">{{ error() }}</span>
+        <span [id]="inputId() + '-error'" class="text-xs text-red-500 dark:text-red-400 font-medium">{{ error() }}</span>
       } @else if (helperText()) {
         <span [id]="inputId() + '-helper'" class="text-xs text-gray-400">{{ helperText() }}</span>
       }

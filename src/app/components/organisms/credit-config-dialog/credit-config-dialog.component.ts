@@ -30,11 +30,11 @@ export type CreditConfigResult = { success: true } | undefined;
     <div class="flex flex-col h-full max-h-[90vh] p-8">
       <header class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
+            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 dark:shadow-indigo-900/30">
               <span class="material-icons !text-[24px]">credit_score</span>
             </div>
             <div>
-              <h2 class="text-xl font-black text-gray-900 tracking-tight !m-0">
+              <h2 class="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight !m-0">
                 {{ isEdit() ? 'Editar Límite de Crédito' : 'Configurar Crédito' }}
               </h2>
               <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-1">
@@ -48,19 +48,19 @@ export type CreditConfigResult = { success: true } | undefined;
         </header>
 
         @if (error()) {
-          <div class="p-4 bg-red-50 border border-red-200 rounded-[20px] mb-6 flex items-start gap-3">
-            <span class="material-icons text-red-500 text-sm mt-0.5">error_outline</span>
-            <p class="text-xs text-red-700 font-medium">{{ error() }}</p>
+          <div class="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-[20px] mb-6 flex items-start gap-3">
+            <span class="material-icons text-red-500 dark:text-red-400 text-sm mt-0.5">error_outline</span>
+            <p class="text-xs text-red-700 dark:text-red-300 font-medium">{{ error() }}</p>
           </div>
         }
 
         @if (success()) {
           <div class="p-6 flex flex-col items-center text-center space-y-3">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
+            <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center">
               <span class="material-icons !text-[32px]">check_circle</span>
             </div>
-            <p class="font-black text-gray-900 text-lg">Crédito {{ isEdit() ? 'Actualizado' : 'Configurado' }}</p>
-            <p class="text-sm text-gray-500">
+            <p class="font-black text-gray-900 dark:text-gray-100 text-lg">Crédito {{ isEdit() ? 'Actualizado' : 'Configurado' }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
               El límite de crédito se ha {{ isEdit() ? 'actualizado' : 'configurado' }} exitosamente.
             </p>
             <ui-button variant="primary" (clicked)="close(true)">Cerrar</ui-button>

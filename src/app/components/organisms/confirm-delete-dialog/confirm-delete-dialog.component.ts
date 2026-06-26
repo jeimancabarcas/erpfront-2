@@ -16,34 +16,34 @@ export interface ConfirmDeleteData {
   standalone: true,
   imports: [CommonModule, ButtonAtom],
   template: `
-    <div class="p-8">
+    <div class="p-8 bg-white dark:bg-gray-900">
       <div class="flex justify-end">
         <ui-button variant="icon" (clicked)="close(false)" ariaLabel="Cerrar diálogo">
           <span class="material-icons">close</span>
         </ui-button>
       </div>
       <div class="text-center">
-        <div class="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+        <div class="w-20 h-20 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm dark:shadow-none">
           <span class="material-icons !text-[40px] !w-10 !h-10">delete_forever</span>
         </div>
         
-        <h2 class="text-2xl font-black text-gray-900 mb-2">{{ data.title }}</h2>
-        <p class="text-gray-500 font-medium mb-8 leading-relaxed">
+        <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 mb-2">{{ data.title }}</h2>
+        <p class="text-gray-500 dark:text-gray-400 font-medium mb-8 leading-relaxed">
           {{ data.message }} 
-          <span *ngIf="data.itemName" class="text-gray-900 font-bold">"{{ data.itemName }}"</span>. 
+          <span *ngIf="data.itemName" class="text-gray-900 dark:text-gray-100 font-bold">"{{ data.itemName }}"</span>. 
           Esta acción no se puede deshacer.
         </p>
 
         <div class="flex flex-col gap-3">
           <button 
             (click)="close(true)"
-            class="!h-14 !rounded-2xl !font-bold !bg-red-600 text-white shadow-xl shadow-red-100 hover:scale-105 transition-transform"
+            class="!h-14 !rounded-2xl !font-bold !bg-red-600 text-white shadow-xl shadow-red-100 dark:shadow-red-900/30 hover:scale-105 transition-transform"
           >
             {{ data.confirmText || 'Sí, eliminar definitivamente' }}
           </button>
           <button 
             (click)="close(false)"
-            class="!h-14 !rounded-2xl !font-bold text-gray-400 hover:bg-gray-50"
+            class="!h-14 !rounded-2xl !font-bold text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             {{ data.cancelText || 'No, mantener' }}
           </button>
