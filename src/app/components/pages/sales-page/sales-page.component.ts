@@ -33,13 +33,13 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
       <app-breadcrumb 
         [items]="[
           { label: 'Gestión Comercial', link: '/comercial' },
-          { label: 'Ventas' }
+          { label: 'Punto de venta (POS)' }
         ]" 
       />
 
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-6">
         <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Historial de Ventas</h1>
+          <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Punto de venta (POS)</h1>
           <p class="text-gray-500 dark:text-gray-400 font-medium">Gestiona y consulta las facturas generadas por el sistema.</p>
         </div>
         <ui-button 

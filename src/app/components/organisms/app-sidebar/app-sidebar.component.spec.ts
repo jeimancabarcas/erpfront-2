@@ -14,9 +14,9 @@ describe('AppSidebarOrganism', () => {
       ],
     },
     {
-      label: 'Ventas',
+      label: 'Punto de venta (POS)',
       items: [
-        { icon: 'payments', label: 'Ventas', routerLink: '/comercial/sales' },
+        { icon: 'payments', label: 'Punto de venta (POS)', routerLink: '/comercial/sales' },
       ],
     },
   ];

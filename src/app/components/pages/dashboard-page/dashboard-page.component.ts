@@ -40,7 +40,7 @@ import { CardAtom } from '../../atoms/card/card.component';
 export class DashboardPageComponent {
   modules = [
     { 
-      title: 'Ventas', 
+      title: 'Punto de venta (POS)', 
       description: 'Gestión de facturación, pedidos y clientes potenciales.', 
       icon: 'shopping_cart', 
       color: '#4f46e5' 

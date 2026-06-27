@@ -31,7 +31,7 @@ import { TableCellDirective } from '../../../../components/atoms/table/table-cel
   template: `
       <app-breadcrumb 
         [items]="[
-          { label: 'Ventas', link: '/comercial/sales' },
+          { label: 'Punto de venta (POS)', link: '/comercial/sales' },
           { label: 'Clientes' }
         ]" 
       />

@@ -27,7 +27,7 @@ describe('SidebarComponent', () => {
     const expectedOrder = [
       'Inicio',
       'Gestión Comercial',
-      'Ventas',
+      'Punto de venta (POS)',
       'Clientes',
       'Compras',
       'Proveedores',

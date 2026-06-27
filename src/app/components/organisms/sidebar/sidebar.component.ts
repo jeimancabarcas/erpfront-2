@@ -48,7 +48,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
             >
               <div class="flex items-center gap-3 px-4">
                 <mat-icon class="!text-[20px]">payments</mat-icon>
-                <span class="text-xs font-bold tracking-wide">Ventas</span>
+                <span class="text-xs font-bold tracking-wide">Punto de venta (POS)</span>
               </div>
             </a>
             <a
