@@ -333,7 +333,7 @@ interface TraceEvent {
               </ui-button>
             }
 
-            @if (!inv.isElectronic && !inv.emission) {
+            @if (!inv.emission) {
               <ui-button variant="primary" (clicked)="emitInvoice()" [disabled]="emitLoading()" [loading]="emitLoading()">
                 <span class="material-icons">rocket_launch</span>
                 Emitir Electrónicamente

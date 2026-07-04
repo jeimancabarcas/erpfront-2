@@ -159,7 +159,6 @@ export class FinanceService {
       total: parseFloat(dto.total || '0'),
       status: dto.is_validated ? 'Paid' : 'Sent',
       electronicId: dto.reference_code || dto.id,
-      isElectronic: true,
       items: [],
       type: dto.type,
       raw: dto,

@@ -12,7 +12,6 @@ describe('Invoice model', () => {
       customerId: 'cust-1',
       totalAmount: 100000,
       status: 'PAID',
-      isElectronic: false,
       items: [],
     };
 
@@ -28,7 +27,6 @@ describe('Invoice model', () => {
       customerId: 'cust-1',
       totalAmount: 100000,
       status: 'PAID',
-      isElectronic: true,
       items: [],
       emission: {
         number: 'SETP990003678',
@@ -55,7 +53,6 @@ describe('Invoice model', () => {
       customerId: 'cust-1',
       totalAmount: 50000,
       status: 'PAID',
-      isElectronic: false,
       items: [],
     };
 

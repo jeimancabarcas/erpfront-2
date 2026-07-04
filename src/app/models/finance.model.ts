@@ -30,7 +30,6 @@ export interface FinanceInvoice {
   total: number;
   status: 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Cancelled';
   electronicId?: string; // CUFE / UUID for electronic invoicing
-  isElectronic?: boolean; // Whether the invoice is electronic (DIAN)
   adjustments?: AdjustmentNote[];
   type?: 'bill' | 'credit-note'; // Document type from Radian/Factus
   raw?: FinanceDocumentDto; // Raw Factus response for detail view

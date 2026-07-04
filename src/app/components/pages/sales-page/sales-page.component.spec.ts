@@ -174,8 +174,8 @@ describe('SalesPageComponent — MANUAL badge in invoice list (TDD)', () => {
     fixture.detectChanges();
   }
 
-  it('renders MANUAL badge when isElectronic is false', async () => {
-    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001', isElectronic: false });
+  it('renders MANUAL badge when emission is undefined', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001' });
     await buildComponent([invoice]);
     fixture.detectChanges();
 
@@ -185,8 +185,8 @@ describe('SalesPageComponent — MANUAL badge in invoice list (TDD)', () => {
     expect(badge?.textContent?.trim()).toBe('MANUAL');
   });
 
-  it('does NOT render MANUAL badge when isElectronic is true', async () => {
-    const invoice = makeInvoice({ invoiceNumber: 'FAC-0001', isElectronic: true });
+  it('does NOT render MANUAL badge when emission is present', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'FAC-0001', emission: { number: 'SETP990001', cude: 'abc', qrUrl: '', publicUrl: '', isValidated: true } });
     await buildComponent([invoice]);
     fixture.detectChanges();
 
@@ -195,18 +195,8 @@ describe('SalesPageComponent — MANUAL badge in invoice list (TDD)', () => {
     expect(badge).toBeNull();
   });
 
-  it('does NOT render MANUAL badge when isElectronic is undefined', async () => {
-    const invoice = makeInvoice({ invoiceNumber: 'FAC-0001', isElectronic: undefined });
-    await buildComponent([invoice]);
-    fixture.detectChanges();
-
-    const nativeEl: HTMLElement = fixture.nativeElement;
-    const badge = nativeEl.querySelector('[data-testid="manual-badge"]');
-    expect(badge).toBeNull();
-  });
-
-  it('renders ELECTRÓNICA badge when isElectronic is true', async () => {
-    const invoice = makeInvoice({ invoiceNumber: 'SETP990001', isElectronic: true });
+  it('renders ELECTRÓNICA badge when emission is present', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'SETP990001', emission: { number: 'SETP990001', cude: 'abc', qrUrl: '', publicUrl: '', isValidated: true } });
     await buildComponent([invoice]);
     fixture.detectChanges();
 
@@ -216,18 +206,8 @@ describe('SalesPageComponent — MANUAL badge in invoice list (TDD)', () => {
     expect(badge?.textContent?.trim()).toBe('ELECTRÓNICA');
   });
 
-  it('renders ELECTRÓNICA badge when invoice has been emitted (isElectronic + emission)', async () => {
-    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001', emission: { number: 'SETP990099', cude: '', qrUrl: '', publicUrl: '', isValidated: true }, isElectronic: true });
-    await buildComponent([invoice]);
-    fixture.detectChanges();
-
-    const nativeEl: HTMLElement = fixture.nativeElement;
-    const badge = nativeEl.querySelector('[data-testid="electronic-badge"]');
-    expect(badge).not.toBeNull();
-  });
-
-  it('does NOT render ELECTRÓNICA badge when isElectronic is false', async () => {
-    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001', isElectronic: false });
+  it('does NOT render ELECTRÓNICA badge when emission is undefined', async () => {
+    const invoice = makeInvoice({ invoiceNumber: 'MAN-0001' });
     await buildComponent([invoice]);
     fixture.detectChanges();
 

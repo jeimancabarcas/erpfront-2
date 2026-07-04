@@ -4,16 +4,13 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SalesNoteFormDialogOrganism, SalesNoteDialogData } from './sales-note-form-dialog.component';
-import { FinanceService } from '../../../services/finance.service';
 import { SalesNoteService } from '../../../services/sales-note.service';
-import { InvoiceService } from '../../../services/invoice.service';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Invoice } from '../../../models/invoice.model';
 
-describe('SalesNoteFormDialogOrganism — Factus path', () => {
-  let financeService: jasmine.SpyObj<FinanceService>;
-  let salesNoteService: jasmine.SpyObj<SalesNoteService>;
+describe('SalesNoteFormDialogOrganism — Scenario D (Total Annulment)', () => {
+  let salesNoteService: { createCreditNote: ReturnType<typeof vi.fn> };
 
   const mockInvoice: Invoice = {
     id: 'inv-uuid-001',
@@ -23,16 +20,13 @@ describe('SalesNoteFormDialogOrganism — Factus path', () => {
     customerId: 'cust-001',
     totalAmount: 1190000,
     status: 'DRAFT',
-    isElectronic: true,
     items: [
       {
         productId: 'prod-001',
-        name: 'Producto A',
-        codeReference: 'P-001',
         quantity: 1,
         unitPrice: 1000000,
-        price: 1000000,
         subtotal: 1000000,
+        product: { id: 'prod-001', name: 'Producto A', sku: 'P-001' } as any,
       },
     ],
     customer: {
@@ -47,15 +41,8 @@ describe('SalesNoteFormDialogOrganism — Factus path', () => {
   };
 
   function setup(dataOverrides: Partial<SalesNoteDialogData> = {}) {
-    financeService = jasmine.createSpyObj('FinanceService', ['createElectronicCreditNote']);
-    salesNoteService = jasmine.createSpyObj('SalesNoteService', ['createCreditNote']);
-    const invoiceService = jasmine.createSpyObj('InvoiceService', ['loadInvoices']);
-
-    invoiceService.loadInvoices.and.returnValue(of([]));
-    financeService.createElectronicCreditNote.and.returnValue(
-      of({ status: 'OK', message: 'Created', data: { number: 'NC-001' } }),
-    );
-    salesNoteService.createCreditNote.and.returnValue(
+    salesNoteService = { createCreditNote: vi.fn() };
+    salesNoteService.createCreditNote.mockReturnValue(
       of({ id: 'nc-001', noteNumber: 'NC-001' }),
     );
 
@@ -69,9 +56,7 @@ describe('SalesNoteFormDialogOrganism — Factus path', () => {
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: dialogData },
         { provide: MatDialogRef, useValue: { close: vi.fn() } },
-        { provide: FinanceService, useValue: financeService },
         { provide: SalesNoteService, useValue: salesNoteService },
-        { provide: InvoiceService, useValue: invoiceService },
       ],
     });
 
@@ -81,73 +66,66 @@ describe('SalesNoteFormDialogOrganism — Factus path', () => {
     return { component, fixture };
   }
 
-  describe('Factus credit note submission', () => {
-    it('should call FinanceService.createElectronicCreditNote when useFactusCreditNote is true', () => {
-      const { component } = setup({ useFactusCreditNote: true, billNumber: 'SETP990000123' });
-
-      // Set correction concept to '2' (Anulación total) to avoid items being required
-      component.noteForm.patchValue({
-        correctionConceptCode: '2',
-        observation: 'Test anulación',
-      });
-
-      (component as any).onSubmit();
-
-      expect(financeService.createElectronicCreditNote).toHaveBeenCalled();
-      expect(salesNoteService.createCreditNote).not.toHaveBeenCalled();
-
-      const callArg = financeService.createElectronicCreditNote.calls.mostRecent().args[0];
-      expect(callArg.billNumber).toBe('SETP990000123');
-      expect(callArg.correctionConceptCode).toBe('2');
-    });
-
-    it('should call SalesNoteService.createCreditNote when useFactusCreditNote is not set', () => {
-      const { component } = setup(); // no useFactusCreditNote flag
-
-      component.noteForm.patchValue({
-        correctionConceptCode: '2',
-        observation: 'Test manual',
-      });
-
-      (component as any).onSubmit();
-
-      expect(salesNoteService.createCreditNote).toHaveBeenCalled();
-      expect(financeService.createElectronicCreditNote).not.toHaveBeenCalled();
-    });
-
-    it('should set errorMsg when Factus submission fails', () => {
-      financeService.createElectronicCreditNote.and.returnValue(
-        throwError(() => ({ error: { message: 'Factus validation error' } })),
-      );
-
-      const { component } = setup({ useFactusCreditNote: true, billNumber: 'SETP990000123' });
-
-      component.noteForm.patchValue({
-        correctionConceptCode: '2',
-        observation: 'Test error',
-      });
-
-      (component as any).onSubmit();
-
-      expect(component.errorMsg()).toBe('Factus validation error');
-      expect(component.loading()).toBe(false);
-    });
+  it('should default to correction concept code 2 (total annulment)', () => {
+    const { component } = setup();
+    expect(component.noteForm.get('correctionConceptCode')?.value).toBe('2');
   });
 
-  describe('Electronic toggle state', () => {
-    it('should be forced ON and disabled when useFactusCreditNote is true', () => {
-      const { component } = setup({ useFactusCreditNote: true, billNumber: 'SETP990000123' });
+  it('should have scenario set to D (total annulment)', () => {
+    const { component } = setup();
+    expect(component.scenario()).toBe('D');
+  });
 
-      expect(component.isElectronic()).toBe(true);
-      // The toggle disabled state is computed from data.forceElectronic in the template;
-      // confirm the signal reflects the forced electronic state
-      expect(component.isElectronic()).toBe(true);
+  it('showItemsTable should always be false', () => {
+    const { component } = setup();
+    expect(component.showItemsTable()).toBe(false);
+  });
+
+  it('should call SalesNoteService.createCreditNote on submit', () => {
+    const { component } = setup();
+
+    component.noteForm.patchValue({
+      correctionConceptCode: '2',
+      observation: 'Test annulment',
     });
 
-    it('should be enabled with invoice.isElectronic when useFactusCreditNote is not set', () => {
-      const { component } = setup(); // no flag, invoice.isElectronic = true
+    (component as any).onSubmit();
 
-      expect(component.isElectronic()).toBe(mockInvoice.isElectronic);
+    expect(salesNoteService.createCreditNote).toHaveBeenCalled();
+    const callArg = salesNoteService.createCreditNote.mock.calls[0][1];
+    expect(callArg.correctionConceptCode).toBe('2');
+    expect(callArg.scenarioType).toBe('total_annulment');
+  });
+
+  it('should derive isElectronic from invoice.emission', () => {
+    const invoiceWithEmission: Invoice = {
+      ...mockInvoice,
+      emission: { number: 'SETP990001', cude: 'abc', qrUrl: '', publicUrl: '', isValidated: true },
+    };
+    const { component } = setup({ invoice: invoiceWithEmission });
+
+    component.noteForm.patchValue({
+      correctionConceptCode: '2',
+      observation: 'Test',
     });
+
+    (component as any).onSubmit();
+
+    const callArg1 = salesNoteService.createCreditNote.mock.calls[0][1];
+    expect(callArg1.isElectronic).toBe(true);
+  });
+
+  it('should set isElectronic to false when invoice has no emission', () => {
+    const { component } = setup();
+
+    component.noteForm.patchValue({
+      correctionConceptCode: '2',
+      observation: 'Test manual',
+    });
+
+    (component as any).onSubmit();
+
+    const callArg2 = salesNoteService.createCreditNote.mock.calls[0][1];
+    expect(callArg2.isElectronic).toBe(false);
   });
 });

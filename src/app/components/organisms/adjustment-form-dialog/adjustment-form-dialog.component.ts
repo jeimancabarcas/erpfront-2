@@ -2,7 +2,6 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
@@ -17,7 +16,6 @@ import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 export interface AdjustmentFormData {
   type?: 'Credit';
   invoice?: FinanceInvoice;
-  invoiceIsElectronic?: boolean;
   /** When true, the electronic toggle is forced ON and disabled (e.g., from Factus documents) */
   forceElectronic?: boolean;
 }
@@ -29,7 +27,6 @@ export interface AdjustmentFormData {
     CommonModule, 
     ReactiveFormsModule, 
     MatDialogModule,
-    MatSlideToggleModule,
     MatSnackBarModule,
     ButtonAtom,
     TextInputComponent,
@@ -90,34 +87,6 @@ export interface AdjustmentFormData {
             </div>
           </div>
 
-          <!-- Electronic toggle -->
-          <div class="flex items-center justify-between px-1">
-            <mat-slide-toggle
-              [checked]="isElectronic()"
-              (change)="isElectronic.set($event.checked)"
-              [disabled]="isElectronicDisabled()"
-              color="primary"
-            >
-              <span class="text-sm font-semibold text-gray-700">Nota Electrónica (DIAN)</span>
-            </mat-slide-toggle>
-          </div>
-
-          @if (isElectronicDisabled() && selectedInvoice()?.isElectronic === false) {
-            <div class="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-              <span class="material-icons text-blue-500 mt-0.5 text-[18px]">info</span>
-              <p class="text-xs text-blue-700 leading-relaxed">
-                La factura de referencia es <strong>manual</strong>. Las notas electrónicas solo pueden emitirse para facturas electrónicas.
-              </p>
-            </div>
-          } @else if (!isElectronic()) {
-            <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-              <span class="material-icons text-amber-500 mt-0.5 text-[18px]">warning_amber</span>
-              <p class="text-xs text-amber-700 leading-relaxed">
-                Esta nota <strong>no será enviada a la DIAN</strong>. Se generará solo en el sistema local sin validez fiscal electrónica.
-              </p>
-            </div>
-          }
-
           <!-- Invoice Reference Selection -->
           <div class="space-y-3">
             <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1 block">Factura de Referencia</label>
@@ -156,7 +125,7 @@ export interface AdjustmentFormData {
           </div>
 
           <!-- DIAN Correction Concept -->
-          <ui-select label="Concepto de Corrección (DIAN)" placeholder="Seleccione el concepto" [options]="correctionConceptOptions()" [formControl]="adjustmentForm.controls.correctionConceptCode" />
+          <ui-select label="Concepto de Corrección (DIAN)" placeholder="Seleccione el concepto" [options]="correctionConceptOptions" [formControl]="adjustmentForm.controls.correctionConceptCode" />
 
           <!-- Amount Selection -->
           <div class="space-y-3">
@@ -207,12 +176,6 @@ export class AdjustmentFormDialogOrganism implements OnInit {
 
   selectedInvoice = signal<FinanceInvoice | null>(null);
   isSubmitting = signal<boolean>(false);
-  isElectronic = signal(this.data.forceElectronic || this.data.invoice?.isElectronic || false);
-  isElectronicDisabled = computed(() => {
-    if (this.data.forceElectronic) return true;
-    const inv = this.selectedInvoice();
-    return inv ? !inv.isElectronic : true;
-  });
 
   adjustmentForm = this.fb.group({
     type: [this.data.type || 'Credit', Validators.required],
@@ -254,18 +217,13 @@ export class AdjustmentFormDialogOrganism implements OnInit {
       }));
   });
 
-  // Correction concepts for credit notes
-  correctionConcepts = computed(() => [
-    { code: '1', label: '1 - Devolución parcial de los bienes o no aceptación del servicio' },
+  // Correction concepts for credit notes — only total annulment (code '2')
+  correctionConcepts = [
     { code: '2', label: '2 - Anulación de factura electrónica' },
-    { code: '3', label: '3 - Rebaja o descuento parcial o total' },
-    { code: '4', label: '4 - Ajuste de precio' },
-    { code: '5', label: '5 - Otros' }
-  ]);
+  ];
 
-  correctionConceptOptions = computed<SelectOption[]>(() =>
-    this.correctionConcepts().map(c => ({ value: c.code, label: c.label }))
-  );
+  correctionConceptOptions: SelectOption[] =
+    this.correctionConcepts.map(c => ({ value: c.code, label: c.label }));
 
   constructor() {
     // Watch invoice selection from ui-select
@@ -274,7 +232,6 @@ export class AdjustmentFormDialogOrganism implements OnInit {
         const invoice = this.realFinanceInvoices().find(inv => inv.id === id);
         if (invoice) {
           this.selectedInvoice.set(invoice);
-          this.isElectronic.set(invoice.isElectronic ?? false);
           this.adjustmentForm.patchValue({ amount: invoice.total });
         }
       }
@@ -286,7 +243,6 @@ export class AdjustmentFormDialogOrganism implements OnInit {
           const inv = this.data.invoice;
           this.adjustmentForm.get('invoiceSearch')?.setValue(inv.id);
           this.selectedInvoice.set(inv);
-          this.isElectronic.set(inv.isElectronic ?? false);
           this.adjustmentForm.patchValue({ amount: inv.total });
         }
       });
@@ -314,7 +270,6 @@ export class AdjustmentFormDialogOrganism implements OnInit {
       customerTaxId: inv.customer?.documentNumber || 'N/A',
       date: inv.date,
       dueDate: inv.date,
-      isElectronic: inv.isElectronic,
       subtotal: Number(inv.totalAmount || 0),
       tax: 0,
       total: Number(inv.totalAmount || 0),
@@ -343,7 +298,6 @@ export class AdjustmentFormDialogOrganism implements OnInit {
       const dto: any = {
         correctionConceptCode: val.correctionConceptCode!,
         observation: val.reason || 'Sin observación',
-        isElectronic: this.isElectronic(),
       };
 
       // If partial credit note, calculate and scale item prices

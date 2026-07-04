@@ -10,7 +10,6 @@ import {
   FormControl,
   AbstractControl,
 } from '@angular/forms';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { ProductService } from '../../../services/product.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -40,7 +39,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatSlideToggleModule,
     CurrencyPipe,
     PercentPipe,
     ButtonAtom,
@@ -81,27 +79,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
         </header>
 
         <form [formGroup]="saleForm" (ngSubmit)="onSubmit()" class="space-y-8">
-          <!-- Electronic invoice toggle -->
-          <div class="flex items-center justify-between px-1">
-            <mat-slide-toggle
-              [checked]="isElectronic()"
-              (change)="isElectronic.set($event.checked)"
-              color="primary"
-            >
-              <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Factura electrónica</span>
-            </mat-slide-toggle>
-          </div>
-
-          @if (!isElectronic()) {
-            <div class="flex items-start gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-4 py-3">
-              <span class="material-icons text-amber-500 dark:text-amber-400 mt-0.5 text-[18px]">warning_amber</span>
-              <p class="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
-                Esta venta <strong>no será enviada a la DIAN</strong>. Se asignará un número
-                interno (MAN-XXXXXXXX) y no tendrá validez fiscal electrónica.
-              </p>
-            </div>
-          }
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Customer Selection -->
             <div class="space-y-2">
@@ -161,6 +138,15 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                 [options]="installmentOptions()"
                 formControlName="installments"
               />
+              <ui-select
+                label="Frecuencia de Pago"
+                placeholder="Seleccione la frecuencia"
+                [options]="paymentFrequencyOptions"
+                [value]="paymentFrequency()"
+                (valueChange)="paymentFrequency.set($event)"
+              />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="flex items-end pb-4">
                 <p class="text-xs text-gray-400 dark:text-gray-500">
                   @if (toNumber(installmentsValue()) > 1) {
@@ -410,7 +396,6 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
   customers = this.customerService.customers;
   allProducts = this.productService.products;
   isSubmitting = signal(false);
-  isElectronic = signal(false);
 
   // Payment method/type state
   paymentMethodOptions = computed<SelectOption[]>(() =>
@@ -428,6 +413,17 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
     { value: '6', label: '6 cuotas' },
     { value: '12', label: '12 cuotas' },
   ]);
+
+  // Payment frequency for credit invoices
+  paymentFrequencyOptions: SelectOption[] = [
+    { value: 'DAILY', label: 'Diario' },
+    { value: 'WEEKLY', label: 'Semanal' },
+    { value: 'BIWEEKLY', label: 'Quincenal' },
+    { value: 'MONTHLY', label: 'Mensual' },
+    { value: 'QUARTERLY', label: 'Trimestral' },
+    { value: 'YEARLY', label: 'Anual' },
+  ];
+  paymentFrequency = signal('MONTHLY');
 
   saleForm = this.fb.group({
     customerId: ['', Validators.required],
@@ -754,6 +750,7 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
         notes: formValue.notes || undefined,
         paymentMethodId: formValue.paymentMethodId || undefined,
         paymentTypeId: formValue.paymentTypeId || undefined,
+        paymentFrequency: this.isCreditPayment() ? this.paymentFrequency() : undefined,
         installments: this.isCreditPayment() ? Number(this.saleForm.get('installments')?.value ?? 1) : undefined,
         items: (formValue.items || []).map((item: any) => {
           const itemPayload: any = {
@@ -769,7 +766,6 @@ export class SaleFormMolecule implements OnInit, OnDestroy {
 
           return itemPayload;
         }),
-        isElectronic: this.isElectronic(),
       };
 
       this.invoiceService.createInvoice(dto).subscribe({

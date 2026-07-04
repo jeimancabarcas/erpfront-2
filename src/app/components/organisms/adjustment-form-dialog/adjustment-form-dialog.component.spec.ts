@@ -21,7 +21,7 @@ try {
   // Already initialized — ignore
 }
 
-describe('AdjustmentFormDialogOrganism — conditional electronic toggle (TDD)', () => {
+describe('AdjustmentFormDialogOrganism — Scenario D only', () => {
   let component: AdjustmentFormDialogOrganism;
   let fixture: ComponentFixture<AdjustmentFormDialogOrganism>;
   let mockFinanceService: any;
@@ -63,127 +63,101 @@ describe('AdjustmentFormDialogOrganism — conditional electronic toggle (TDD)',
     fixture.detectChanges();
   }
 
-  it('sets isElectronic to false for manual invoice from data', async () => {
-    await setupWithData({
-      invoice: {
-        id: 'MAN-001',
-        dbId: 'inv-1',
-        customerName: 'Test',
-        customerTaxId: '123',
-        date: '2026-06-23',
-        dueDate: '2026-06-23',
-        items: [],
-        subtotal: 1000,
-        tax: 0,
-        total: 1000,
-        status: 'Paid',
-        isElectronic: false,
-      },
-    });
-
-    expect(component.isElectronic()).toBe(false);
-    expect(component.isElectronicDisabled()).toBe(true);
-  });
-
-  it('sets isElectronic to true for electronic invoice from data', async () => {
-    await setupWithData({
-      invoice: {
-        id: 'FAC-001',
-        dbId: 'inv-2',
-        customerName: 'Test',
-        customerTaxId: '123',
-        date: '2026-06-23',
-        dueDate: '2026-06-23',
-        items: [],
-        subtotal: 1000,
-        tax: 0,
-        total: 1000,
-        status: 'Paid',
-        isElectronic: true,
-      },
-    });
-
-    expect(component.isElectronic()).toBe(true);
-    expect(component.isElectronicDisabled()).toBe(false);
-  });
-
-  it('renders toggle disabled for manual invoice', async () => {
-    await setupWithData({
-      invoice: {
-        id: 'MAN-001',
-        dbId: 'inv-1',
-        customerName: 'Test',
-        customerTaxId: '123',
-        date: '2026-06-23',
-        dueDate: '2026-06-23',
-        items: [],
-        subtotal: 1000,
-        tax: 0,
-        total: 1000,
-        status: 'Paid',
-        isElectronic: false,
-      },
-    });
-
-    const el = fixture.nativeElement as HTMLElement;
-    const toggle = el.querySelector('mat-slide-toggle');
-    expect(toggle).not.toBeNull();
-    expect(component.isElectronicDisabled()).toBe(true);
-    expect(component.isElectronic()).toBe(false);
-  });
-
-  it('shows explanation message for manual invoice', async () => {
-    await setupWithData({
-      invoice: {
-        id: 'MAN-001',
-        dbId: 'inv-1',
-        customerName: 'Test',
-        customerTaxId: '123',
-        date: '2026-06-23',
-        dueDate: '2026-06-23',
-        items: [],
-        subtotal: 1000,
-        tax: 0,
-        total: 1000,
-        status: 'Paid',
-        isElectronic: false,
-      },
-    });
-
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('manual');
-    expect(el.textContent).toContain('solo pueden emitirse para facturas electrónicas');
-  });
-
-  it('renders toggle enabled for electronic invoice', async () => {
-    await setupWithData({
-      invoice: {
-        id: 'FAC-001',
-        dbId: 'inv-2',
-        customerName: 'Test',
-        customerTaxId: '123',
-        date: '2026-06-23',
-        dueDate: '2026-06-23',
-        items: [],
-        subtotal: 1000,
-        tax: 0,
-        total: 1000,
-        status: 'Paid',
-        isElectronic: true,
-      },
-    });
-
-    const el = fixture.nativeElement as HTMLElement;
-    const toggle = el.querySelector('mat-slide-toggle');
-    expect(toggle).not.toBeNull();
-    expect(component.isElectronic()).toBe(true);
-    expect(component.isElectronicDisabled()).toBe(false);
-  });
-
-  it('defaults isElectronic to false when data.invoice is undefined', async () => {
+  it('has only code 2 in correction concepts', async () => {
     await setupWithData({});
+    expect(component.correctionConcepts).toHaveLength(1);
+    expect(component.correctionConcepts[0].code).toBe('2');
+  });
 
-    expect(component.isElectronic()).toBe(false);
-    expect(component.isElectronicDisabled()).toBe(true);
+  it('defaults correction concept to empty (user must select)', async () => {
+    await setupWithData({});
+    expect(component.adjustmentForm.get('correctionConceptCode')?.value).toBe('');
+  });
+
+  it('submits credit note with correction concept code 2', async () => {
+    await setupWithData({
+      invoice: {
+        id: 'FAC-001',
+        dbId: 'inv-2',
+        customerName: 'Test',
+        customerTaxId: '123',
+        date: '2026-06-23',
+        dueDate: '2026-06-23',
+        items: [],
+        subtotal: 1000,
+        tax: 0,
+        total: 1000,
+        status: 'Paid',
+        electronicId: 'elec-001',
+      },
+    });
+
+    component.adjustmentForm.patchValue({
+      correctionConceptCode: '2',
+      reason: 'Test annulment',
+    });
+
+    component.onSubmit();
+
+    expect(mockSalesNoteService.createCreditNote).toHaveBeenCalled();
+    const dto = mockSalesNoteService.createCreditNote.mock.calls[0][1];
+    expect(dto.correctionConceptCode).toBe('2');
+  });
+
+  it('derives isElectronic from invoice electronicId', async () => {
+    await setupWithData({
+      invoice: {
+        id: 'FAC-001',
+        dbId: 'inv-2',
+        customerName: 'Test',
+        customerTaxId: '123',
+        date: '2026-06-23',
+        dueDate: '2026-06-23',
+        items: [],
+        subtotal: 1000,
+        tax: 0,
+        total: 1000,
+        status: 'Paid',
+        electronicId: 'elec-001',
+      },
+    });
+
+    component.adjustmentForm.patchValue({
+      correctionConceptCode: '2',
+      reason: 'Test',
+    });
+
+    component.onSubmit();
+
+    const dto1 = mockSalesNoteService.createCreditNote.mock.calls[0][1];
+    expect(dto1.isElectronic).toBe(true);
+  });
+
+  it('sets isElectronic to false when invoice has no electronicId', async () => {
+    await setupWithData({
+      invoice: {
+        id: 'MAN-001',
+        dbId: 'inv-1',
+        customerName: 'Test',
+        customerTaxId: '123',
+        date: '2026-06-23',
+        dueDate: '2026-06-23',
+        items: [],
+        subtotal: 1000,
+        tax: 0,
+        total: 1000,
+        status: 'Paid',
+      },
+    });
+
+    component.adjustmentForm.patchValue({
+      correctionConceptCode: '2',
+      reason: 'Test manual',
+    });
+
+    component.onSubmit();
+
+    const dto2 = mockSalesNoteService.createCreditNote.mock.calls[0][1];
+    expect(dto2.isElectronic).toBe(false);
   });
 });

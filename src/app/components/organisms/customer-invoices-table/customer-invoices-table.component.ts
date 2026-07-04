@@ -91,7 +91,7 @@ import { TableCellDirective } from '../../atoms/table/table-cell.directive';
               <ui-button 
                 variant="icon"
                 size="sm"
-                [tooltip]="inv.isElectronic ? 'Descargar PDF DIAN' : 'Ver PDF Historial'"
+                [tooltip]="inv.emission ? 'Descargar PDF DIAN' : 'Ver PDF Historial'"
                 (clicked)="downloadInvoicePdf(inv)"
               >
                 <mat-icon class="!text-red-600">picture_as_pdf</mat-icon>
@@ -162,7 +162,7 @@ export class CustomerInvoicesTableOrganism {
   }
 
   downloadInvoicePdf(invoice: Invoice) {
-    const request$ = invoice.isElectronic
+    const request$ = invoice.emission
       ? this.invoiceService.getInvoiceDianPdf(invoice.id)
       : this.invoiceService.getInvoicePdf(invoice.id);
 

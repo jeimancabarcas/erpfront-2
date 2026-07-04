@@ -30,7 +30,6 @@ function createManualInvoice(overrides?: Partial<Invoice>): Invoice {
     customerId: 'cust-1',
     totalAmount: 100000,
     status: 'PAID',
-    isElectronic: false,
     items: [
       {
         productId: 'prod-1',
@@ -53,7 +52,7 @@ describe('InvoiceDetailDialogOrganism — Emit button (TDD)', () => {
   beforeEach(async () => {
     mockInvoiceService = {
       getInvoiceById: vi.fn().mockReturnValue(of(createManualInvoice())),
-      emitInvoice: vi.fn().mockReturnValue(of(createManualInvoice({ isElectronic: true, emission: { number: 'SETP990003678', cude: '', qrUrl: '', publicUrl: '', isValidated: false } }))),
+      emitInvoice: vi.fn().mockReturnValue(of(createManualInvoice({ emission: { number: 'SETP990003678', cude: '', qrUrl: '', publicUrl: '', isValidated: false } }))),
       getInvoicePdf: vi.fn().mockReturnValue(of({ pdfBase64Encoded: '', fileName: 'test.pdf' })),
       getInvoiceDianPdf: vi.fn().mockReturnValue(of({ pdfBase64Encoded: '', fileName: 'dian.pdf' })),
     };
@@ -107,7 +106,7 @@ describe('InvoiceDetailDialogOrganism — Emit button (TDD)', () => {
   });
 
   it('should update invoice with emission on successful emit', () => {
-    const updatedInvoice = createManualInvoice({ isElectronic: true, emission: { number: 'SETP990003678', cude: '', qrUrl: '', publicUrl: '', isValidated: false } });
+    const updatedInvoice = createManualInvoice({ emission: { number: 'SETP990003678', cude: '', qrUrl: '', publicUrl: '', isValidated: false } });
     mockInvoiceService.emitInvoice.mockReturnValue(of(updatedInvoice));
 
     component.emitInvoice();
@@ -121,7 +120,7 @@ describe('InvoiceDetailDialogOrganism — Emit button (TDD)', () => {
       imports: [InvoiceDetailDialogOrganism, NoopAnimationsModule],
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: { invoice: createManualInvoice({ isElectronic: true }) } },
+        { provide: MAT_DIALOG_DATA, useValue: { invoice: createManualInvoice({ emission: { number: 'SETP990001', cude: '', qrUrl: '', publicUrl: '', isValidated: true } }) } },
         { provide: InvoiceService, useValue: mockInvoiceService },
         { provide: SalesNoteService, useValue: mockSalesNoteService },
       ],
@@ -181,7 +180,6 @@ describe('InvoiceDetailDialogOrganism — afterClosed reload (TDD)', () => {
       customerId: 'cust-1',
       totalAmount: 100000,
       status: 'PAID',
-      isElectronic: false,
       items: [
         { productId: 'prod-1', quantity: 2, unitPrice: 50000, subtotal: 100000 },
       ],
@@ -259,8 +257,8 @@ describe('InvoiceDetailDialogOrganism — afterClosed reload (TDD)', () => {
     expect(mockSalesNoteService.getNotesByInvoiceId).not.toHaveBeenCalled();
   });
 
-  it('passes invoice.isElectronic in dialog data', async () => {
-    const invoice = createSuiteInvoice({ isElectronic: true });
+  it('passes invoice data to adjustment dialog', async () => {
+    const invoice = createSuiteInvoice();
     await setupWithInvoice(invoice);
 
     component.openAdjustmentDialog(invoice);
@@ -270,25 +268,7 @@ describe('InvoiceDetailDialogOrganism — afterClosed reload (TDD)', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           invoice: expect.objectContaining({
-            isElectronic: true,
-          }),
-        }),
-      }),
-    );
-  });
-
-  it('passes false when invoice.isElectronic is false', async () => {
-    const invoice = createSuiteInvoice({ isElectronic: false });
-    await setupWithInvoice(invoice);
-
-    component.openAdjustmentDialog(invoice);
-
-    expect(mockMatDialog.open).toHaveBeenCalledWith(
-      expect.any(Function),
-      expect.objectContaining({
-        data: expect.objectContaining({
-          invoice: expect.objectContaining({
-            isElectronic: false,
+            id: invoice.id,
           }),
         }),
       }),
@@ -525,7 +505,6 @@ describe('InvoiceDetailDialogOrganism — Emission metadata section (TDD)', () =
 
   it('should display emission number, CUDE, QR, public URL and validation status when emission is present', async () => {
     const invoice = createManualInvoice({
-      isElectronic: true,
       emission: {
         number: 'SETP990003678',
         cude: 'abc123cudehash',
@@ -544,7 +523,6 @@ describe('InvoiceDetailDialogOrganism — Emission metadata section (TDD)', () =
 
   it('should display PENDIENTE validation badge when emission is not validated', async () => {
     const invoice = createManualInvoice({
-      isElectronic: true,
       emission: {
         number: 'SETP990003679',
         cude: 'anothercude',

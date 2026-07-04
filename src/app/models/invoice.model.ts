@@ -42,7 +42,8 @@ export interface Invoice {
   netTotal?: number; // Computed by backend: totalAmount - Σcn.amount + Σdn.amount
   status: InvoiceStatus;
   notes?: string;
-  isElectronic?: boolean;
+  dueDate?: string | Date;
+  paymentFrequency?: string;
   emission?: EmissionInfo; // Metadata de emisión electrónica Factus
   installments?: number;
   paymentTypeId?: string;
@@ -53,9 +54,9 @@ export interface Invoice {
 export interface CreateInvoiceDto {
   customerId: string;
   notes?: string;
-  isElectronic?: boolean;
   paymentMethodId?: string;
   paymentTypeId?: string;
+  paymentFrequency?: string;
   installments?: number;
   items: {
     productId: string;

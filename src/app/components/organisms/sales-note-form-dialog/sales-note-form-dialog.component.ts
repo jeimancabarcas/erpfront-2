@@ -1,21 +1,17 @@
-import { Component, inject, signal, computed, OnInit, effect } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormArray, FormGroup, ValidatorFn, AbstractControl } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
 import { Invoice } from '../../../models/invoice.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SalesNoteService } from '../../../services/sales-note.service';
-import { FinanceService } from '../../../services/finance.service';
 import { CreateSalesNoteDto } from '../../../models/sales-note.model';
-import { CreateElectronicCreditNotePayload } from '../../../models/finance.model';
 
 export interface SalesNoteDialogData {
   invoice: Invoice;
@@ -41,9 +37,7 @@ export interface SalesNoteDialogData {
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    MatCheckboxModule,
     MatDividerModule,
-    MatSlideToggleModule,
     CurrencyPipe,
     ButtonAtom,
     TextInputComponent,
@@ -75,49 +69,8 @@ export interface SalesNoteDialogData {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ui-select label="Tipo de Nota" [options]="noteTypeOptions" [formControl]="noteForm.controls.noteType" />
 
-            <ui-select label="Concepto de Corrección" [options]="correctionOptions()" [formControl]="noteForm.controls.correctionConceptCode" />
+            <ui-select label="Concepto de Corrección" [options]="correctionOptions" [formControl]="noteForm.controls.correctionConceptCode" />
           </div>
-
-          <!-- Electronic toggle -->
-          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm">
-                <mat-icon>rocket_launch</mat-icon>
-              </div>
-              <div>
-                <p class="text-xs font-black text-gray-900">Nota Electrónica (DIAN)</p>
-                <p class="text-[10px] text-gray-400 font-bold uppercase">
-                  {{ isElectronic() ? 'Se emitirá ante la DIAN' : 'Solo local — sin validez fiscal electrónica' }}
-                </p>
-              </div>
-            </div>
-            <mat-slide-toggle [checked]="isElectronic()" (change)="isElectronic.set($event.checked)"
-              [disabled]="data.forceElectronic || data.useFactusCreditNote || !data.invoice.isElectronic" color="primary"></mat-slide-toggle>
-          </div>
-
-          @if (data.forceElectronic) {
-            <div class="flex items-start gap-3 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-3">
-              <span class="material-icons text-indigo-500 mt-0.5 text-[18px]">info</span>
-              <p class="text-xs text-indigo-700 leading-relaxed">
-                Emisión electrónica <strong>requerida</strong> — este documento debe ser enviado a la DIAN.
-              </p>
-            </div>
-          } @else if (data.useFactusCreditNote) {
-            <div class="flex items-start gap-3 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-3">
-              <span class="material-icons text-indigo-500 mt-0.5 text-[18px]">info</span>
-              <p class="text-xs text-indigo-700 leading-relaxed">
-                Emisión directa por Factus — la nota crédito se emitirá electrónicamente sin vínculo local.
-              </p>
-            </div>
-          } @else if (!data.invoice.isElectronic) {
-            <div class="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-              <span class="material-icons text-blue-500 mt-0.5 text-[18px]">info</span>
-              <p class="text-xs text-blue-700 leading-relaxed">
-                La factura de referencia es <strong>manual</strong>. Las notas electrónicas solo pueden emitirse para facturas electrónicas.
-                El toggle está deshabilitado.
-              </p>
-            </div>
-          }
 
           <!-- Observation -->
           <ui-textarea formControlName="observation" label="Observación / Justificación" placeholder="Indique la justificación de este ajuste..." [rows]="3" />
@@ -127,75 +80,6 @@ export interface SalesNoteDialogData {
             <div class="flex items-start gap-3 rounded-xl px-4 py-3" [class.bg-amber-50]="info.type === 'warning'" [class.border]="info.type === 'warning'" [class.border-amber-200]="info.type === 'warning'" [class.bg-blue-50]="info.type === 'info'" [class.border]="info.type === 'info'" [class.border-blue-200]="info.type === 'info'" [class.bg-green-50]="info.type === 'success'" [class.border]="info.type === 'success'" [class.border-green-200]="info.type === 'success'">
               <span class="material-icons mt-0.5 text-[18px]" [class.text-amber-500]="info.type === 'warning'" [class.text-blue-500]="info.type === 'info'" [class.text-green-500]="info.type === 'success'">{{ info.icon }}</span>
               <p class="text-xs leading-relaxed" [class.text-amber-700]="info.type === 'warning'" [class.text-blue-700]="info.type === 'info'" [class.text-green-700]="info.type === 'success'">{{ info.message }}</p>
-            </div>
-          }
-
-          <!-- Items Selection Table (Scenarios A, B, C, F) -->
-          @if (showItemsTable()) {
-            <div class="space-y-3 animate-in fade-in duration-300">
-              <label class="text-[10px] text-gray-400 font-black uppercase tracking-widest ml-1">Selección de Productos</label>
-
-              @if (skippedProductsNote(); as note) {
-                <div class="text-[10px] text-gray-400 ml-1">{{ note }}</div>
-              }
-
-              <div class="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-white">
-                <table class="w-full text-left border-collapse">
-                  <thead>
-                    <tr class="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <th class="py-3 px-4 text-center w-12">Activo</th>
-                      <th class="py-3 px-4">Producto</th>
-                      <th class="py-3 px-4 text-center w-32">Stock Disponible</th>
-                      @if (scenario() === 'A') {
-                        <th class="py-3 px-4 text-center w-28">Cant. Devolver</th>
-                      }
-                      @if (scenario() === 'B' || scenario() === 'C') {
-                        <th class="py-3 px-4 text-center w-28">Nuevo Precio</th>
-                      }
-                      <th class="py-3 px-4 text-right">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (itemForm of itemsFormArray.controls; track $index) {
-                      <tr class="border-b border-gray-50 last:border-0" [formGroup]="asFormGroup(itemForm)">
-                        <td class="py-3 px-4 text-center">
-                          <mat-checkbox formControlName="selected" color="primary"></mat-checkbox>
-                        </td>
-                        <td class="py-3 px-4">
-                          <div class="flex flex-col">
-                            <span class="text-xs font-bold text-gray-900 leading-tight">{{ itemForm.value.name }}</span>
-                            <span class="text-[9px] text-gray-400">SKU: {{ itemForm.value.codeReference }}</span>
-                          </div>
-                        </td>
-                        <td class="py-3 px-4 text-center text-xs font-medium text-gray-500">
-                          <div>{{ itemForm.value.originalQty }} de {{ getOriginalQty(itemForm) }}</div>
-                          @if (isPriceAdjusted(itemForm)) {
-                            <div class="text-[9px] text-indigo-500 font-bold">P/U ajustado: {{ itemForm.value.unitPrice | currency }}</div>
-                          } @else {
-                            <div class="text-[9px] text-gray-400">{{ itemForm.value.unitPrice | currency }} c/u</div>
-                          }
-                        </td>
-                        @if (scenario() === 'A') {
-                          <td class="py-1 px-1 text-center">
-                            <ui-text-input type="number" formControlName="quantity" />
-                          </td>
-                        }
-                        @if (scenario() === 'B' || scenario() === 'C') {
-                          <td class="py-1 px-1 text-center">
-                            <ui-text-input type="number" formControlName="price" />
-                            <div class="text-[9px] mt-0.5" [class.text-green-600]="Number(itemForm.value.price) > 0 && Number(itemForm.value.price) < itemForm.value.unitPrice" [class.text-red-500]="Number(itemForm.value.price) >= itemForm.value.unitPrice">
-                              {{ Number(itemForm.value.price) > 0 ? (itemForm.value.unitPrice - Number(itemForm.value.price) | currency) + ' de descuento' : '' }}
-                            </div>
-                          </td>
-                        }
-                        <td class="py-3 px-4 text-right font-black text-xs text-gray-900">
-                          {{ calculateItemSubtotal(itemForm) | currency }}
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
             </div>
           }
 
@@ -282,101 +166,41 @@ export interface SalesNoteDialogData {
 export class SalesNoteFormDialogOrganism implements OnInit {
   private fb = inject(FormBuilder);
   private salesNoteService = inject(SalesNoteService);
-  private financeService = inject(FinanceService);
 
   public dialogRef = inject(MatDialogRef<SalesNoteFormDialogOrganism>);
   public data: SalesNoteDialogData = inject(MAT_DIALOG_DATA);
 
   loading = signal(false);
   errorMsg = signal<string | null>(null);
-  isElectronic = signal(this.data.forceElectronic || this.data.useFactusCreditNote || this.data.invoice.isElectronic || false);
   Number = Number; // Expose Number for template
 
-  // Current scenario derived from correctionConceptCode
-  scenario = computed<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | null>(() => {
-    this.manualTrigger(); // Re-evaluate on form changes
-    const type = this.noteForm.get('noteType')?.value;
+  // Current scenario derived from correctionConceptCode — only 'D' (total annulment) remains
+  scenario = computed<'D' | null>(() => {
     const code = this.noteForm.get('correctionConceptCode')?.value;
-    if (!code) return null;
-
-    if (type === 'credit') {
-      if (code === '1' || code === '5') return 'A';  // Partial return / Others
-      if (code === '2') return 'D';                    // Total annulment
-      if (code === '3') return 'B';                    // Discount
-      if (code === '4') return 'C';                    // Price correction
-    } else {
-      if (code === '1') return 'E';                    // Financial interest
-      if (code === '2' || code === '3' || code === '4') return 'F'; // Undercharge / Others
-    }
+    if (code === '2') return 'D';
     return null;
   });
 
-  // Whether to show the items table
-  showItemsTable = computed(() => {
-    const s = this.scenario();
-    return s === 'A' || s === 'B' || s === 'C';
-  });
+  // Whether to show the items table — always false for total annulment only
+  showItemsTable = computed(() => false);
 
   // Scenario info message
   scenarioInfo = computed<{ message: string; icon: string; type: string } | null>(() => {
     const s = this.scenario();
-    switch (s) {
-      case 'A': return { icon: 'assignment_return', message: 'Devolución parcial: seleccione los productos y la cantidad a devolver. Se restaurará inventario y se recalcularán impuestos proporcionalmente.', type: 'info' };
-      case 'B': return { icon: 'discount', message: 'Descuento comercial: indique el nuevo precio por producto (menor al original). No afecta inventario. Los impuestos se recalculan proporcionalmente.', type: 'warning' };
-      case 'C': return { icon: 'price_change', message: 'Corrección de precio (sobrecargo): indique el precio corregido (menor al original). No afecta inventario.', type: 'warning' };
-      case 'D': return { icon: 'warning', message: 'Anulación total: se revertirá el 100% de valores, inventario e impuestos. La factura quedará anulada.', type: 'warning' };
-      case 'E': return { icon: 'account_balance', message: 'Intereses financieros: ingrese el monto del interés. No afecta inventario. Usa tasa de interés configurable.', type: 'info' };
-      case 'F': return { icon: 'trending_up', message: 'Corrección por undercharge: indique el precio corregido (mayor al original). No afecta inventario. Los impuestos se recalculan sobre el diferencial.', type: 'warning' };
-      default: return null;
-    }
+    if (s === 'D') return { icon: 'warning', message: 'Anulación total: se revertirá el 100% de valores, inventario e impuestos. La factura quedará anulada.', type: 'warning' };
+    return null;
   });
 
   dialogTitle = computed(() => {
     const s = this.scenario();
-    switch (s) {
-      case 'A': return 'Nota Crédito — Devolución Parcial';
-      case 'B': return 'Nota Crédito — Descuento Comercial';
-      case 'C': return 'Nota Crédito — Corrección de Precio';
-      case 'D': return 'Nota Crédito — Anulación Total';
-      default: return 'Emitir Nota Crédito';
-    }
-  });
-
-  /** Returns the ORIGINAL invoice quantity for an item form (before any returns). */
-  getOriginalQty(itemForm: any): number {
-    const productId = itemForm.get('productId')?.value;
-    if (!productId || !this.data.invoice?.items) return itemForm.get('originalQty')?.value || 0;
-    const invoiceItem = this.data.invoice.items.find(i => i.productId === productId);
-    return invoiceItem ? Number(invoiceItem.quantity) : itemForm.get('originalQty')?.value || 0;
-  }
-
-  /** Whether the price was adjusted by a previous NC (discount/correction). */
-  isPriceAdjusted(itemForm: any): boolean {
-    const productId = itemForm.get('productId')?.value;
-    if (!productId || !this.data.invoice?.items) return false;
-    const invoiceItem = this.data.invoice.items.find(i => i.productId === productId);
-    if (!invoiceItem) return false;
-    return Number(itemForm.get('unitPrice')?.value) !== Number(invoiceItem.unitPrice);
-  }
-
-  /** Shows a note when some products were fully returned and hidden. */
-  skippedProductsNote = computed<string | null>(() => {
-    if (!this.data.returnedQuantities || !this.data.invoice?.items) return null;
-    const totalReturned = Object.keys(this.data.returnedQuantities).length;
-    if (totalReturned === 0) return null;
-    const skipped = this.data.invoice.items.filter(item => {
-      const returned = this.data.returnedQuantities![item.productId] || 0;
-      return Number(item.quantity) - returned <= 0;
-    });
-    if (skipped.length === 0) return null;
-    return `${skipped.length} producto(s) completamente devuelto(s) — no se muestran.`;
+    if (s === 'D') return 'Nota Crédito — Anulación Total';
+    return 'Emitir Nota Crédito';
   });
 
   noteForm = this.fb.group({
     noteType: ['credit', Validators.required],
     correctionConceptCode: [this.data.forceCorrectionCode || '2', Validators.required],
     observation: ['', Validators.required],
-    items: this.fb.array([])
   });
 
   noteType = signal<'credit'>('credit');
@@ -385,189 +209,27 @@ export class SalesNoteFormDialogOrganism implements OnInit {
     { value: 'credit', label: 'Nota de Crédito (Anular / Devolver)' },
   ];
 
-  correctionOptions = computed<SelectOption[]>(() => {
-    if (this.data.forceCorrectionCode) {
-      const forced = this.data.forceCorrectionCode;
-      const allOptions: SelectOption[] = [
-        { value: '1', label: '1 - Devolución parcial de los bienes' },
-        { value: '2', label: '2 - Anulación total de factura' },
-        { value: '3', label: '3 - Rebaja o descuento parcial' },
-        { value: '4', label: '4 - Ajuste de precio' },
-        { value: '5', label: '5 - Otros' },
-      ];
-      return allOptions.filter(o => o.value === forced);
-    }
-    return [
-      { value: '1', label: '1 - Devolución parcial de los bienes' },
-      { value: '2', label: '2 - Anulación total de factura' },
-      { value: '3', label: '3 - Rebaja o descuento parcial' },
-      { value: '4', label: '4 - Ajuste de precio' },
-      { value: '5', label: '5 - Otros' },
-    ];
-  });
-
-  get itemsFormArray(): FormArray {
-    return this.noteForm.get('items') as FormArray;
-  }
+  correctionOptions: SelectOption[] = [
+    { value: '2', label: '2 - Anulación total de la factura' },
+  ];
 
   ngOnInit() {
-    this.setupItemsForm();
-
     this.noteForm.get('noteType')?.valueChanges.subscribe(() => {
       this.noteType.set('credit');
       this.noteForm.get('correctionConceptCode')?.setValue('2');
     });
-
-    // Sync disabled states when scenario changes
-    this.noteForm.get('correctionConceptCode')?.valueChanges.subscribe(() => {
-      this.syncItemDisabledStates();
-    });
-  }
-
-  setupItemsForm() {
-    this.itemsFormArray.clear();
-    if (this.data.invoice && this.data.invoice.items) {
-      const returned = this.data.returnedQuantities || {};
-      const adjusted = this.data.adjustedPrices || {};
-
-      this.data.invoice.items.forEach(item => {
-        const productId = item.productId;
-        const alreadyReturned = productId ? Number(returned[productId] || 0) : 0;
-        const originalQty = Number(item.quantity);
-        const remainingQty = Math.max(0, originalQty - alreadyReturned);
-
-        // Skip fully returned products
-        if (remainingQty <= 0) return;
-
-        // Use adjusted price if a previous NC changed it, otherwise use original
-        const effectivePrice = productId && adjusted[productId] != null
-          ? adjusted[productId]
-          : Number(item.unitPrice);
-
-        this.itemsFormArray.push(
-          this.fb.group({
-            selected: [true],
-            codeReference: [item.product?.sku || item.productId],
-            productId: [productId],
-            name: [item.product?.name || 'Producto'],
-            originalQty: [remainingQty],
-            unitPrice: [effectivePrice],
-            quantity: [remainingQty > 0 ? Math.min(remainingQty, item.quantity) : 0, [Validators.required, Validators.min(0.01)]],
-            price: [effectivePrice, [Validators.required, Validators.min(0)]]
-          })
-        );
-      });
-    }
-    this.syncItemDisabledStates();
-  }
-
-  /** Enable/disable quantity/price controls based on current scenario */
-  private syncItemDisabledStates(): void {
-    const s = this.scenario();
-    this.itemsFormArray.controls.forEach(control => {
-      const qtyCtrl = control.get('quantity');
-      const priceCtrl = control.get('price');
-      if (qtyCtrl) {
-        if (s === 'A') qtyCtrl.enable({ emitEvent: false });
-        else qtyCtrl.disable({ emitEvent: false });
-      }
-      if (priceCtrl) {
-        if (s === 'B' || s === 'C') priceCtrl.enable({ emitEvent: false });
-        else priceCtrl.disable({ emitEvent: false });
-      }
-    });
-  }
-
-  asFormGroup(control: any): FormGroup {
-    return control as FormGroup;
-  }
-
-  calculateItemSubtotal(itemForm: any): number {
-    const isSelected = itemForm.get('selected')?.value;
-    if (!isSelected) return 0;
-
-    const s = this.scenario();
-    if (s === 'A') {
-      const qty = Number(itemForm.get('quantity')?.value || 0);
-      return qty * Number(itemForm.get('unitPrice')?.value || 0);
-    }
-    if (s === 'B' || s === 'C') {
-      const prc = Number(itemForm.get('price')?.value || 0);
-      return (Number(itemForm.get('unitPrice')?.value || 0) - prc) * Number(itemForm.get('originalQty')?.value || 0);
-    }
-    return 0;
   }
 
   noteTotalAmount = computed(() => {
-    this.manualTrigger();
     const s = this.scenario();
-    if (!s) return 0;
-
-    // D: full invoice total
     if (s === 'D') return Number(this.data.invoice.totalAmount) || 0;
-
-    // A, B, C: sum of selected items
-    let sum = 0;
-    this.itemsFormArray.controls.forEach(control => {
-      sum += this.calculateItemSubtotal(control);
-    });
-    return sum;
+    return 0;
   });
-
-  manualTrigger = signal(0);
-
-  constructor() {
-    this.noteForm.valueChanges.subscribe(() => {
-      this.manualTrigger.update(n => n + 1);
-    });
-  }
 
   onSubmit() {
     const s = this.scenario();
-    if (!s) return;
-    if (s === 'D' && this.noteForm.get('correctionConceptCode')?.value !== '2') return;
-    if (s !== 'D' && s !== 'E' && this.itemsFormArray.controls.every(c => !c.get('selected')?.value)) {
-      this.errorMsg.set('Debe seleccionar al menos un ítem.');
-      return;
-    }
-
-    // Validate quantity doesn't exceed original (Scenario A)
-    if (s === 'A') {
-      let invalid = false;
-      this.itemsFormArray.controls.forEach(control => {
-        if (control.get('selected')?.value) {
-          const qty = Number(control.get('quantity')?.value || 0);
-          const original = Number(control.get('originalQty')?.value || 0);
-          if (qty > original) {
-            invalid = true;
-          }
-        }
-      });
-      if (invalid) {
-        this.errorMsg.set('La cantidad a devolver no puede exceder la cantidad original de la factura.');
-        this.loading.set(false);
-        return;
-      }
-    }
-
-    // Validate price < original (Scenarios B, C)
-    if (s === 'B' || s === 'C') {
-      let invalid = false;
-      this.itemsFormArray.controls.forEach(control => {
-        if (control.get('selected')?.value) {
-          const price = Number(control.get('price')?.value || 0);
-          const original = Number(control.get('unitPrice')?.value || 0);
-          if (price <= 0 || price >= original) {
-            invalid = true;
-          }
-        }
-      });
-      if (invalid) {
-        this.errorMsg.set('El nuevo precio debe ser menor al precio original y mayor a cero.');
-        this.loading.set(false);
-        return;
-      }
-    }
+    if (!s || s !== 'D') return;
+    if (this.noteForm.get('correctionConceptCode')?.value !== '2') return;
 
     this.loading.set(true);
     this.errorMsg.set(null);
@@ -575,99 +237,22 @@ export class SalesNoteFormDialogOrganism implements OnInit {
     const formValue = this.noteForm.value;
     const concept = formValue.correctionConceptCode || '2';
 
-    // Map scenario type for backend
-    const scenarioTypeMap: Record<string, string> = {
-      'A': 'partial_return',
-      'B': 'discount',
-      'C': 'price_correction',
-      'D': 'total_annulment',
+    const payload: CreateSalesNoteDto = {
+      correctionConceptCode: concept,
+      observation: formValue.observation || '',
+      scenarioType: 'total_annulment',
     };
 
-    const payloadItems: any[] = [];
-
-    if (s === 'A' || s === 'B' || s === 'C') {
-      this.itemsFormArray.controls.forEach(control => {
-        if (control.get('selected')?.value) {
-          const item: any = {
-            codeReference: control.get('codeReference')?.value,
-            quantity: s === 'A' ? Number(control.get('quantity')?.value) : Number(control.get('originalQty')?.value),
-            productId: control.get('productId')?.value,
-          };
-          // For discount, overcharge, undercharge: send the new price
-          if (s === 'B' || s === 'C') {
-            item.price = Number(control.get('price')?.value);
-          }
-          payloadItems.push(item);
-        }
-      });
-    }
-
-    if (this.data.useFactusCreditNote) {
-      // Factus path: submit to Factus endpoint exclusively
-      const factusPayload: CreateElectronicCreditNotePayload = {
-        billNumber: this.data.billNumber || this.data.invoice.invoiceNumber,
-        referenceCode: `NC-REF-${Date.now()}`,
-        correctionConceptCode: concept,
-        observation: formValue.observation || '',
-        paymentDetails: [
-          {
-            paymentForm: '1',
-            paymentMethodCode: '10',
-            amount: this.noteTotalAmount(),
-          },
-        ],
-        items:
-          payloadItems.length > 0
-            ? payloadItems.map((item: any) => ({
-                codeReference: item.codeReference,
-                name: item.name || item.codeReference,
-                quantity: item.quantity,
-                price: item.price ?? 0,
-                productId: item.productId,
-              }))
-            : [
-                {
-                  codeReference: 'ANNUL-ALL',
-                  name: 'Anulación total',
-                  quantity: 1,
-                  price: this.noteTotalAmount(),
-                },
-              ],
-      };
-
-      this.financeService.createElectronicCreditNote(factusPayload).subscribe({
-        next: (response) => {
-          this.loading.set(false);
-          this.dialogRef.close({ success: true, type: 'credit', note: response });
-        },
-        error: (err) => {
-          this.loading.set(false);
-          const errMsg =
-            err.error?.message || err.message || 'Error desconocido al emitir nota por Factus.';
-          this.errorMsg.set(errMsg);
-        },
-      });
-    } else {
-      // Manual path: local SalesNoteService (preserved unchanged)
-      const payload: CreateSalesNoteDto = {
-        correctionConceptCode: concept,
-        observation: formValue.observation || '',
-        isElectronic: this.isElectronic(),
-        scenarioType: scenarioTypeMap[s] || undefined,
-        items: payloadItems.length > 0 ? payloadItems : undefined,
-      };
-
-      this.salesNoteService.createCreditNote(this.data.invoice.id, payload).subscribe({
-        next: (response) => {
-          this.loading.set(false);
-          this.dialogRef.close({ success: true, type: 'credit', note: response });
-        },
-        error: (err) => {
-          this.loading.set(false);
-          const errMsg = err.error?.message || err.message || 'Error desconocido al emitir nota.';
-          this.errorMsg.set(errMsg);
-        },
-      });
-    }
+    this.salesNoteService.createCreditNote(this.data.invoice.id, payload).subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        this.dialogRef.close({ success: true, type: 'credit', note: response });
+      },
+      error: (err) => {
+        this.loading.set(false);
+        const errMsg = err.error?.message || err.message || 'Error desconocido al emitir nota.';
+        this.errorMsg.set(errMsg);
+      },
+    });
   }
 }

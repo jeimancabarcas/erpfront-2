@@ -294,12 +294,14 @@ describe('SaleFormMolecule — Product Dialog Integration (TDD)', () => {
     expect(component.items.length).toBe(0);
   });
 
-  it('should have isElectronic signal defaulting to false', () => {
-    expect(component.isElectronic()).toBe(false);
+  it('should have paymentFrequency defaulting to MONTHLY', () => {
+    expect(component.paymentFrequency()).toBe('MONTHLY');
   });
 
-  it('should send isElectronic: false by default (manual mode)', () => {
-    component.saleForm.patchValue({ customerId: 'cust-1' });
+  it('should include paymentFrequency in DTO when credit payment', () => {
+    component.saleForm.patchValue({ customerId: 'cust-1', paymentTypeId: 'credit-type', installments: '3' });
+    // Mock isCreditPayment to return true
+    vi.spyOn(component as any, 'isCreditPayment', 'get').mockReturnValue(true);
 
     const mockResult: ProductSelectionDialogResult = {
       productId: 'prod-1',
@@ -322,11 +324,13 @@ describe('SaleFormMolecule — Product Dialog Integration (TDD)', () => {
     component.onSubmit();
 
     expect(capturedDto).not.toBeNull();
-    expect(capturedDto.isElectronic).toBe(false);
+    expect(capturedDto.paymentFrequency).toBe('MONTHLY');
   });
 
-  it('should send isElectronic: true when toggle is activated', () => {
+  it('should NOT include paymentFrequency in DTO when not credit payment', () => {
     component.saleForm.patchValue({ customerId: 'cust-1' });
+    // Mock isCreditPayment to return false
+    vi.spyOn(component as any, 'isCreditPayment', 'get').mockReturnValue(false);
 
     const mockResult: ProductSelectionDialogResult = {
       productId: 'prod-1',
@@ -340,8 +344,6 @@ describe('SaleFormMolecule — Product Dialog Integration (TDD)', () => {
     mockMatDialog.open.mockReturnValueOnce({ afterClosed: () => of(mockResult) });
     component.openAddProductDialog();
 
-    component.isElectronic.set(true);
-
     let capturedDto: any = null;
     mockInvoiceService.createInvoice = vi.fn().mockImplementation((dto: any) => {
       capturedDto = dto;
@@ -351,7 +353,7 @@ describe('SaleFormMolecule — Product Dialog Integration (TDD)', () => {
     component.onSubmit();
 
     expect(capturedDto).not.toBeNull();
-    expect(capturedDto.isElectronic).toBe(true);
+    expect(capturedDto.paymentFrequency).toBeUndefined();
   });
 });
 

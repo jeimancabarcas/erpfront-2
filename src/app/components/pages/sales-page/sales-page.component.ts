@@ -78,7 +78,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
               <span class="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg text-xs tracking-tight border border-indigo-100/50 dark:border-indigo-800/30">
                 {{ item.invoiceNumber }}
               </span>
-              @if (item.isElectronic === false) {
+              @if (!item.emission) {
                 <span data-testid="manual-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
                   MANUAL
                 </span>
@@ -99,6 +99,13 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
           <!-- Date -->
           <ng-template uiTableCell="date" let-item>
             <span class="text-gray-500 dark:text-gray-400 text-xs font-medium">{{ item.date | date:'dd MMM, yyyy' }}</span>
+          </ng-template>
+
+          <!-- Due Date -->
+          <ng-template uiTableCell="dueDate" let-item>
+            <span class="text-gray-500 dark:text-gray-400 text-xs font-medium">
+              {{ item.dueDate ? (item.dueDate | date:'dd MMM, yyyy') : '-' }}
+            </span>
           </ng-template>
 
           <!-- Total -->
@@ -175,6 +182,7 @@ export class SalesPageComponent implements OnInit {
     { key: 'invoiceNumber', header: 'No. Factura' },
     { key: 'customer', header: 'Cliente' },
     { key: 'date', header: 'Fecha' },
+    { key: 'dueDate', header: 'Vencimiento' },
     { key: 'totalAmount', header: 'Total Neto', align: 'right' },
     { key: 'status', header: 'Estado' },
     { key: 'actions', header: '', width: '60px' },

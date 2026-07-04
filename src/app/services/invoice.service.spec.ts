@@ -33,7 +33,6 @@ describe('InvoiceService', () => {
       customerId: 'cust-1',
       totalAmount: 100000,
       status: 'PAID',
-      isElectronic: true,
       items: [],
       emission: {
         number: 'SETP990003678',

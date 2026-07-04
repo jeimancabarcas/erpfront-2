@@ -3,7 +3,6 @@ export interface CreateSalesNoteDto {
   observation?: string;
   billNumber?: string;
   numberingRangeId?: number;
-  isElectronic?: boolean;
   scenarioType?: string;
   items?: {
     codeReference: string;

@@ -303,7 +303,6 @@ export class FinanceInvoicingViewComponent implements OnInit {
       customerId: '',
       totalAmount: fi.total,
       status: 'DRAFT',
-      isElectronic: true,
       items: [],
       customer: raw?.customer ? {
         id: '',
