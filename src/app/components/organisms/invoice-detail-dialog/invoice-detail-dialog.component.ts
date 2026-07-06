@@ -329,7 +329,7 @@ interface TraceEvent {
             @if (inv.status !== 'CANCELLED') {
               <ui-button variant="outline" (clicked)="openAdjustmentDialog(inv)">
                 <span class="material-icons">post_add</span>
-                Emitir Nota de Crédito
+                {{ inv.emission ? 'Emitir Nota de Crédito' : 'Anular factura' }}
               </ui-button>
             }
 

@@ -97,7 +97,7 @@ import { InventoryService } from '../../../services/inventory.service';
 
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef class="!font-bold !text-gray-400 !uppercase !text-xs !tracking-widest">Fecha</th>
-            <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm">{{movement.date}}</td>
+            <td mat-cell *matCellDef="let movement" class="text-gray-500 text-sm whitespace-nowrap">{{movement.date | date:'dd/MM/yyyy HH:mm:ss'}}</td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

@@ -133,19 +133,14 @@ export interface SalesNoteDialogData {
 
           <!-- Dialog Actions -->
           <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <button mat-button type="button" [disabled]="loading()" class="!rounded-full !px-8 !h-12 !font-bold text-gray-500" (click)="dialogRef.close()">
+            <ui-button variant="ghost" type="button" [disabled]="loading()" (clicked)="dialogRef.close()">
               Descartar
-            </button>
-            <button mat-flat-button color="primary" type="submit" 
+            </ui-button>
+            <ui-button variant="primary" type="submit"
               [disabled]="noteForm.invalid || loading() || noteTotalAmount() <= 0"
-              class="!rounded-full !px-12 !h-12 !bg-indigo-600 !font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center min-w-[180px]">
-              @if (loading()) {
-                <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              } @else {
-                <mat-icon>send</mat-icon>
-              }
-              <span class="ml-2">{{ loading() ? 'Procesando DIAN...' : 'Emitir Nota DIAN' }}</span>
-            </button>
+              [loading]="loading()">
+              {{ data.invoice.emission ? 'Emitir Nota DIAN' : 'Anular factura' }}
+            </ui-button>
           </div>
         </form>
       </div>
