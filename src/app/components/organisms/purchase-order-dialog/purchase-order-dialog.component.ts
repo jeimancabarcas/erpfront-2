@@ -1,37 +1,42 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, type OnInit, computed } from '@angular/core';
 import { CommonModule, formatDate, CurrencyPipe } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import {
-  ReactiveFormsModule,
-  FormBuilder,
-  FormGroup,
-  FormArray,
-  FormControl,
-  Validators,
-} from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { ReactiveFormsModule, FormBuilder, type FormGroup, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import { Subject, debounceTime } from 'rxjs';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
-import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { SelectAtom, type SelectOption } from '../../atoms/select/select.component';
 import { DatepickerComponent } from '../../atoms/datepicker/datepicker.component';
 import { SupplierService } from '../../../services/supplier.service';
-import { ProductService } from '../../../services/product.service';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
-import {
+import type {
   PurchaseOrder,
   CreatePurchaseOrderDto,
-  PurchaseOrderStatus,
+  UpdatePurchaseOrderDto,
 } from '../../../models/purchase-order.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TextareaComponent } from '../../atoms/textarea/textarea.component';
+import {
+  ProductSelectionDialogComponent,
+  type ProductSelectionDialogResult,
+} from '../product-selection-dialog/product-selection-dialog.component';
+import { SupplierDialogOrganism } from '../supplier-dialog/supplier-dialog.component';
+import {
+  DIALOG_WIDTHS,
+  DIALOG_PANEL_CLASS,
+  DIALOG_DEFAULTS,
+} from '../../../shared/constants/dialog.config';
 
 export interface PurchaseOrderDialogData {
   order?: PurchaseOrder;
 }
 
-interface PurchaseOrderItemForm {
-  productId: FormControl<string>;
-  quantity: FormControl<number>;
-  unitPrice: FormControl<number>;
+export interface PurchaseItemDisplay {
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  referenceStock: number;
+  referenceAveragePrice: number;
 }
 
 @Component({
@@ -39,7 +44,6 @@ interface PurchaseOrderItemForm {
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
     ReactiveFormsModule,
     CurrencyPipe,
     ButtonAtom,
@@ -58,10 +62,14 @@ interface PurchaseOrderItemForm {
             <span class="material-icons text-3xl">shopping_cart</span>
           </div>
           <div>
-            <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
+            <h2
+              class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0"
+            >
               {{ isEditMode() ? 'Editar Orden' : 'Nueva Orden de Compra' }}
             </h2>
-            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
+            <p
+              class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1"
+            >
               {{ isEditMode() ? 'Orden ' + orderNumber() : 'Registro de pedido' }}
             </p>
           </div>
@@ -71,17 +79,6 @@ interface PurchaseOrderItemForm {
         </ui-button>
       </header>
 
-      @if (isReadonly()) {
-        <div
-          class="mx-2 mb-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800 p-4 rounded-2xl flex items-center gap-3 text-amber-700 dark:text-amber-300"
-        >
-          <span class="material-icons">warning</span>
-          <p class="text-xs font-bold uppercase tracking-wide">
-            Esta orden ya no se puede editar porque está finalizada o anulada.
-          </p>
-        </div>
-      }
-
       @if (error()) {
         <div
           class="mx-2 mb-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 p-4 rounded-2xl flex items-center justify-between gap-3 text-red-700 dark:text-red-300"
@@ -90,164 +87,196 @@ interface PurchaseOrderItemForm {
             <span class="material-icons text-red-500">error_outline</span>
             <p class="text-xs font-bold uppercase tracking-wide">{{ error() }}</p>
           </div>
-          <button
-            (click)="error.set(null)"
-            class="!text-red-400 dark:!text-red-300 hover:!text-red-600 dark:hover:!text-red-400 transition-colors"
-          >
+          <ui-button variant="icon" (clicked)="error.set(null)" ariaLabel="Cerrar error">
             <span class="material-icons">close</span>
-          </button>
+          </ui-button>
         </div>
       }
 
       <div class="flex-1 overflow-y-auto custom-scrollbar">
-        <fieldset [disabled]="isReadonly()" class="contents">
-          <form [formGroup]="form" class="space-y-8 pb-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ui-select
-                label="Proveedor"
-                [options]="supplierOptions()"
-                [formControl]="form.controls.supplierId"
-              />
+        <form [formGroup]="form" class="space-y-8 pb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ui-select
+              label="Proveedor"
+              [options]="supplierOptions()"
+              [formControl]="$any(form.controls['supplierId'])"
+              [searchable]="true"
+              [loading]="isLoadingSuppliers()"
+              [disabled]="isEditMode()"
+              (searchChange)="onSupplierSearch($event)"
+              footerLabel="Crear nuevo proveedor"
+              (footerAction)="openCreateSupplierDialog()"
+            />
 
-              <ui-datepicker label="Fecha de Pedido" [formControl]="form.controls.orderDate" />
+            <ui-datepicker
+              label="Fecha de Pedido"
+              [formControl]="$any(form.controls['orderDate'])"
+            />
 
-              <ui-textarea
-                formControlName="observations"
-                label="Observaciones / Notas"
-                placeholder="Detalles adicionales sobre el pedido..."
-                [rows]="3"
-                class="md:col-span-2"
-              />
-            </div>
+            <ui-textarea
+              formControlName="observations"
+              label="Observaciones / Notas"
+              placeholder="Detalles adicionales sobre el pedido..."
+              [rows]="3"
+              class="md:col-span-2"
+            />
+          </div>
 
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700">
-              <div class="flex justify-between items-center mb-6">
-                <h3
-                  class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-widest flex items-center gap-2"
-                >
-                  <span class="material-icons text-indigo-600 dark:text-indigo-400">list</span>
-                  Productos del Pedido
-                </h3>
-                <button
-                  type="button"
-                  mat-flat-button
-                  color="primary"
-                  (click)="addItem()"
-                  class="!rounded-full !h-10 !text-xs !font-bold !bg-indigo-600 dark:!bg-indigo-500"
-                >
+          <div
+            class="bg-gray-50 dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700"
+          >
+            <div class="flex justify-between items-center mb-6">
+              <h3
+                class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-widest flex items-center gap-2"
+              >
+                <span class="material-icons text-indigo-600 dark:text-indigo-400">list</span>
+                Productos del Pedido
+              </h3>
+              @if (!isEditMode()) {
+                <ui-button variant="primary" (clicked)="openAddProductDialog()">
                   <span class="material-icons mr-2">add</span>
-                  Agregar Item
-                </button>
-              </div>
-
-              @if (itemsArray.length > 0) {
-                <div class="space-y-6 pr-1">
-                  @for (itemGroup of itemsArray.controls; track $index; let i = $index) {
-                    <div
-                      [formGroup]="itemGroup"
-                      class="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-none transition-all hover:border-indigo-100 dark:hover:border-indigo-800 hover:shadow-md group relative"
-                    >
-                      <button
-                        type="button"
-                        mat-icon-button
-                        (click)="removeItem(i)"
-                        class="!absolute -top-2 -right-2 !bg-white dark:!bg-gray-900 !shadow-sm dark:!shadow-none !text-red-300 dark:!text-red-400 hover:!text-red-600 dark:hover:!text-red-400 !border !border-gray-50 dark:!border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <span class="material-icons">close</span>
-                      </button>
-
-                      <div class="flex flex-col gap-6">
-                        <ui-select
-                          label="Producto"
-                          [options]="productOptions()"
-                          [formControl]="$any(itemGroup).controls.productId"
-                          class="w-full"
-                        />
-
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                          <div class="md:col-span-3">
-                            <ui-text-input
-                              label="Cantidad"
-                              type="number"
-                              icon="numbers"
-                              [formControl]="$any(itemGroup).controls.quantity"
-                            />
-                          </div>
-
-                          <div class="md:col-span-4">
-                            <ui-text-input
-                              label="Precio Unitario"
-                              type="number"
-                              icon="payments"
-                              [formControl]="$any(itemGroup).controls.unitPrice"
-                            />
-                          </div>
-
-                          <div class="md:col-span-5 flex flex-col items-end">
-                            <div
-                              class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1"
-                            >
-                              Subtotal de línea
-                            </div>
-                            <div class="text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
-                              {{ getItemTotal(i) | currency }}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                </div>
-
-                <div class="flex justify-end mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <div class="text-right">
-                    <p class="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
-                      Total de la Orden
-                    </p>
-                    <p class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tighter">
-                      {{ orderTotal() | currency }}
-                    </p>
-                  </div>
-                </div>
-              } @else {
-                <div
-                  class="py-12 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-3xl bg-white/50 dark:bg-gray-900/50"
-                >
-                  <span class="material-icons text-gray-200 dark:text-gray-600 text-5xl mb-2">inventory_2</span>
-                  <p class="text-gray-400 dark:text-gray-500 text-sm font-bold">
-                    No hay productos agregados a esta orden
-                  </p>
-                  <button
-                    type="button"
-                    mat-button
-                    color="primary"
-                    (click)="addItem()"
-                    class="mt-2 !font-bold"
-                  >
-                    Comenzar a agregar
-                  </button>
-                </div>
+                  Añadir Producto
+                </ui-button>
               }
             </div>
-          </form>
-        </fieldset>
+
+            @if (items().length > 0) {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                      <th
+                        class="text-left py-2 px-2 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
+                      >
+                        Producto
+                      </th>
+                      <th
+                        class="text-center py-2 px-2 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
+                      >
+                        Cantidad
+                      </th>
+                      <th
+                        class="text-right py-2 px-2 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
+                      >
+                        Precio Unit.
+                      </th>
+                      <th
+                        class="text-right py-2 px-2 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
+                      >
+                        Subtotal
+                      </th>
+                      @if (!isEditMode()) {
+                        <th
+                          class="text-center py-2 px-2 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
+                        >
+                          Acciones
+                        </th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of items(); track item.productId; let i = $index) {
+                      <tr
+                        class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-white/50 dark:hover:bg-gray-700/20"
+                      >
+                        <td class="py-3 px-2">
+                          <span class="font-bold text-gray-900 dark:text-gray-100">{{
+                            item.name
+                          }}</span>
+                        </td>
+                        <td class="text-center py-3 px-2">
+                          <span
+                            class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-xs font-black"
+                            >{{ item.quantity }}</span
+                          >
+                        </td>
+                        <td class="text-right py-3 px-2">
+                          <span class="text-gray-700 dark:text-gray-300 font-medium">{{
+                            item.unitPrice | currency
+                          }}</span>
+                        </td>
+                        <td class="text-right py-3 px-2">
+                          <span class="font-black text-gray-900 dark:text-gray-100">{{
+                            item.quantity * item.unitPrice | currency
+                          }}</span>
+                        </td>
+                        @if (!isEditMode()) {
+                          <td class="text-center py-3 px-2">
+                            <div class="flex justify-center gap-1">
+                              <ui-button
+                                variant="icon"
+                                (clicked)="openEditProductDialog(i)"
+                                ariaLabel="Editar producto"
+                              >
+                                <span class="material-icons text-sm">edit</span>
+                              </ui-button>
+                              <ui-button
+                                variant="icon"
+                                (clicked)="removeItem(i)"
+                                ariaLabel="Eliminar producto"
+                              >
+                                <span class="material-icons text-sm">delete</span>
+                              </ui-button>
+                            </div>
+                          </td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="flex justify-end mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="text-right">
+                  <p
+                    class="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1"
+                  >
+                    Total de la Orden
+                  </p>
+                  <p class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tighter">
+                    {{ orderTotal() | currency }}
+                  </p>
+                </div>
+              </div>
+            } @else {
+              <div
+                class="py-12 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-3xl bg-white/50 dark:bg-gray-900/50"
+              >
+                <span class="material-icons text-gray-200 dark:text-gray-600 text-5xl mb-2"
+                  >inventory_2</span
+                >
+                <p class="text-gray-400 dark:text-gray-500 text-sm font-bold">
+                  No hay productos agregados
+                </p>
+                @if (!isEditMode()) {
+                  <ui-button variant="ghost" (clicked)="openAddProductDialog()" class="mt-2">
+                    Añadir Producto
+                  </ui-button>
+                }
+              </div>
+            }
+          </div>
+        </form>
       </div>
 
-      <footer class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
-        <button mat-button (click)="close(null)" class="!rounded-full !h-12 !px-6 !font-bold">
-          Cancelar
-        </button>
+      <footer
+        class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100 dark:border-gray-700"
+      >
+        <ui-button variant="ghost" (clicked)="close(null)"> Cancelar </ui-button>
 
-        @if (!isReadonly()) {
-          <button
-            mat-flat-button
-            color="primary"
-            [disabled]="form.invalid || itemsArray.length === 0"
-            (click)="saveOrder()"
-            class="!rounded-full !h-12 !px-8 !font-bold !bg-indigo-600 dark:!bg-indigo-500 shadow-xl shadow-indigo-100 dark:shadow-indigo-900/50"
+        @if (!isEditMode()) {
+          <ui-button
+            variant="primary"
+            [disabled]="form.invalid || items().length === 0"
+            (clicked)="saveOrder()"
           >
-            {{ isEditMode() ? 'Guardar Cambios' : 'Crear Orden' }}
-          </button>
+            Crear Orden
+          </ui-button>
+        }
+        @if (isEditMode()) {
+          <ui-button variant="primary" [disabled]="form.pristine" (clicked)="saveOrder()">
+            Guardar Cambios
+          </ui-button>
         }
       </footer>
     </div>
@@ -277,72 +306,73 @@ export class PurchaseOrderDialogOrganism implements OnInit {
   private dialogRef = inject(MatDialogRef<PurchaseOrderDialogOrganism, boolean>);
   private dialogData = inject<PurchaseOrderDialogData>(MAT_DIALOG_DATA);
   private fb = inject(FormBuilder);
+  private matDialog = inject(MatDialog);
   private supplierService = inject(SupplierService);
-  private productService = inject(ProductService);
   private purchaseOrderService = inject(PurchaseOrderService);
 
   isEditMode = signal(false);
   orderId = signal<string | null>(null);
   orderNumber = signal<string | null>(null);
-  orderStatus = signal<PurchaseOrderStatus>('DRAFT');
 
-  suppliers = this.supplierService.suppliers;
-  products = this.productService.products;
+  // Supplier search
+  private supplierSearch$ = new Subject<string>();
+  supplierList = signal<{ value: string; label: string }[]>([]);
+  isLoadingSuppliers = signal(false);
 
-  supplierOptions = computed<SelectOption[]>(() =>
-    this.suppliers().map((s) => ({ value: s.id, label: s.name })),
+  // Items
+  items = signal<PurchaseItemDisplay[]>([]);
+
+  // Existing quantities for stock validation (productId → sum of quantities)
+  existingQuantities = computed<Record<string, number>>(() => {
+    const map: Record<string, number> = {};
+    for (const item of this.items()) {
+      map[item.productId] = (map[item.productId] || 0) + item.quantity;
+    }
+    return map;
+  });
+
+  supplierOptions = computed<SelectOption[]>(() => this.supplierList());
+
+  orderTotal = computed(() =>
+    this.items().reduce((acc, item) => acc + item.quantity * item.unitPrice, 0),
   );
 
-  productOptions = computed<SelectOption[]>(() =>
-    this.products().map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` })),
-  );
-
-  form = this.fb.group({
+  form: FormGroup = this.fb.group({
     supplierId: ['', Validators.required],
     orderDate: [new Date(), Validators.required],
     observations: [''],
-    items: this.fb.array<FormGroup<PurchaseOrderItemForm>>([]),
   });
 
-  get itemsArray(): FormArray<FormGroup<PurchaseOrderItemForm>> {
-    return this.form.get('items') as FormArray<FormGroup<PurchaseOrderItemForm>>;
-  }
-
-  isReadonly = computed(
-    () =>
-      this.isEditMode() &&
-      (['COMPLETED', 'CANCELLED'] as PurchaseOrderStatus[]).includes(this.orderStatus()),
-  );
-
-  orderTotal = signal(0);
-
   constructor() {
-    this.form.valueChanges.subscribe(() => {
-      const total = this.itemsArray.controls.reduce((acc, group) => {
-        const qty = group.get('quantity')?.value ?? 0;
-        const price = group.get('unitPrice')?.value ?? 0;
-        return acc + qty * price;
-      }, 0);
-      this.orderTotal.set(total);
+    // Supplier search with debounce
+    this.supplierSearch$.pipe(debounceTime(300)).subscribe((query) => {
+      this.isLoadingSuppliers.set(true);
+      this.supplierService.loadSuppliers({ name: query || undefined, limit: 20 }).subscribe({
+        next: () => {
+          this.supplierList.set(
+            this.supplierService.suppliers().map((s) => ({ value: s.id, label: s.name })),
+          );
+          this.isLoadingSuppliers.set(false);
+        },
+        error: () => this.isLoadingSuppliers.set(false),
+      });
     });
   }
 
   ngOnInit() {
-    if (this.suppliers().length === 0) {
-      this.supplierService.loadSuppliers({ limit: 100 }).subscribe();
-    }
-    if (this.products().length === 0) {
-      this.productService.loadProducts({ limit: 100 }).subscribe();
-    }
+    // Load initial supplier list
+    this.supplierService.loadSuppliers({ limit: 20 }).subscribe(() => {
+      this.supplierList.set(
+        this.supplierService.suppliers().map((s) => ({ value: s.id, label: s.name })),
+      );
+    });
 
     if (this.dialogData?.order) {
       this.isEditMode.set(true);
-      const { id, orderNumber, status, supplierId, orderDate, observations, items } =
-        this.dialogData.order;
+      const { id, orderNumber, supplierId, orderDate, observations, items } = this.dialogData.order;
 
       this.orderId.set(id);
       this.orderNumber.set(orderNumber);
-      this.orderStatus.set(status);
 
       this.form.patchValue({
         supplierId,
@@ -350,89 +380,178 @@ export class PurchaseOrderDialogOrganism implements OnInit {
         observations: observations ?? '',
       });
 
-      items?.forEach((item) => {
-        this.itemsArray.push(this.createItemGroup(item.productId, item.quantity, item.price));
-      });
+      // Map existing items to display format
+      if (items) {
+        this.items.set(
+          items.map((item) => ({
+            productId: item.productId,
+            name: item.product?.name ?? '',
+            quantity: item.quantity,
+            unitPrice: item.price,
+            referenceStock: item.product?.currentStock ?? 0,
+            referenceAveragePrice: item.product?.averagePurchasePrice ?? 0,
+          })),
+        );
+      }
     }
   }
 
-  private createItemGroup(
-    productId = '',
-    quantity = 1,
-    unitPrice = 0,
-  ): FormGroup<PurchaseOrderItemForm> {
-    return this.fb.group({
-      productId: [productId, Validators.required],
-      quantity: [quantity, [Validators.required, Validators.min(1)]],
-      unitPrice: [unitPrice, [Validators.required, Validators.min(0)]],
-    }) as FormGroup<PurchaseOrderItemForm>;
+  onSupplierSearch(query: string) {
+    this.supplierSearch$.next(query);
   }
 
-  addItem() {
-    this.itemsArray.push(this.createItemGroup());
+  openCreateSupplierDialog() {
+    const ref = this.matDialog.open(SupplierDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {},
+    });
+
+    ref.afterClosed().subscribe(() => {
+      // Reload supplier list to include the new supplier
+      this.supplierService.loadSuppliers({ limit: 20 }).subscribe(() => {
+        this.supplierList.set(
+          this.supplierService.suppliers().map((s) => ({ value: s.id, label: s.name })),
+        );
+      });
+    });
+  }
+
+  openAddProductDialog() {
+    const ref = this.matDialog.open(ProductSelectionDialogComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        mode: 'add',
+        existingQuantities: this.existingQuantities(),
+        context: 'purchase',
+      },
+    });
+
+    ref.afterClosed().subscribe((result: ProductSelectionDialogResult | undefined) => {
+      if (!result) return;
+
+      this.items.update((current) => [
+        ...current,
+        {
+          productId: result.productId,
+          name: result.name,
+          quantity: result.quantity,
+          unitPrice: result.unitPrice,
+          referenceStock: result.referenceStock,
+          referenceAveragePrice: result.referenceAveragePrice,
+        },
+      ]);
+    });
+  }
+
+  openEditProductDialog(index: number) {
+    const item = this.items()[index];
+
+    const ref = this.matDialog.open(ProductSelectionDialogComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        mode: 'edit',
+        lineItem: {
+          productId: item.productId,
+          name: item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          referenceSellingPrice: 0,
+          referenceAveragePrice: item.referenceAveragePrice,
+          referenceStock: item.referenceStock,
+        },
+        index,
+        existingQuantities: {
+          ...this.existingQuantities(),
+          [item.productId]: this.existingQuantities()[item.productId] - item.quantity,
+        },
+        context: 'purchase',
+      },
+    });
+
+    ref.afterClosed().subscribe((result: ProductSelectionDialogResult | undefined) => {
+      if (!result) return;
+
+      this.items.update((current) => {
+        const updated = [...current];
+        updated[index] = {
+          productId: result.productId,
+          name: result.name,
+          quantity: result.quantity,
+          unitPrice: result.unitPrice,
+          referenceStock: result.referenceStock,
+          referenceAveragePrice: result.referenceAveragePrice,
+        };
+        return updated;
+      });
+    });
   }
 
   removeItem(index: number) {
-    this.itemsArray.removeAt(index);
-  }
-
-  getItemTotal(index: number): number {
-    const group = this.itemsArray.at(index);
-    const qty = group.get('quantity')?.value ?? 0;
-    const price = group.get('unitPrice')?.value ?? 0;
-    return qty * price;
-  }
-
-  isProductSelected(productId: string, index: number): boolean {
-    return this.itemsArray.controls.some(
-      (group, i) => group.get('productId')?.value === productId && i !== index,
-    );
+    this.items.update((current) => current.filter((_, i) => i !== index));
   }
 
   saveOrder() {
     this.error.set(null);
 
-    const { supplierId, orderDate, observations, items } = this.form.getRawValue();
+    if (this.isEditMode()) {
+      // Edit mode: only send date and notes
+      const raw = this.form.getRawValue();
+      const payload: UpdatePurchaseOrderDto = {
+        orderDate: raw.orderDate ? formatDate(raw.orderDate, 'yyyy-MM-dd', 'en-US') : undefined,
+        observations: raw.observations || undefined,
+      };
 
-    if (!supplierId) {
-      this.error.set('Debe seleccionar un proveedor.');
-      return;
+      this.loading.set(true);
+      this.purchaseOrderService.updateOrder(this.orderId()!, payload).subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.error.set('Error al guardar la orden. Intente nuevamente.');
+          console.error('Error saving order:', err);
+        },
+      });
+    } else {
+      // Create mode
+      const raw = this.form.getRawValue();
+
+      if (!raw.supplierId) {
+        this.error.set('Debe seleccionar un proveedor.');
+        return;
+      }
+
+      const payload: CreatePurchaseOrderDto = {
+        supplierId: raw.supplierId,
+        orderDate: formatDate(raw.orderDate ?? new Date(), 'yyyy-MM-dd', 'en-US'),
+        observations: raw.observations ?? '',
+        items: this.items().map((item) => ({
+          productId: item.productId,
+          quantity: Number(item.quantity),
+          price: Number(item.unitPrice),
+        })),
+      };
+
+      this.loading.set(true);
+      this.purchaseOrderService.createOrder(payload).subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.error.set('Error al guardar la orden. Intente nuevamente.');
+          console.error('Error saving order:', err);
+        },
+      });
     }
-
-    const productIds = items.map((i: any) => i.productId).filter((id: string) => !!id);
-    const uniqueProductIds = new Set(productIds);
-    if (productIds.length !== uniqueProductIds.size) {
-      this.error.set('Existen productos duplicados en la orden. Por favor revisa los items.');
-      return;
-    }
-
-    const payload: CreatePurchaseOrderDto = {
-      supplierId: supplierId!,
-      orderDate: formatDate(orderDate ?? new Date(), 'yyyy-MM-dd', 'en-US'),
-      observations: observations ?? '',
-      items: items.map((i: any) => ({
-        productId: i.productId,
-        quantity: Number(i.quantity),
-        price: Number(i.unitPrice),
-      })),
-    };
-
-    const request = this.isEditMode()
-      ? this.purchaseOrderService.updateOrder(this.orderId()!, payload)
-      : this.purchaseOrderService.createOrder(payload);
-
-    this.loading.set(true);
-    request.subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.dialogRef.close(true);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.error.set('Error al guardar la orden. Intente nuevamente.');
-        console.error('Error saving order:', err);
-      },
-    });
   }
 
   close(result: boolean | null) {

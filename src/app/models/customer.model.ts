@@ -66,3 +66,45 @@ export interface PaymentRecord {
   notes?: string | null;
   createdAt: string;
 }
+
+export interface PaymentReceiptItemDto {
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+
+export interface PaymentReceiptPaymentDto {
+  id: string;
+  amount: number;
+  paymentDate: string;
+  notes: string | null;
+  isCurrentPayment: boolean;
+}
+
+export interface PaymentReceiptDto {
+  paymentId: string;
+  paymentAmount: number;
+  paymentDate: string;
+  paymentNotes: string | null;
+
+  invoiceId: string;
+  invoiceNumber: string;
+  invoiceStatus: string;
+  invoiceTotal: number;
+  invoiceSubtotal: number;
+  invoiceDate: string;
+  invoiceItems: PaymentReceiptItemDto[];
+
+  allInvoicePayments: PaymentReceiptPaymentDto[];
+
+  installments: number | null;
+  paymentFrequency: string | null;
+  dueDate: string | null;
+
+  remainingBalance: number;
+
+  customerId: string;
+  customerName: string;
+  customerDocument: string;
+}

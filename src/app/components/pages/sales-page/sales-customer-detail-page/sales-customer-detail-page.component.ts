@@ -16,6 +16,7 @@ import { CustomerInvoicesTableOrganism } from '../../../organisms/customer-invoi
 import { CreditPortfolioOrganism } from '../../../organisms/credit-portfolio/credit-portfolio.component';
 import { CreditConfigDialogOrganism } from '../../../organisms/credit-config-dialog/credit-config-dialog.component';
 import { PaymentHistoryTableOrganism } from '../../../organisms/payment-history-table/payment-history-table.component';
+import { ReceiptPreviewDialogOrganism } from '../../../organisms/receipt-preview-dialog/receipt-preview-dialog.component';
 import { RecordPaymentFormMolecule } from '../../../molecules/record-payment-form/record-payment-form.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 
@@ -32,6 +33,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
     CreditPortfolioOrganism,
     CreditConfigDialogOrganism,
     PaymentHistoryTableOrganism,
+    ReceiptPreviewDialogOrganism,
   ],
   template: `
       <div class="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom duration-500">
@@ -85,6 +87,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
                 [pageSize]="paymentPageSize()"
                 [pageIndex]="paymentPageIndex()"
                 (pageChange)="onPaymentPageChange($event)"
+                (receiptRequested)="onReceiptRequested($event)"
               />
 
               <!-- Invoices Table -->
@@ -246,6 +249,17 @@ export class SalesCustomerDetailPageComponent implements OnInit {
       if (result?.success) {
         this.loadCreditData(customerId);
       }
+    });
+  }
+
+  onReceiptRequested(payment: PaymentRecord) {
+    const customerId = this.route.snapshot.paramMap.get('id');
+    if (!customerId) return;
+
+    this.dialog.open(ReceiptPreviewDialogOrganism, {
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { customerId, paymentId: payment.id },
     });
   }
 

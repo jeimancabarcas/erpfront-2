@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { PaginatedMeta, QueryParams } from '../models/pagination.model';
-import { Customer, CreateCustomerDto, UpdateCustomerDto, CreditPortfolio, RecordPaymentDto, PaymentRecord } from '../models/customer.model';
+import { Customer, CreateCustomerDto, UpdateCustomerDto, CreditPortfolio, RecordPaymentDto, PaymentRecord, PaymentReceiptDto } from '../models/customer.model';
 
 @Injectable({
   providedIn: 'root'
@@ -94,5 +94,13 @@ export class CustomerService {
     if (page) params.page = page;
     if (limit) params.limit = limit;
     return this.http.get<{ data: PaymentRecord[]; meta: { total: number; page: number; lastPage: number; limit: number } }>(`${this.apiUrl}/${id}/credit/payments`, { params });
+  }
+
+  getPaymentReceipt(customerId: string, paymentId: string): Observable<PaymentReceiptDto> {
+    return this.http.get<PaymentReceiptDto>(`${this.apiUrl}/${customerId}/payments/${paymentId}/receipt`);
+  }
+
+  getPaymentReceiptPdf(customerId: string, paymentId: string): Observable<{ pdf: string }> {
+    return this.http.get<{ pdf: string }>(`${this.apiUrl}/${customerId}/payments/${paymentId}/receipt/pdf`);
   }
 }

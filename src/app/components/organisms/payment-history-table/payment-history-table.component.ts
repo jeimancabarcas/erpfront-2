@@ -5,6 +5,7 @@ import { PaymentRecord } from '../../../models/customer.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { TableComponent, TableColumn } from '../../atoms/table/table.component';
 import { TableCellDirective } from '../../atoms/table/table-cell.directive';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-payment-history-table',
@@ -17,6 +18,7 @@ import { TableCellDirective } from '../../atoms/table/table-cell.directive';
     ButtonAtom,
     TableComponent,
     TableCellDirective,
+    MatTooltipModule,
   ],
   template: `
     <div class="bg-white dark:bg-gray-900 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none overflow-hidden flex flex-col">
@@ -68,6 +70,17 @@ import { TableCellDirective } from '../../atoms/table/table-cell.directive';
           <ng-template uiTableCell="notes" let-payment>
             <span class="text-xs text-gray-400 dark:text-gray-500">{{ payment.notes || '-' }}</span>
           </ng-template>
+
+          <ng-template uiTableCell="actions" let-payment>
+            <ui-button
+              variant="icon"
+              [ariaLabel]="'Generar recibo'"
+              [tooltip]="'Generar recibo'"
+              (clicked)="onReceiptClick(payment)"
+            >
+              <span class="material-icons">receipt</span>
+            </ui-button>
+          </ng-template>
         </ui-table>
 
         <!-- Paginator -->
@@ -92,15 +105,21 @@ export class PaymentHistoryTableOrganism {
   readonly pageSize = input(5);
   readonly pageIndex = input(0);
   readonly pageChange = output<PageEvent>();
+  readonly receiptRequested = output<PaymentRecord>();
 
   protected readonly tableColumns: TableColumn[] = [
     { key: 'date', header: 'Fecha' },
     { key: 'invoiceNumber', header: 'No. Factura' },
     { key: 'amount', header: 'Monto', align: 'right' },
     { key: 'notes', header: 'Notas' },
+    { key: 'actions', header: 'Acciones', align: 'center', width: '120px', sortable: false },
   ];
 
   onPageChange(event: PageEvent) {
     this.pageChange.emit(event);
+  }
+
+  onReceiptClick(payment: PaymentRecord) {
+    this.receiptRequested.emit(payment);
   }
 }

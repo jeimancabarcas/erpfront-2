@@ -1,22 +1,22 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, type OnInit, type OnDestroy } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
   FormsModule,
   ReactiveFormsModule,
   FormBuilder,
   Validators,
-  FormGroup,
-  ValidatorFn,
-  AbstractControl,
+  type FormGroup,
+  type ValidatorFn,
+  type AbstractControl,
 } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { Subject, Subscription, distinctUntilChanged, debounceTime } from 'rxjs';
+import { Subject, type Subscription, distinctUntilChanged, debounceTime } from 'rxjs';
 import { ProductService } from '../../../services/product.service';
-import { Product } from '../../../models/product.model';
+import type { Product } from '../../../models/product.model';
 import { computeRecommendedPrice } from '../../../shared/utils/price.utils';
 import { ButtonAtom } from '../../atoms/button/button.component';
-import { SelectAtom, SelectOption } from '../../atoms/select/select.component';
+import { SelectAtom, type SelectOption } from '../../atoms/select/select.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
 
 // ── Interfaces ──
@@ -35,6 +35,8 @@ export interface ProductSelectionDialogData {
   index?: number;
   /** Quantities of each product already in the invoice, used for stock validation */
   existingQuantities?: Record<string, number>;
+  /** Context for adapting the dialog: 'sale' (default) or 'purchase' */
+  context?: 'sale' | 'purchase';
 }
 
 export interface ProductSelectionDialogResult {
@@ -55,8 +57,10 @@ export interface ProductSelectionDialogResult {
 function stockLimitValidator(
   productSignal: () => Product | null,
   existingQtySignal: () => number,
+  skipWhen?: () => boolean,
 ): ValidatorFn {
   return (control: AbstractControl): { [key: string]: unknown } | null => {
+    if (skipWhen?.()) return null;
     const product = productSignal();
     if (!product) return null;
     const qty = control.value;
@@ -92,11 +96,15 @@ function stockLimitValidator(
             <span class="material-icons !text-3xl">inventory_2</span>
           </div>
           <div>
-            <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
+            <h2
+              class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0"
+            >
               {{ isEditMode() ? 'Editar Producto' : 'Añadir Producto' }}
             </h2>
-            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
-              {{ isEditMode() ? 'Modificar línea de factura' : 'Seleccionar producto para la venta' }}
+            <p
+              class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1"
+            >
+              {{ subtitle() }}
             </p>
           </div>
         </div>
@@ -108,9 +116,7 @@ function stockLimitValidator(
       <div class="flex-1 overflow-y-auto custom-scrollbar">
         @if (loading()) {
           <div class="flex justify-center items-center py-12">
-            <div
-              class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"
-            ></div>
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
           </div>
         } @else {
           <form [formGroup]="form" class="space-y-6">
@@ -118,7 +124,9 @@ function stockLimitValidator(
             @if (isEditMode()) {
               <!-- Read-only display in edit mode -->
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                <label
+                  class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest"
+                >
                   Producto <span class="text-red-500">*</span>
                 </label>
                 <div
@@ -174,23 +182,25 @@ function stockLimitValidator(
                   </p>
                 </div>
 
-                <!-- Precio Configurado -->
-                <div
-                  class="price-card rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 p-4"
-                >
-                  <p
-                    class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1"
+                @if (!isPurchaseContext()) {
+                  <!-- Precio Configurado (hidden in purchase context) -->
+                  <div
+                    class="price-card rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 p-4"
                   >
-                    Precio Configurado
-                  </p>
-                  <p class="text-lg font-black text-indigo-800 dark:text-indigo-300">
-                    @if (selectedProduct()!.sellingPrice > 0) {
-                      {{ selectedProduct()!.sellingPrice | currency }}
-                    } @else {
-                      <span class="text-indigo-400 dark:text-indigo-300">—</span>
-                    }
-                  </p>
-                </div>
+                    <p
+                      class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1"
+                    >
+                      Precio Configurado
+                    </p>
+                    <p class="text-lg font-black text-indigo-800 dark:text-indigo-300">
+                      @if (selectedProduct()!.sellingPrice > 0) {
+                        {{ selectedProduct()!.sellingPrice | currency }}
+                      } @else {
+                        <span class="text-indigo-400 dark:text-indigo-300">—</span>
+                      }
+                    </p>
+                  </div>
+                }
               </div>
             }
 
@@ -204,7 +214,10 @@ function stockLimitValidator(
                 [error]="quantityError()"
               />
               @if (quantityError()) {
-                <p data-testid="stock-error" class="text-xs text-red-500 dark:text-red-400 font-medium mt-1">
+                <p
+                  data-testid="stock-error"
+                  class="text-xs text-red-500 dark:text-red-400 font-medium mt-1"
+                >
                   {{ quantityError() }}
                 </p>
               }
@@ -237,7 +250,13 @@ function stockLimitValidator(
         class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100 dark:border-gray-700"
       >
         <ui-button variant="outline" (clicked)="onCancel()">Cancelar</ui-button>
-        <ui-button variant="primary" data-testid="save-btn" [disabled]="form.invalid || loading()" (clicked)="onSave()">{{ isEditMode() ? 'Guardar Cambios' : 'Añadir Producto' }}</ui-button>
+        <ui-button
+          variant="primary"
+          data-testid="save-btn"
+          [disabled]="form.invalid || loading()"
+          (clicked)="onSave()"
+          >{{ isEditMode() ? 'Guardar Cambios' : 'Añadir Producto' }}</ui-button
+        >
       </footer>
     </div>
   `,
@@ -264,7 +283,9 @@ function stockLimitValidator(
   ],
 })
 export class ProductSelectionDialogComponent implements OnInit, OnDestroy {
-  private dialogRef = inject(MatDialogRef<ProductSelectionDialogComponent, ProductSelectionDialogResult | undefined>);
+  private dialogRef = inject(
+    MatDialogRef<ProductSelectionDialogComponent, ProductSelectionDialogResult | undefined>,
+  );
   protected dialogData = inject<ProductSelectionDialogData>(MAT_DIALOG_DATA, { optional: true });
   private fb = inject(FormBuilder);
   private productService = inject(ProductService);
@@ -318,7 +339,8 @@ export class ProductSelectionDialogComponent implements OnInit, OnDestroy {
     this.quantityErrorTrigger();
     const errors = this.form?.controls['quantity'].errors;
     if (!errors) return '';
-    if (errors['stockExceeded']) return `Stock insuficiente (disponible: ${errors['stockExceeded'].max})`;
+    if (errors['stockExceeded'])
+      return `Stock insuficiente (disponible: ${errors['stockExceeded'].max})`;
     if (errors['min']) return 'La cantidad debe ser al menos 1';
     if (errors['required']) return 'La cantidad es requerida';
     return '';
@@ -335,6 +357,16 @@ export class ProductSelectionDialogComponent implements OnInit, OnDestroy {
 
   isEditMode = signal(false);
 
+  // Computed: whether dialog is in purchase context (hides selling price panel)
+  isPurchaseContext = computed(() => this.dialogData?.context === 'purchase');
+
+  // Computed: subtitle based on context
+  subtitle = computed(() => {
+    if (this.isEditMode()) return 'Modificar línea de factura';
+    if (this.isPurchaseContext()) return 'Seleccionar producto para la compra';
+    return 'Seleccionar producto para la venta';
+  });
+
   // Subscriptions
   private productSearchSub: Subscription | null = null;
   private productIdSub: Subscription | null = null;
@@ -344,18 +376,35 @@ export class ProductSelectionDialogComponent implements OnInit, OnDestroy {
   // ── Form ──
   form: FormGroup = this.fb.group({
     productId: ['', Validators.required],
-    quantity: [1, [Validators.required, Validators.min(1), stockLimitValidator(() => this.selectedProduct(), () => this.existingQtyForSelected())]],
+    quantity: [
+      1,
+      [
+        Validators.required,
+        Validators.min(1),
+        stockLimitValidator(
+          () => this.selectedProduct(),
+          () => this.existingQtyForSelected(),
+          () => this.isPurchaseContext(),
+        ),
+      ],
+    ],
     unitPrice: [0, [Validators.required, Validators.min(0)]],
   });
 
   // Typed form control accessors for strict template checking
-  get productIdCtrl() { return this.form.get('productId')!; }
-  get quantityCtrl() { return this.form.get('quantity')!; }
-  get unitPriceCtrl() { return this.form.get('unitPrice')!; }
+  get productIdCtrl() {
+    return this.form.get('productId')!;
+  }
+  get quantityCtrl() {
+    return this.form.get('quantity')!;
+  }
+  get unitPriceCtrl() {
+    return this.form.get('unitPrice')!;
+  }
 
   ngOnInit() {
     // Product search with debounce
-    this.productSearchSub = this.productSearch$.pipe(debounceTime(300)).subscribe(query => {
+    this.productSearchSub = this.productSearch$.pipe(debounceTime(300)).subscribe((query) => {
       this.isLoadingProducts.set(true);
       this.productService.loadProducts({ name: query || undefined, limit: 50 }).subscribe({
         next: () => this.isLoadingProducts.set(false),
@@ -415,7 +464,8 @@ export class ProductSelectionDialogComponent implements OnInit, OnDestroy {
       });
 
       // Find and lock the product
-      const product = this.productService.products().find((p) => p.id === data.lineItem!.productId) ?? null;
+      const product =
+        this.productService.products().find((p) => p.id === data.lineItem!.productId) ?? null;
       this.selectedProduct.set(product);
 
       // Disable productId in edit mode
@@ -430,9 +480,10 @@ export class ProductSelectionDialogComponent implements OnInit, OnDestroy {
 
     if (product) {
       // Set default unit price
-      const defaultPrice = product.sellingPrice > 0
-        ? product.sellingPrice
-        : computeRecommendedPrice(product.averagePurchasePrice);
+      const defaultPrice =
+        product.sellingPrice > 0
+          ? product.sellingPrice
+          : computeRecommendedPrice(product.averagePurchasePrice);
       this.form.controls['unitPrice'].setValue(defaultPrice);
 
       // Reset quantity to 1
@@ -452,16 +503,20 @@ export class ProductSelectionDialogComponent implements OnInit, OnDestroy {
 
     // Ensure productId is enabled to read its value (was disabled in edit mode)
     const productIdControl = this.form.controls['productId'];
-    const productId = this.isEditMode() ? this.dialogData?.lineItem?.productId ?? '' : productIdControl.value;
+    const productId = this.isEditMode()
+      ? (this.dialogData?.lineItem?.productId ?? '')
+      : productIdControl.value;
 
     const product = this.selectedProduct();
     const result: ProductSelectionDialogResult = {
       productId: productId ?? '',
       name: product?.name ?? this.dialogData?.lineItem?.name ?? '',
-      quantity: this.form.controls['quantity'].value,
-      unitPrice: this.form.controls['unitPrice'].value,
-      referenceSellingPrice: product?.sellingPrice ?? this.dialogData?.lineItem?.referenceSellingPrice ?? 0,
-      referenceAveragePrice: product?.averagePurchasePrice ?? this.dialogData?.lineItem?.referenceAveragePrice ?? 0,
+      quantity: Number(this.form.controls['quantity'].value),
+      unitPrice: Number(this.form.controls['unitPrice'].value),
+      referenceSellingPrice:
+        product?.sellingPrice ?? this.dialogData?.lineItem?.referenceSellingPrice ?? 0,
+      referenceAveragePrice:
+        product?.averagePurchasePrice ?? this.dialogData?.lineItem?.referenceAveragePrice ?? 0,
       referenceStock: product?.currentStock ?? this.dialogData?.lineItem?.referenceStock ?? 0,
     };
     this.dialogRef.close(result);

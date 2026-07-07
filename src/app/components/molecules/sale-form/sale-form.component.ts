@@ -105,14 +105,6 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
             />
           </div>
 
-          <!-- Add Product Button -->
-          <div class="flex justify-start">
-            <ui-button variant="outline" (clicked)="openAddProductDialog()">
-              <span class="material-icons text-lg mr-2">add</span>
-              Añadir Producto
-            </ui-button>
-          </div>
-
           <!-- Payment Method & Payment Type -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ui-select
@@ -216,9 +208,15 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
           <!-- Added Products Table -->
           @if (itemsCount() > 0) {
             <div class="space-y-4 animate-in fade-in slide-in-from-bottom duration-500">
-              <label class="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest ml-1"
-                >Detalle de Factura</label
-              >
+              <div class="flex items-center justify-between">
+                <label class="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest ml-1"
+                  >Detalle de Factura</label
+                >
+                <ui-button variant="outline" (clicked)="openAddProductDialog()">
+                  <span class="material-icons text-lg mr-2">add</span>
+                  Añadir Producto
+                </ui-button>
+              </div>
               <div class="border border-gray-100 dark:border-gray-700 rounded-[24px] overflow-hidden bg-white dark:bg-gray-900 shadow-sm dark:shadow-none">
                 <ui-table
                   [columns]="itemsColumns"
@@ -314,6 +312,10 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../sha
                   Busca productos y agrégalos para generar la venta.
                 </p>
               </div>
+              <ui-button variant="outline" (clicked)="openAddProductDialog()">
+                <span class="material-icons text-lg mr-2">add</span>
+                Añadir Producto
+              </ui-button>
             </div>
           }
 

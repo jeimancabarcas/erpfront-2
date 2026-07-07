@@ -1,12 +1,16 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Observable, tap } from 'rxjs';
-import { PaginatedMeta, QueryParams } from '../models/pagination.model';
-import { PurchaseOrder, CreatePurchaseOrderDto, UpdatePurchaseOrderStatusDto, PurchaseOrderStatus } from '../models/purchase-order.model';
+import { type Observable, tap } from 'rxjs';
+import type { PaginatedMeta, QueryParams } from '../models/pagination.model';
+import type {
+  PurchaseOrder,
+  CreatePurchaseOrderDto,
+  UpdatePurchaseOrderDto,
+} from '../models/purchase-order.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PurchaseOrderService {
   private http = inject(HttpClient);
@@ -21,7 +25,7 @@ export class PurchaseOrderService {
   loadOrders(params?: QueryParams): Observable<any> {
     const queryParams: any = {};
     if (params) {
-      Object.keys(params).forEach(key => {
+      Object.keys(params).forEach((key) => {
         if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
           queryParams[key] = params[key];
         }
@@ -34,44 +38,31 @@ export class PurchaseOrderService {
         const meta = response.meta || null;
         this._orders.set(data);
         this._meta.set(meta);
-      })
+      }),
     );
   }
 
   createOrder(dto: CreatePurchaseOrderDto): Observable<PurchaseOrder> {
     return this.http.post<PurchaseOrder>(this.apiUrl, dto).pipe(
-      tap(newOrder => {
-        this._orders.update(items => [newOrder, ...items]);
-      })
+      tap((newOrder) => {
+        this._orders.update((items) => [newOrder, ...items]);
+      }),
     );
   }
 
-  updateOrder(id: string, dto: CreatePurchaseOrderDto): Observable<PurchaseOrder> {
+  updateOrder(id: string, dto: UpdatePurchaseOrderDto): Observable<PurchaseOrder> {
     return this.http.patch<PurchaseOrder>(`${this.apiUrl}/${id}`, dto).pipe(
-      tap(updatedOrder => {
-        this._orders.update(items => 
-          items.map(item => item.id === id ? updatedOrder : item)
-        );
-      })
-    );
-  }
-
-  updateStatus(id: string, status: PurchaseOrderStatus, receiptUrl?: string): Observable<PurchaseOrder> {
-    const dto: UpdatePurchaseOrderStatusDto = { status, receiptUrl };
-    return this.http.patch<PurchaseOrder>(`${this.apiUrl}/${id}/status`, dto).pipe(
-      tap(updatedOrder => {
-        this._orders.update(items => 
-          items.map(item => item.id === id ? updatedOrder : item)
-        );
-      })
+      tap((updatedOrder) => {
+        this._orders.update((items) => items.map((item) => (item.id === id ? updatedOrder : item)));
+      }),
     );
   }
 
   deleteOrder(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       tap(() => {
-        this._orders.update(items => items.filter(item => item.id !== id));
-      })
+        this._orders.update((items) => items.filter((item) => item.id !== id));
+      }),
     );
   }
 }
