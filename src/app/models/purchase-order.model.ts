@@ -1,6 +1,17 @@
 import type { Supplier } from './supplier.model';
 import type { Product } from './product.model';
 
+export type PurchaseOrderStatus = 'CREATED' | 'COMPLETED' | 'CANCELLED';
+
+export interface PurchaseOrderSupportDocument {
+  id: string;
+  referenceCode: string;
+  number: string | null;
+  cude?: string;
+  qrUrl?: string;
+  publicUrl?: string;
+}
+
 export interface PurchaseOrderItem {
   productId: string;
   quantity: number;
@@ -13,6 +24,9 @@ export interface PurchaseOrder {
   orderNumber: string;
   orderDate: string;
   observations: string;
+  status: PurchaseOrderStatus;
+  supportFileUrl?: string;
+  supportDocuments?: PurchaseOrderSupportDocument[];
   supplierId: string;
   supplier: Supplier;
   items: PurchaseOrderItem[];

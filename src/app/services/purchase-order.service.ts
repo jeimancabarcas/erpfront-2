@@ -5,6 +5,7 @@ import { type Observable, tap } from 'rxjs';
 import type { PaginatedMeta, QueryParams } from '../models/pagination.model';
 import type {
   PurchaseOrder,
+  PurchaseOrderSupportDocument,
   CreatePurchaseOrderDto,
   UpdatePurchaseOrderDto,
 } from '../models/purchase-order.model';
@@ -63,6 +64,41 @@ export class PurchaseOrderService {
       tap(() => {
         this._orders.update((items) => items.filter((item) => item.id !== id));
       }),
+    );
+  }
+
+  completeOrder(id: string, file?: File): Observable<PurchaseOrder> {
+    const formData = new FormData();
+    if (file) {
+      formData.append('file', file);
+    }
+    return this.http.post<PurchaseOrder>(`${this.apiUrl}/${id}/complete`, formData).pipe(
+      tap((updatedOrder) => {
+        this._orders.update((items) => items.map((item) => (item.id === id ? updatedOrder : item)));
+      }),
+    );
+  }
+
+  cancelOrder(id: string): Observable<PurchaseOrder> {
+    return this.http.post<PurchaseOrder>(`${this.apiUrl}/${id}/cancel`, {}).pipe(
+      tap((updatedOrder) => {
+        this._orders.update((items) => items.map((item) => (item.id === id ? updatedOrder : item)));
+      }),
+    );
+  }
+
+  emitSupportDocument(id: string): Observable<PurchaseOrderSupportDocument> {
+    return this.http.post<PurchaseOrderSupportDocument>(
+      `${this.apiUrl}/${id}/support-document`,
+      {},
+    );
+  }
+
+  downloadSupportDocumentPdf(
+    id: string,
+  ): Observable<{ pdfBase64Encoded: string; fileName: string }> {
+    return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(
+      `${this.apiUrl}/${id}/support-document/pdf`,
     );
   }
 }

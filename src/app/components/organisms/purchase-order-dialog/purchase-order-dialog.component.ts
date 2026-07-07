@@ -500,6 +500,12 @@ export class PurchaseOrderDialogOrganism implements OnInit {
     this.error.set(null);
 
     if (this.isEditMode()) {
+      // Guard: only allow editing CREATED orders
+      if (this.dialogData?.order && this.dialogData.order.status !== 'CREATED') {
+        this.error.set('Solo se pueden editar órdenes en estado CREATED');
+        return;
+      }
+
       // Edit mode: only send date and notes
       const raw = this.form.getRawValue();
       const payload: UpdatePurchaseOrderDto = {

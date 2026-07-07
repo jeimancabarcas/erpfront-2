@@ -3,6 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { PurchaseOrderDialogOrganism } from '../../../../components/organisms/purchase-order-dialog/purchase-order-dialog.component';
+import { PurchaseOrderDetailModalComponent } from '../../../../components/organisms/purchase-order-detail-modal/purchase-order-detail-modal.component';
 import { PurchaseOrderService } from '../../../../services/purchase-order.service';
 import { SupplierService } from '../../../../services/supplier.service';
 import type { PurchaseOrder } from '../../../../models/purchase-order.model';
@@ -108,6 +109,18 @@ import { TableCellDirective } from '../../../../components/atoms/table/table-cel
           }}</span>
         </ng-template>
 
+        <!-- Status -->
+        <ng-template uiTableCell="status" let-item>
+          <span
+            [class]="
+              'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ' +
+              getStatusBadgeClass(item.status)
+            "
+          >
+            {{ getStatusLabel(item.status) }}
+          </span>
+        </ng-template>
+
         <!-- Items -->
         <ng-template uiTableCell="items" let-item>
           <span
@@ -120,8 +133,8 @@ import { TableCellDirective } from '../../../../components/atoms/table/table-cel
         <!-- Actions -->
         <ng-template uiTableCell="actions" let-item>
           <div class="flex justify-end" (click)="$event.stopPropagation()">
-            <ui-button variant="icon" (clicked)="openPurchaseOrderDialog(item)">
-              <span class="material-icons">edit</span>
+            <ui-button variant="icon" (clicked)="openDetailModal(item)">
+              <span class="material-icons">visibility</span>
             </ui-button>
           </div>
         </ng-template>
@@ -198,9 +211,10 @@ export class InventoryPurchasesPageComponent implements OnInit {
   protected readonly tableColumns: TableColumn[] = [
     { key: 'orderNumber', header: 'No. Orden' },
     { key: 'supplier', header: 'Proveedor' },
+    { key: 'status', header: 'Estado' },
     { key: 'date', header: 'Fecha' },
     { key: 'items', header: 'Items' },
-    { key: 'actions', header: '', width: '100px' },
+    { key: 'actions', header: '', width: '80px' },
   ];
 
   private dialog = inject(MatDialog);
@@ -281,5 +295,43 @@ export class InventoryPurchasesPageComponent implements OnInit {
     ref.afterClosed().subscribe((result) => {
       if (result) this.loadData();
     });
+  }
+
+  openDetailModal(order: PurchaseOrder) {
+    const ref = this.dialog.open(PurchaseOrderDetailModalComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { order },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadData();
+    });
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'CREATED':
+        return 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'COMPLETED':
+        return 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400';
+      case 'CANCELLED':
+        return 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400';
+      default:
+        return 'bg-gray-50 text-gray-600';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'CREATED':
+        return 'Creada';
+      case 'COMPLETED':
+        return 'Completada';
+      case 'CANCELLED':
+        return 'Cancelada';
+      default:
+        return status;
+    }
   }
 }
