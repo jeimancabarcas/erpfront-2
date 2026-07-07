@@ -5,6 +5,9 @@ export interface Supplier {
   address: string;
   phone: string;
   email: string;
+  dv: string | null;
+  municipalityCode: string | null;
+  legalOrganizationCode: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -14,7 +17,10 @@ export interface CreateSupplierDto {
   name: string;
   address: string;
   phone: string;
-  email: string;
+  dv?: string;
+  municipalityCode?: string;
+  legalOrganizationCode?: string;
+  email?: string;
 }
 
 export interface UpdateSupplierDto {
@@ -22,5 +28,8 @@ export interface UpdateSupplierDto {
   name?: string;
   address?: string;
   phone?: string;
+  dv?: string;
+  municipalityCode?: string;
+  legalOrganizationCode?: string;
   email?: string;
 }

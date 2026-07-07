@@ -83,6 +83,30 @@ export interface SupplierDialogData {
               placeholder="Ej. +57 300 123 4567"
             />
             <ui-text-input
+              label="DV (Dígito de Verificación)"
+              icon="tag"
+              [value]="form().dv"
+              (valueChange)="form().dv = $event"
+              name="dv"
+              placeholder="Ej. 7 (opcional)"
+            />
+            <ui-text-input
+              label="Código de Municipio"
+              icon="location_city"
+              [value]="form().municipalityCode"
+              (valueChange)="form().municipalityCode = $event"
+              name="municipalityCode"
+              placeholder="Ej. 11001 Bogotá (opcional)"
+            />
+            <ui-text-input
+              label="Código Org. Legal"
+              icon="gavel"
+              [value]="form().legalOrganizationCode"
+              (valueChange)="form().legalOrganizationCode = $event"
+              name="legalOrganizationCode"
+              placeholder="Ej. 01 (opcional)"
+            />
+            <ui-text-input
               type="email"
               label="Correo Electrónico"
               icon="email"
@@ -137,6 +161,9 @@ export class SupplierDialogOrganism implements OnInit {
     name: '',
     address: '',
     phone: '',
+    dv: '',
+    municipalityCode: '',
+    legalOrganizationCode: '',
     email: '',
   });
 
@@ -155,8 +182,18 @@ export class SupplierDialogOrganism implements OnInit {
   }
 
   saveSupplier() {
-    const { id, nit, name, address, phone, email } = this.form();
-    const payload = { nit, name, address, phone, email };
+    const { id, nit, name, address, phone, dv, municipalityCode, legalOrganizationCode, email } =
+      this.form();
+    const payload = {
+      nit,
+      name,
+      address,
+      phone,
+      dv,
+      municipalityCode,
+      legalOrganizationCode,
+      email,
+    };
 
     const request = this.isEditMode
       ? this.supplierService.updateSupplier(id, payload)
