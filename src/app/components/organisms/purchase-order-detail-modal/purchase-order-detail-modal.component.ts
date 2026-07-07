@@ -277,21 +277,22 @@ export interface TraceEvent {
               </ui-button>
             }
             @case ('COMPLETED') {
-              <ui-button
-                variant="primary"
-                [disabled]="actionInProgress() === 'emit' || !!supportDocument()"
-                (clicked)="emitSupportDocument()"
-                [title]="supportDocument() ? 'Documento ya emitido' : ''"
-              >
-                @if (actionInProgress() === 'emit') {
-                  <span class="flex items-center gap-2">
-                    <span class="material-icons animate-spin">refresh</span>
-                    Emitiendo...
-                  </span>
-                } @else {
-                  Emitir documento soporte
-                }
-              </ui-button>
+              @if (!supportDocument()) {
+                <ui-button
+                  variant="primary"
+                  [disabled]="actionInProgress() === 'emit'"
+                  (clicked)="emitSupportDocument()"
+                >
+                  @if (actionInProgress() === 'emit') {
+                    <span class="flex items-center gap-2">
+                      <span class="material-icons animate-spin">refresh</span>
+                      Emitiendo...
+                    </span>
+                  } @else {
+                    Emitir documento soporte
+                  }
+                </ui-button>
+              }
               @if (supportDocument()) {
                 <ui-button
                   variant="secondary"
