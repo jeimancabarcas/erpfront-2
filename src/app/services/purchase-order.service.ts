@@ -6,7 +6,9 @@ import type { PaginatedMeta, QueryParams } from '../models/pagination.model';
 import type {
   PurchaseOrder,
   PurchaseOrderSupportDocument,
+  PurchaseOrderAdjustmentNote,
   CreatePurchaseOrderDto,
+  CreateAdjustmentNoteDto,
   UpdatePurchaseOrderDto,
 } from '../models/purchase-order.model';
 
@@ -87,6 +89,10 @@ export class PurchaseOrderService {
     );
   }
 
+  getOrderById(id: string): Observable<PurchaseOrder> {
+    return this.http.get<PurchaseOrder>(`${this.apiUrl}/${id}`);
+  }
+
   emitSupportDocument(id: string): Observable<PurchaseOrderSupportDocument> {
     return this.http.post<PurchaseOrderSupportDocument>(
       `${this.apiUrl}/${id}/support-document`,
@@ -99,6 +105,25 @@ export class PurchaseOrderService {
   ): Observable<{ pdfBase64Encoded: string; fileName: string }> {
     return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(
       `${this.apiUrl}/${id}/support-document/pdf`,
+    );
+  }
+
+  emitAdjustmentNote(
+    orderId: string,
+    dto: CreateAdjustmentNoteDto,
+  ): Observable<PurchaseOrderAdjustmentNote> {
+    return this.http.post<PurchaseOrderAdjustmentNote>(
+      `${this.apiUrl}/${orderId}/adjustment-note`,
+      dto,
+    );
+  }
+
+  downloadAdjustmentNotePdf(
+    orderId: string,
+    noteId: string,
+  ): Observable<{ pdfBase64Encoded: string; fileName: string }> {
+    return this.http.get<{ pdfBase64Encoded: string; fileName: string }>(
+      `${this.apiUrl}/${orderId}/adjustment-note/${noteId}/pdf`,
     );
   }
 }

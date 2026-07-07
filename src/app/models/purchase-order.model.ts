@@ -10,6 +10,7 @@ export interface PurchaseOrderSupportDocument {
   cude?: string;
   qrUrl?: string;
   publicUrl?: string;
+  createdAt?: string;
 }
 
 export interface PurchaseOrderItem {
@@ -27,6 +28,7 @@ export interface PurchaseOrder {
   status: PurchaseOrderStatus;
   supportFileUrl?: string;
   supportDocuments?: PurchaseOrderSupportDocument[];
+  adjustmentNotes?: PurchaseOrderAdjustmentNote[];
   supplierId: string;
   supplier: Supplier;
   items: PurchaseOrderItem[];
@@ -43,6 +45,36 @@ export interface CreatePurchaseOrderDto {
     quantity: number;
     price: number;
   }[];
+}
+
+export interface PurchaseOrderAdjustmentNote {
+  id: string;
+  referenceCode: string;
+  noteNumber: string | null;
+  cude?: string;
+  correctionConceptCode: string;
+  amount: number;
+  observation?: string;
+  qrUrl?: string;
+  publicUrl?: string;
+  items?: PurchaseOrderAdjustmentNoteItem[];
+  createdAt: string;
+}
+
+export interface PurchaseOrderAdjustmentNoteItem {
+  codeReference: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  productId?: string;
+  taxAmount: number;
+  consumed: boolean;
+}
+
+export interface CreateAdjustmentNoteDto {
+  correctionConceptCode: string;
+  observation?: string;
 }
 
 export interface UpdatePurchaseOrderDto {
