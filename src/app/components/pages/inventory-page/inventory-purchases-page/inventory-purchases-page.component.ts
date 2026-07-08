@@ -1,8 +1,10 @@
 import { Component, inject, type OnInit, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { Subject, debounceTime } from 'rxjs';
 import { BreadcrumbMolecule } from '../../../../components/molecules/breadcrumb/breadcrumb.component';
 import { PurchaseOrderDialogOrganism } from '../../../../components/organisms/purchase-order-dialog/purchase-order-dialog.component';
+import { SupplierDialogOrganism } from '../../../../components/organisms/supplier-dialog/supplier-dialog.component';
 import { PurchaseOrderDetailModalComponent } from '../../../../components/organisms/purchase-order-detail-modal/purchase-order-detail-modal.component';
 import { PurchaseOrderService } from '../../../../services/purchase-order.service';
 import { SupplierService } from '../../../../services/supplier.service';
@@ -36,6 +38,7 @@ import { TableCellDirective } from '../../../../components/atoms/table/table-cel
     DatePipe,
     TableComponent,
     TableCellDirective,
+    SupplierDialogOrganism,
   ],
   template: `
     <app-breadcrumb
@@ -69,7 +72,12 @@ import { TableCellDirective } from '../../../../components/atoms/table/table-cel
           placeholder="Todos los proveedores"
           [options]="supplierOptions()"
           [value]="supplierFilter()"
+          [searchable]="true"
+          [loading]="isLoadingSuppliers()"
+          (searchChange)="onSupplierSearch($event)"
           (valueChange)="onSupplierFilterChange($event)"
+          [footerLabel]="'Crear nuevo proveedor'"
+          (footerAction)="openCreateSupplierDialog()"
         />
       </div>
     </div>
@@ -226,6 +234,11 @@ export class InventoryPurchasesPageComponent implements OnInit {
   meta = this.purchaseOrderService.meta;
   suppliers = this.supplierService.suppliers;
 
+  // Supplier search
+  private supplierSearch$ = new Subject<string>();
+  supplierList = signal<{ value: string; label: string }[]>([]);
+  isLoadingSuppliers = signal(false);
+
   // Filtros
   supplierFilter = signal('');
 
@@ -237,22 +250,43 @@ export class InventoryPurchasesPageComponent implements OnInit {
 
   totalPages = computed(() => Math.max(1, Math.ceil((this.meta()?.total || 0) / this.pageSize())));
 
+  supplierOptions = computed<SelectOption[]>(() => this.supplierList());
+
+  constructor() {
+    // Supplier search with debounce
+    this.supplierSearch$.pipe(debounceTime(300)).subscribe((query) => {
+      this.isLoadingSuppliers.set(true);
+      this.supplierService.loadSuppliers({ search: query || undefined, limit: 50 }).subscribe({
+        next: () => {
+          this.supplierList.set(
+            this.supplierService.suppliers().map((s) => ({ value: s.id, label: `${s.name} (${s.nit})` })),
+          );
+          this.isLoadingSuppliers.set(false);
+        },
+        error: () => this.isLoadingSuppliers.set(false),
+      });
+    });
+  }
+
   ngOnInit() {
     this.loadData();
 
-    if (this.suppliers().length === 0) {
-      this.supplierService.loadSuppliers({ limit: 100 }).subscribe();
-    }
+    // Load initial suppliers into local list
+    this.supplierService.loadSuppliers({ limit: 50 }).subscribe(() => {
+      this.supplierList.set(
+        this.supplierService.suppliers().map((s) => ({ value: s.id, label: `${s.name} (${s.nit})` })),
+      );
+    });
   }
-
-  supplierOptions = computed<SelectOption[]>(() =>
-    this.suppliers().map((s) => ({ value: s.id, label: s.name })),
-  );
 
   onSupplierFilterChange(value: string) {
     this.supplierFilter.set(value);
     this.pageIndex.set(1);
     this.loadData();
+  }
+
+  onSupplierSearch(query: string) {
+    this.supplierSearch$.next(query);
   }
 
   loadData() {
@@ -333,5 +367,27 @@ export class InventoryPurchasesPageComponent implements OnInit {
       default:
         return status;
     }
+  }
+
+  openCreateSupplierDialog(): void {
+    const dialogRef = this.dialog.open(SupplierDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {},
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.supplierService.loadSuppliers({ limit: 50 }).subscribe(() => {
+          this.supplierList.set(
+            this.supplierService.suppliers().map((s) => ({
+              value: s.id,
+              label: `${s.name} (${s.nit})`,
+            })),
+          );
+        });
+      }
+    });
   }
 }

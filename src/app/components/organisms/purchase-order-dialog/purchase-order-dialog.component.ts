@@ -347,10 +347,10 @@ export class PurchaseOrderDialogOrganism implements OnInit {
     // Supplier search with debounce
     this.supplierSearch$.pipe(debounceTime(300)).subscribe((query) => {
       this.isLoadingSuppliers.set(true);
-      this.supplierService.loadSuppliers({ name: query || undefined, limit: 20 }).subscribe({
+      this.supplierService.loadSuppliers({ search: query || undefined, limit: 20 }).subscribe({
         next: () => {
           this.supplierList.set(
-            this.supplierService.suppliers().map((s) => ({ value: s.id, label: s.name })),
+            this.supplierService.suppliers().map((s) => ({ value: s.id, label: `${s.name} (${s.nit})` })),
           );
           this.isLoadingSuppliers.set(false);
         },
@@ -363,7 +363,7 @@ export class PurchaseOrderDialogOrganism implements OnInit {
     // Load initial supplier list
     this.supplierService.loadSuppliers({ limit: 20 }).subscribe(() => {
       this.supplierList.set(
-        this.supplierService.suppliers().map((s) => ({ value: s.id, label: s.name })),
+        this.supplierService.suppliers().map((s) => ({ value: s.id, label: `${s.name} (${s.nit})` })),
       );
     });
 
@@ -412,7 +412,7 @@ export class PurchaseOrderDialogOrganism implements OnInit {
       // Reload supplier list to include the new supplier
       this.supplierService.loadSuppliers({ limit: 20 }).subscribe(() => {
         this.supplierList.set(
-          this.supplierService.suppliers().map((s) => ({ value: s.id, label: s.name })),
+          this.supplierService.suppliers().map((s) => ({ value: s.id, label: `${s.name} (${s.nit})` })),
         );
       });
     });
