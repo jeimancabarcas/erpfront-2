@@ -64,6 +64,10 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'sales', pathMatch: 'full' },
       {
+        path: 'dashboard',
+        loadComponent: () => import('./components/pages/sales-page/sales-dashboard-page.component').then(m => m.SalesDashboardPageComponent)
+      },
+      {
         path: 'sales',
         loadComponent: () => import('./components/pages/sales-page/sales-page.component').then(m => m.SalesPageComponent)
       },

@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { PaginatedMeta, QueryParams } from '../models/pagination.model';
 import { Invoice, CreateInvoiceDto } from '../models/invoice.model';
+import { TopProductItem } from '../models/stats.model';
 
 @Injectable({
   providedIn: 'root'
@@ -98,5 +99,21 @@ export class InvoiceService {
    */
   emitInvoice(id: string): Observable<Invoice> {
     return this.http.post<Invoice>(`${this.apiUrl}/${id}/emit`, {});
+  }
+
+  /**
+   * Obtiene los productos más vendidos del mes actual (ranking top N)
+   */
+  getTopProducts(limit: number = 5): Observable<TopProductItem[]> {
+    const url = `${environment.apiUrl}/sales/stats/top-products`;
+    return this.http.get<TopProductItem[]>(url, { params: { limit } });
+  }
+
+  /**
+   * Obtiene los productos menos vendidos del mes actual (ranking bottom N)
+   */
+  getBottomProducts(limit: number = 5): Observable<TopProductItem[]> {
+    const url = `${environment.apiUrl}/sales/stats/bottom-products`;
+    return this.http.get<TopProductItem[]>(url, { params: { limit } });
   }
 }

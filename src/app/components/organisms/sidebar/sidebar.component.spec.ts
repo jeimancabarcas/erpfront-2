@@ -27,6 +27,7 @@ describe('SidebarComponent', () => {
     const expectedOrder = [
       'Inicio',
       'Gestión Comercial',
+      'Dashboard',
       'Punto de venta (POS)',
       'Clientes',
       'Compras',
@@ -58,7 +59,8 @@ describe('SidebarComponent', () => {
     expect(expansionPanels.length).toBe(0);
   });
 
-  it('should have Gestión Comercial with all 4 sub-items visible', () => {
+  it('should have Gestión Comercial with all 5 sub-items visible', () => {
+    expect(fixture.debugElement.query(By.css('a[routerLink="/comercial/dashboard"]'))).toBeTruthy();
     expect(fixture.debugElement.query(By.css('a[routerLink="/comercial/sales"]'))).toBeTruthy();
     expect(fixture.debugElement.query(By.css('a[routerLink="/comercial/customers"]'))).toBeTruthy();
     expect(fixture.debugElement.query(By.css('a[routerLink="/abastecimiento/purchases"]'))).toBeTruthy();

@@ -13,3 +13,10 @@ export interface FinancialStats {
     trend: 'UP' | 'DOWN';
   };
 }
+
+export interface TopProductItem {
+  productId: string;
+  productName: string;
+  totalSold: number;
+  totalRevenue: number;
+}
