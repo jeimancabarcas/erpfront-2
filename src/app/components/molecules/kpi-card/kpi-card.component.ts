@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [CommonModule, MatIconModule, CurrencyPipe],
   template: `
     <div 
-      class="p-6 rounded-[32px] border border-gray-100 bg-white shadow-sm flex flex-col justify-between h-full group hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 hover:-translate-y-1"
+      class="p-6 rounded-[32px] border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm flex flex-col justify-between h-full group hover:shadow-xl hover:shadow-indigo-500/5 dark:hover:shadow-none transition-all duration-500 hover:-translate-y-1"
     >
       <div class="flex justify-between items-start mb-6">
         <div 
@@ -21,7 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
         @if (trend !== undefined) {
           <div 
             class="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-            [ngClass]="trend === 'UP' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'"
+            [ngClass]="trend === 'UP' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'"
           >
             <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">{{ trend === 'UP' ? 'trending_up' : 'trending_down' }}</mat-icon>
             {{ trendValue | number:'1.0-1' }}%
@@ -30,11 +30,11 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
 
       <div>
-        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">{{ label }}</p>
-        <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ value | currency }}</h3>
+        <p class="text-[10px] text-gray-400 dark:text-gray-400 font-black uppercase tracking-widest mb-1">{{ label }}</p>
+        <h3 class="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{{ value | currency }}</h3>
         
         @if (subtitle) {
-          <p class="text-xs text-gray-400 font-medium mt-2 flex items-center gap-1">
+          <p class="text-xs text-gray-400 dark:text-gray-400 font-medium mt-2 flex items-center gap-1">
             <mat-icon class="!text-[14px] !w-[14px] !h-[14px] opacity-50">info_outline</mat-icon>
             {{ subtitle }}
           </p>
