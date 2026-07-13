@@ -25,7 +25,7 @@ export interface CustomerDialogData {
   template: `
     @if (loading()) {
       <div class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
       </div>
     } @else if (error()) {
       <div class="flex flex-col items-center gap-2 text-red-500 py-12">
