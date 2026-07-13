@@ -17,7 +17,7 @@ import { BillingProvider } from '../../../models/billing.model';
     SelectAtom
   ],
   template: `
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm mb-10">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white dark:bg-gray-800 p-8 rounded-[32px] border border-gray-100 dark:border-gray-700 shadow-sm mb-10 dark:shadow-none">
       <ui-text-input
         label="Buscar Paciente"
         icon="person_search"
