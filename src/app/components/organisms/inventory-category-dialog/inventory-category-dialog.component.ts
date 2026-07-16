@@ -20,7 +20,7 @@ import { TextareaComponent } from '../../atoms/textarea/textarea.component';
   template: `
     <div class="p-8">
       <header class="flex justify-between items-center mb-8">
-        <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
+        <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Categoría' : 'Nueva Categoría' }}
         </h2>
         <ui-button variant="icon" (clicked)="onClose()" ariaLabel="Cerrar diálogo">

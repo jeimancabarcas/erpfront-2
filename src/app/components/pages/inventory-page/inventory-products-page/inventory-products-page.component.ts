@@ -36,8 +36,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
 
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-6">
         <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Catálogo de Productos</h1>
-          <p class="text-gray-500 font-medium">Gestiona la definición de tus productos, SKUs y categorías base.</p>
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Catálogo de Productos</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Gestiona la definición de tus productos, SKUs y categorías base.</p>
         </div>
         <ui-button 
           variant="primary"
@@ -49,7 +49,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
       </header>
 
       <!-- Barra de Filtros -->
-      <div class="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm mb-6">
+      <div class="bg-white dark:bg-gray-900 p-6 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ui-text-input icon="search" placeholder="Buscar por nombre..." [value]="nameFilter()" (valueChange)="nameFilter.set($event); debouncedFilter()" />
 
@@ -59,44 +59,44 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
         </div>
       </div>
 
-      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+      <div class="bg-white dark:bg-gray-900 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-gray-100">
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">SKU</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Nombre</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Categoría</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Precios (Costo / Venta)</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left">Stock</th>
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th class="px-6 py-4 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-left">SKU</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-left">Nombre</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-left">Categoría</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-left">Precios (Costo / Venta)</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-left">Stock</th>
               <th class="px-6 py-4"></th>
             </tr>
           </thead>
           <tbody>
             @for (product of products(); track product.id) {
-              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-800">
                 <td class="px-6 py-5">
-                  <span class="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  <span class="font-mono text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                     {{ product.sku }}
                   </span>
                 </td>
                 <td class="px-6 py-5">
-                  <div class="font-bold text-gray-900">{{ product.name }}</div>
+                  <div class="font-bold text-gray-900 dark:text-gray-100">{{ product.name }}</div>
                 </td>
                 <td class="px-6 py-5">
                   <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-indigo-400"></div>
-                    <span class="font-medium">{{ product.category?.name || 'Sin categoría' }}</span>
+                    <div class="w-2 h-2 rounded-full bg-indigo-400 dark:bg-indigo-500"></div>
+                    <span class="font-medium text-gray-600 dark:text-gray-400">{{ product.category?.name || 'Sin categoría' }}</span>
                   </div>
                 </td>
                 <td class="px-6 py-5">
                   <div class="flex flex-col">
                     <div class="flex items-center gap-1">
-                      <span class="text-[10px] text-gray-400 font-bold uppercase">Costo:</span>
-                      <span class="font-bold text-gray-600 italic text-xs">{{ product.averagePurchasePrice | currency }}</span>
+                      <span class="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase">Costo:</span>
+                      <span class="font-bold text-gray-600 dark:text-gray-400 italic text-xs">{{ product.averagePurchasePrice | currency }}</span>
                     </div>
                     <div class="flex items-center gap-1">
-                      <span class="text-[10px] text-indigo-400 font-black uppercase">Venta:</span>
-                      <span class="font-black text-indigo-600">{{ product.sellingPrice | currency }}</span>
+                      <span class="text-[10px] text-indigo-400 dark:text-indigo-500 font-black uppercase">Venta:</span>
+                      <span class="font-black text-indigo-600 dark:text-indigo-400">{{ product.sellingPrice | currency }}</span>
                     </div>
                   </div>
                 </td>
@@ -105,7 +105,7 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
                     <span class="font-black text-base" [class]="getStockColor(product)">
                       {{ product.currentStock }}
                     </span>
-                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-tighter">
                       Mín: {{ product.minStock }} | Máx: {{ product.maxStock }}
                     </span>
                   </div>
@@ -126,9 +126,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
               <tr>
                 <td colspan="6" class="p-12 text-center">
                   <div class="flex flex-col items-center gap-4">
-                    <span class="material-icons text-5xl text-gray-200">inventory_2</span>
-                    <h3 class="text-lg font-bold text-gray-400">No se encontraron productos</h3>
-                    <p class="text-sm text-gray-300 max-w-xs">Aún no has registrado productos en tu catálogo o los filtros aplicados no coinciden.</p>
+                    <span class="material-icons text-5xl text-gray-200 dark:text-gray-600">inventory_2</span>
+                    <h3 class="text-lg font-bold text-gray-400 dark:text-gray-500">No se encontraron productos</h3>
+                    <p class="text-sm text-gray-300 dark:text-gray-600 max-w-xs">Aún no has registrado productos en tu catálogo o los filtros aplicados no coinciden.</p>
                     <ui-button variant="primary" (clicked)="openProductDialog()">
                       <span class="material-icons mr-2">add</span>
                       Registrar Primer Producto
@@ -139,20 +139,20 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
             }
           </tbody>
         </table>
-        
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 dark:border-gray-800">
           <div class="flex items-center gap-2">
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
               Anterior
             </ui-button>
-            <span class="text-xs font-bold text-gray-400">
+            <span class="text-xs font-bold text-gray-400 dark:text-gray-500">
               Página {{ pageIndex() }} de {{ totalPages() }}
             </span>
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
               Siguiente
             </ui-button>
           </div>
-          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+          <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 dark:text-gray-400 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none">
             <option value="5">5 / pág</option>
             <option value="10" selected>10 / pág</option>
             <option value="25">25 / pág</option>
@@ -252,9 +252,9 @@ export class InventoryProductsPageComponent implements OnInit {
   }
 
   getStockColor(product: Product): string {
-    if (product.currentStock <= product.minStock) return 'text-red-600';
-    if (product.currentStock <= product.minStock * 1.5) return 'text-amber-600';
-    return 'text-emerald-600';
+    if (product.currentStock <= product.minStock) return 'text-red-600 dark:text-red-400';
+    if (product.currentStock <= product.minStock * 1.5) return 'text-amber-600 dark:text-amber-400';
+    return 'text-emerald-600 dark:text-emerald-400';
   }
 
   openProductDialog(product?: Product) {

@@ -34,21 +34,21 @@ export type ProductFormResult = boolean | undefined;
   template: `
     @if (loading()) {
       <div class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
       </div>
     } @else if (error()) {
       <div class="flex flex-col items-center gap-2 text-red-500 py-12">
         <span class="material-icons text-5xl">error_outline</span>
         <p>{{ error() }}</p>
-        <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 hover:bg-gray-100 transition-colors mt-4">Cerrar</button>
+        <button (click)="onClose()" class="!rounded-full !px-6 !h-10 !text-sm !font-bold text-gray-500 dark:!text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mt-4">Cerrar</button>
       </div>
     } @else {
-    <div class="p-8">
+      <div class="p-8 dark:bg-gray-900">
       <header class="flex justify-between items-center mb-8">
-        <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
+        <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
           {{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}
         </h2>
-        <button (click)="onClose()" aria-label="Cerrar diálogo" class="!text-gray-400 w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-2xl transition-colors">
+        <button (click)="onClose()" aria-label="Cerrar diálogo" class="!text-gray-400 dark:!text-gray-500 w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 rounded-2xl transition-colors">
           <span class="material-icons">close</span>
         </button>
       </header>
@@ -70,20 +70,20 @@ export type ProductFormResult = boolean | undefined;
 
         <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top duration-300">
           <ui-text-input type="number" label="Precio de Venta" icon="payments" [value]="product().sellingPrice" (valueChange)="updateField('sellingPrice', $event)" name="sellingPrice" [required]="true" placeholder="Ej. 15000" />
-          <span class="text-xs text-indigo-400 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</span>
+          <span class="text-xs text-indigo-400 dark:text-indigo-500 font-bold">P. Sugerido: {{ (product().averagePurchasePrice * 1.3 || 0) | currency }}</span>
           @if (product().taxIds.length > 0) {
-            <span class="text-xs text-emerald-600 font-bold">Precio sin impuestos: {{ priceWithoutTax() | currency }}</span>
+            <span class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Precio sin impuestos: {{ priceWithoutTax() | currency }}</span>
           }
         </div>
 
         <div class="flex flex-col gap-3">
-          <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Impuestos Aplicables</label>
+          <label class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Impuestos Aplicables</label>
           @if (product().taxIds.length > 0) {
             <div class="flex flex-wrap gap-2">
               @for (taxId of product().taxIds; track taxId) {
-                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700">
+                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">
                   {{ getTaxLabel(taxId) }}
-                  <button type="button" (click)="removeTax(taxId)" class="hover:text-indigo-900 text-base leading-none">&times;</button>
+                  <button type="button" (click)="removeTax(taxId)" class="hover:text-indigo-900 dark:hover:text-indigo-300 text-base leading-none">&times;</button>
                 </span>
               }
             </div>
@@ -93,9 +93,9 @@ export type ProductFormResult = boolean | undefined;
 
           @if (isReasonRequired()) {
             <div class="flex flex-col gap-1.5 md:col-span-2 animate-in fade-in slide-in-from-top duration-300">
-              <label class="text-xs font-black text-gray-500 uppercase tracking-widest">Motivo del Ajuste de Stock</label>
+              <label class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Motivo del Ajuste de Stock</label>
               <input [(ngModel)]="adjustmentReason" name="adjustmentReason" required placeholder="Ej. Pérdida, Ajuste de auditoría, etc."
-                class="w-full h-14 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+                class="w-full h-14 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-bold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:border-indigo-400 dark:focus:border-indigo-600 transition-all">
             </div>
           }
 

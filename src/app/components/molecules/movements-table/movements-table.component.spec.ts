@@ -1,9 +1,10 @@
+// @vitest-environment jsdom
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MovementsTableMolecule } from './movements-table.component';
 import { InventoryService } from '../../../services/inventory.service';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('MovementsTableMolecule', () => {
@@ -41,22 +42,24 @@ describe('MovementsTableMolecule', () => {
   });
 
   it('should display origin, destination and operator in columns list', () => {
-    expect(component.displayedColumns).toContain('origin');
-    expect(component.displayedColumns).toContain('destination');
-    expect(component.displayedColumns).toContain('operator');
+    expect(component.tableColumns).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'origin' }),
+      expect.objectContaining({ key: 'destination' }),
+      expect.objectContaining({ key: 'operator' }),
+    ]));
   });
 
   it('should render origin, destination, and operator in the DOM table', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     
-    // Check headers
-    const headers = Array.from(compiled.querySelectorAll('th')).map(el => el.textContent?.trim());
+    // Check headers (ui-table atom uses .ui-table__head-cell)
+    const headers = Array.from(compiled.querySelectorAll('.ui-table__head-cell')).map(el => el.textContent?.trim());
     expect(headers).toContain('Origen');
     expect(headers).toContain('Destino');
     expect(headers).toContain('Usuario');
 
-    // Check cells
-    const cells = Array.from(compiled.querySelectorAll('td')).map(el => el.textContent?.trim());
+    // Check cells (ui-table atom uses .ui-table__cell)
+    const cells = Array.from(compiled.querySelectorAll('.ui-table__cell')).map(el => el.textContent?.trim());
     expect(cells).toContain('Ajuste de inventario');
     expect(cells).toContain('operator@example.com');
   });

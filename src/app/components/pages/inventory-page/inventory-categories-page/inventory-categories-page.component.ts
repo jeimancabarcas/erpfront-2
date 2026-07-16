@@ -30,8 +30,8 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
 
       <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-6">
         <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Categorías de Productos</h1>
-          <p class="text-gray-500 font-medium">Gestiona y organiza tu inventario con filtros y paginación dinámica.</p>
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Categorías de Productos</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Gestiona y organiza tu inventario con filtros y paginación dinámica.</p>
         </div>
         <ui-button 
           variant="primary"
@@ -43,37 +43,37 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
       </header>
 
       <!-- Barra de Filtros -->
-      <div class="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
+      <div class="bg-white dark:bg-gray-900 p-4 rounded-[24px] border border-gray-100 dark:border-gray-800 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
         <div class="relative flex-1 w-full">
           <ui-text-input icon="search" placeholder="Buscar categorías..." [value]="nameFilter()" (valueChange)="nameFilter.set($event); debouncedFilter()" />
         </div>
       </div>
 
-      <div class="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+      <div class="bg-white dark:bg-gray-900 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-gray-100">
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left cursor-pointer">Nombre</th>
-              <th class="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-left cursor-pointer">Productos</th>
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th class="px-6 py-4 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-left cursor-pointer">Nombre</th>
+              <th class="px-6 py-4 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-left cursor-pointer">Productos</th>
               <th class="px-6 py-4"></th>
             </tr>
           </thead>
           <tbody>
             @for (category of categories(); track category.id) {
-              <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-800">
                 <td class="px-6 py-5">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                      <span class="material-icons text-indigo-600">category</span>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+                      <span class="material-icons text-indigo-600 dark:text-indigo-400">category</span>
                     </div>
                     <div>
-                      <div class="font-bold text-gray-900">{{ category.name }}</div>
-                      <div class="text-xs text-gray-400 font-medium line-clamp-1">{{ category.description || 'Sin descripción' }}</div>
+                      <div class="font-bold text-gray-900 dark:text-gray-100">{{ category.name }}</div>
+                      <div class="text-xs text-gray-400 dark:text-gray-500 font-medium line-clamp-1">{{ category.description || 'Sin descripción' }}</div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-5">
-                  <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">
+                  <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full text-xs font-bold">
                     {{ category.productsCount || 0 }} productos
                   </span>
                 </td>
@@ -90,9 +90,9 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
               <tr>
                 <td colspan="3" class="p-12 text-center">
                   <div class="flex flex-col items-center gap-4">
-                    <span class="material-icons text-5xl text-gray-200">category</span>
-                    <h3 class="text-lg font-bold text-gray-400">No se encontraron categorías</h3>
-                    <p class="text-sm text-gray-300 max-w-xs">Aún no has creado categorías para tus productos o los filtros aplicados no coinciden con ningún registro.</p>
+                    <span class="material-icons text-5xl text-gray-200 dark:text-gray-600">category</span>
+                    <h3 class="text-lg font-bold text-gray-400 dark:text-gray-500">No se encontraron categorías</h3>
+                    <p class="text-sm text-gray-300 dark:text-gray-600 max-w-xs">Aún no has creado categorías para tus productos o los filtros aplicados no coinciden con ningún registro.</p>
                     <ui-button variant="primary" (clicked)="openCategoryDialog()">
                       <span class="material-icons mr-2">add</span>
                       Crear Primera Categoría
@@ -103,24 +103,24 @@ import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../
             }
           </tbody>
         </table>
-        
+
         <!-- Paginador -->
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 dark:border-gray-800">
           <div class="flex items-center gap-2">
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
               Anterior
             </ui-button>
-            <span class="text-xs font-bold text-gray-400">
+            <span class="text-xs font-bold text-gray-400 dark:text-gray-500">
               Página {{ pageIndex() }} de {{ totalPages() }}
             </span>
             <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
               Siguiente
             </ui-button>
           </div>
-          <select 
-            [value]="pageSize()" 
+          <select
+            [value]="pageSize()"
             (change)="onPageSizeChange($event)"
-            class="text-xs font-bold text-gray-500 bg-transparent border border-gray-200 rounded-lg px-2 py-1 focus:outline-none"
+            class="text-xs font-bold text-gray-500 dark:text-gray-400 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none"
           >
             <option value="5">5 / pág</option>
             <option value="10">10 / pág</option>

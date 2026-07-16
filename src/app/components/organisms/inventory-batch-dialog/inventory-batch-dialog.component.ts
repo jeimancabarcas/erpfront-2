@@ -16,18 +16,18 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     ButtonAtom
   ],
   template: `
-    <div class="flex flex-col h-full max-h-[90vh] p-8">
+    <div class="flex flex-col h-full max-h-[90vh] p-8 dark:bg-gray-900">
       <!-- Header -->
       <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
             <span class="material-icons !text-3xl">history</span>
           </div>
           <div>
-            <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight !m-0">
+            <h2 class="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight !m-0">
               Trazabilidad por Lotes
             </h2>
-            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
               {{ dialogData.product.name }} • {{ dialogData.product.sku }}
             </p>
           </div>
@@ -39,66 +39,66 @@ import { ButtonAtom } from '../../atoms/button/button.component';
 
       <!-- Info del Producto -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div class="bg-gray-50 p-6 rounded-[28px] border border-gray-100">
-          <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Precio Medio Ponderado (PMP)</p>
-          <p class="text-3xl font-black text-indigo-600 tracking-tighter">
+        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-[28px] border border-gray-100 dark:border-gray-700">
+          <p class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Precio Medio Ponderado (PMP)</p>
+          <p class="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">
             {{ dialogData.product.averagePurchasePrice | currency }}
           </p>
         </div>
-        <div class="bg-gray-50 p-6 rounded-[28px] border border-gray-100">
-          <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual Total</p>
-          <p class="text-3xl font-black text-gray-900 tracking-tighter">
-            {{ dialogData.product.currentStock }} <span class="text-sm font-bold text-gray-400 ml-1 uppercase">unidades</span>
+        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-[28px] border border-gray-100 dark:border-gray-700">
+          <p class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Stock Actual Total</p>
+          <p class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tighter">
+            {{ dialogData.product.currentStock }} <span class="text-sm font-bold text-gray-400 dark:text-gray-500 ml-1 uppercase">unidades</span>
           </p>
         </div>
       </div>
 
       <div class="flex-1 overflow-y-auto custom-scrollbar">
-        <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-4">Historial de Ingresos</h3>
+        <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-widest mb-4">Historial de Ingresos</h3>
         
         @if (isLoading()) {
           <div class="flex flex-col items-center justify-center p-20 gap-4">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            <p class="text-sm text-gray-500 font-medium">Cargando lotes...</p>
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Cargando lotes...</p>
           </div>
         } @else if (batches().length === 0) {
-          <div class="bg-gray-50 rounded-3xl p-12 text-center border border-gray-100">
-            <span class="material-icons !text-5xl text-gray-300 mb-4">inventory_2</span>
-            <p class="text-gray-900 font-bold">No hay lotes registrados</p>
-            <p class="text-xs text-gray-500">Este producto aún no tiene ingresos de stock trazables.</p>
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-700">
+            <span class="material-icons !text-5xl text-gray-300 dark:text-gray-600 mb-4">inventory_2</span>
+            <p class="text-gray-900 dark:text-gray-100 font-bold">No hay lotes registrados</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Este producto aún no tiene ingresos de stock trazables.</p>
           </div>
         } @else {
-          <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+          <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm dark:shadow-none">
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
                 <thead>
-                  <tr class="bg-gray-50/50">
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">Fecha Ingreso</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-50">Cant. Inicial</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-50">Disponible</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right border-b border-gray-50">Precio Compra</th>
+                  <tr class="bg-gray-50/50 dark:bg-gray-800">
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-50 dark:border-gray-700">Fecha Ingreso</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center border-b border-gray-50 dark:border-gray-700">Cant. Inicial</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center border-b border-gray-50 dark:border-gray-700">Disponible</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-right border-b border-gray-50 dark:border-gray-700">Precio Compra</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-50">
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
                   @for (batch of batches(); track batch.id) {
-                    <tr class="hover:bg-gray-50/50 transition-colors">
+                    <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors">
                       <td class="px-6 py-4">
-                        <p class="text-sm font-bold text-gray-900">{{ batch.createdAt | date:'dd MMM, yyyy' }}</p>
-                        <p class="text-[10px] text-gray-400 font-medium italic">ID: {{ batch.id.split('-')[0] }}</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ batch.createdAt | date:'dd MMM, yyyy' }}</p>
+                        <p class="text-[10px] text-gray-400 dark:text-gray-500 font-medium italic">ID: {{ batch.id.split('-')[0] }}</p>
                       </td>
                       <td class="px-6 py-4 text-center">
-                        <span class="text-gray-400 text-xs font-bold">{{ batch.initialQuantity }}</span>
+                        <span class="text-gray-400 dark:text-gray-500 text-xs font-bold">{{ batch.initialQuantity }}</span>
                       </td>
                       <td class="px-6 py-4 text-center">
                         <span
                           class="px-3 py-1 rounded-full text-xs font-black"
-                          [ngClass]="batch.remainingQuantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'"
+                          [ngClass]="batch.remainingQuantity > 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'"
                         >
                           {{ batch.remainingQuantity }}
                         </span>
                       </td>
                       <td class="px-6 py-4 text-right">
-                        <span class="text-sm font-black text-gray-900">{{ batch.purchasePrice | currency }}</span>
+                        <span class="text-sm font-black text-gray-900 dark:text-gray-100">{{ batch.purchasePrice | currency }}</span>
                       </td>
                     </tr>
                   }
@@ -109,7 +109,7 @@ import { ButtonAtom } from '../../atoms/button/button.component';
         }
       </div>
 
-      <div class="flex justify-end pt-6 border-t border-gray-100 mt-4">
+      <div class="flex justify-end pt-6 border-t border-gray-100 dark:border-gray-700 mt-4">
         <ui-button
           variant="primary"
           (clicked)="onClose()"
@@ -125,6 +125,9 @@ import { ButtonAtom } from '../../atoms/button/button.component';
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    .dark .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #4b5563; }
   `]
 })
 export class InventoryBatchDialogOrganism implements OnInit {

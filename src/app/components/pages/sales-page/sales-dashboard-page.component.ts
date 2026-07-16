@@ -114,8 +114,8 @@ import { MatIconModule } from '@angular/material/icon';
               [value]="s.currentMonth.totalSales"
               icon="shopping_cart"
               subtitle="Ventas brutas del periodo"
-              iconBgClass="bg-indigo-50"
-              iconColorClass="text-indigo-600"
+              iconBgClass="bg-indigo-50 dark:bg-indigo-900/30"
+              iconColorClass="text-indigo-600 dark:text-indigo-400"
             />
 
             <app-kpi-card-molecule
@@ -123,18 +123,18 @@ import { MatIconModule } from '@angular/material/icon';
               [value]="s.currentMonth.totalCost"
               icon="inventory_2"
               subtitle="Valor del stock vendido"
-              iconBgClass="bg-amber-50"
-              iconColorClass="text-amber-600"
+              iconBgClass="bg-amber-50 dark:bg-amber-900/30"
+              iconColorClass="text-amber-600 dark:text-amber-400"
             />
 
-            <div class="sm:col-span-2 bg-indigo-50/50 rounded-[32px] p-8 border border-indigo-100/30 flex items-center gap-6">
-              <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm">
+            <div class="sm:col-span-2 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-[32px] p-8 border border-indigo-100/30 dark:border-indigo-800/40 flex items-center gap-6">
+              <div class="w-12 h-12 bg-white dark:bg-indigo-900/50 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm dark:shadow-none">
                 <mat-icon>info</mat-icon>
               </div>
               <div>
-                <p class="text-xs text-indigo-900 font-bold tracking-tight">Análisis de Costos</p>
-                <p class="text-[10px] text-indigo-400 font-medium leading-relaxed mt-1">
-                  Los costos de venta se calculan utilizando el método <strong>FIFO</strong> (Primero en entrar, primero en salir) para asegurar una valoración de inventario precisa y actualizada.
+                <p class="text-xs text-indigo-900 dark:text-indigo-200 font-bold tracking-tight">Análisis de Costos</p>
+                <p class="text-[10px] text-indigo-400 dark:text-indigo-300 font-medium leading-relaxed mt-1">
+                  Los costos de venta se calculan utilizando el método <strong class="text-indigo-900 dark:text-indigo-100">FIFO</strong> (Primero en entrar, primero en salir) para asegurar una valoración de inventario precisa y actualizada.
                 </p>
               </div>
             </div>
