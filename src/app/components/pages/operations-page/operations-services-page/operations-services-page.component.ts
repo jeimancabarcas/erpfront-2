@@ -172,7 +172,7 @@ export class OperationsServicesPageComponent implements OnInit {
     const params: QueryParams = {
       page: this.pageIndex(),
       limit: this.pageSize(),
-      name: this.nameFilter() || ''
+      nombre: this.nameFilter() || ''
     };
     this.serviceService.loadServices(params).subscribe();
   }
