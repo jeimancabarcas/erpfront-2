@@ -7,7 +7,7 @@
    Phase 1 — Design Token System
    ═══════════════════════════════════════════════ */
 
-@theme {
+:root {
   /* ── Colors — Light mode (default) ── */
   --color-bg: #F9FAFB;
   --color-surface: #FFFFFF;
@@ -79,6 +79,21 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@theme {
+  /* Tailwind v4 utility references — mirrors :root tokens */
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-interactive-active: var(--color-interactive-active);
 }
 
 /* ── Dark mode overrides ── */
