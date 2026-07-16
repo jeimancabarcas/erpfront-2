@@ -42,7 +42,7 @@ describe('MovementsTableMolecule', () => {
   });
 
   it('should display origin, destination and operator in columns list', () => {
-    expect(component.tableColumns).toEqual(expect.arrayContaining([
+    expect((component as any).tableColumns).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'origin' }),
       expect.objectContaining({ key: 'destination' }),
       expect.objectContaining({ key: 'operator' }),

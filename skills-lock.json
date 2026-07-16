@@ -4,31 +4,37 @@
     "angular-developer": {
       "source": "angular/skills",
       "sourceType": "github",
-      "computedHash": "13f864392379685bb8935f93989ac3c08c74e36391499d2748e8e0657ef0ee90"
+      "skillPath": "angular-developer/SKILL.md",
+      "computedHash": "400d674a14120ccaa435a263cd6551e5f5ddb84d99df8622689da46fe9e5902c"
     },
     "angular-material": {
       "source": "pluginagentmarketplace/custom-plugin-angular",
       "sourceType": "github",
-      "computedHash": "539a70d810937d554a65be260d6bc28a85ad6515f8e84457303472bed7deceba"
+      "skillPath": "skills/angular-material/SKILL.md",
+      "computedHash": "819b6e2f51a7778777f40c9f12653dbdc46189a917feac73455ec69fb5c83822"
     },
     "atomic-design-fundamentals": {
       "source": "thebushidocollective/han",
       "sourceType": "github",
-      "computedHash": "ae644e79c53f1b450aaf5fd662459da1d66402112230e5b8d4881f8deff981ba"
+      "skillPath": "plugins/patterns/atomic-design/skills/atomic-design-fundamentals/SKILL.md",
+      "computedHash": "4a2d3a077911fd8da7ac42c42ff120345e476078ede8f523c9a0a7b4e3eb7cc8"
     },
     "google-material-design": {
       "source": "copyleftdev/sk1llz",
       "sourceType": "github",
-      "computedHash": "b8587db93252e6d89e7a491a65c1cdc41a68b97dd72c6c7b870af011bf922813"
+      "skillPath": "organizations/google/material-design/SKILL.md",
+      "computedHash": "e3bf51b8b451d035ea1d5da04580be27682709d2cb439ab800485137513d1fb0"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
-      "computedHash": "6337038fe1fe6bbe1b9f252ab678ee575859190bab6f0f246f4061824eb40875"
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "f0916ca326ad6dbde1d0770b46956a213406b8ea4a19ed931bb4f2dc7d04c16d"
     },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
       "computedHash": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474"
     }
   }

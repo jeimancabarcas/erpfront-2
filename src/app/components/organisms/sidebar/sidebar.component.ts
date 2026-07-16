@@ -174,6 +174,39 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           </div>
         </div>
 
+        <!-- Gestión Operativa Placeholder -->
+        <div class="sidebar__placeholder mb-1">
+          <div class="px-4 pt-3 pb-2">
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-200">Gestión Operativa</span>
+          </div>
+          <div class="flex flex-col gap-1 pl-2 pr-1 pb-1">
+            <a
+              mat-list-item
+              routerLink="/operaciones/servicios"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">description</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Servicios</span>
+              </div>
+            </a>
+            <a
+              mat-list-item
+              routerLink="/operaciones/insumos"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">inventory_2</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Insumos</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <!-- Pediatría Placeholder -->
         <div class="sidebar__placeholder mb-1">
           <div class="px-4 pt-3 pb-2">

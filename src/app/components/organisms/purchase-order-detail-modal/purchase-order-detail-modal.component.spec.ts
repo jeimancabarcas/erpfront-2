@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, ComponentFixture } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';

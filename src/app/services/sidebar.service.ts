@@ -9,6 +9,7 @@ export class SidebarService {
   private router = inject(Router);
 
   financeExpanded = false;
+  operacionesExpanded = false;
   pediatricsExpanded = false;
 
   constructor() {
@@ -26,6 +27,9 @@ export class SidebarService {
   private autoExpandActiveRoute() {
     if (this.isFinanceActive()) {
       this.financeExpanded = true;
+    }
+    if (this.isOperacionesActive()) {
+      this.operacionesExpanded = true;
     }
     if (this.isPediatricsActive()) {
       this.pediatricsExpanded = true;
@@ -48,6 +52,10 @@ export class SidebarService {
 
   isComercialActive(): boolean {
     return this.router.url.startsWith('/comercial');
+  }
+
+  isOperacionesActive(): boolean {
+    return this.router.url.startsWith('/operaciones');
   }
 
   private isPediatricsActive(): boolean {

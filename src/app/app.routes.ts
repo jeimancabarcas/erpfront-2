@@ -100,6 +100,20 @@ export const routes: Routes = [
 
     ]
   },
+  {
+    path: 'operaciones',
+    canActivate: [authGuard, profileGuard],
+    children: [
+      {
+        path: 'servicios',
+        loadComponent: () => import('./components/pages/operations-page/operations-services-page/operations-services-page.component').then(m => m.OperationsServicesPageComponent)
+      },
+      {
+        path: 'insumos',
+        loadComponent: () => import('./components/pages/operations-page/operations-supplies-page/operations-supplies-page.component').then(m => m.OperationsSuppliesPageComponent)
+      }
+    ]
+  },
   { 
     path: 'pediatrics/patients', 
     canActivate: [authGuard, profileGuard],
