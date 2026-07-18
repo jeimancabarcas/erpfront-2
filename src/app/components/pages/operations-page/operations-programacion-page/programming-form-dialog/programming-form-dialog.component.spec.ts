@@ -1,26 +1,44 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+// @vitest-environment jsdom
+import { ComponentFixture, TestBed, getTestInjector } from '@angular/core/testing';
+import { MatDialogModule, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { of } from 'rxjs';
+import { of, Observable } from 'rxjs';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { signal } from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { ProgrammingFormDialogComponent } from './programming-form-dialog.component';
-import { ProgrammingService } from '../../../../services/programming.service';
-import { CustomerService } from '../../../../services/customer.service';
-import { ServiceService } from '../../../../services/service.service';
-import { Customer } from '../../../../models/customer.model';
-import { Service } from '../../../../models/service.model';
+import { ProgrammingService } from '../../../../../services/programming.service';
+import { CustomerService } from '../../../../../services/customer.service';
+import { ServiceService } from '../../../../../services/service.service';
+import { SupplyService } from '../../../../../services/supply.service';
+import { Customer } from '../../../../../models/customer.model';
+import { Service } from '../../../../../models/service.model';
+import { Supply } from '../../../../../models/supply.model';
+import { calculateBusinessHoursEnd } from '../../../../../shared/utils/business-hours.utils';
+
+// Initialize Angular testing environment if not already initialized
+try {
+  getTestBed().initTestEnvironment(
+    BrowserTestingModule,
+    platformBrowserTesting(),
+  );
+} catch {
+  // Already initialized — ignore
+}
 
 describe('ProgrammingFormDialogComponent', () => {
   let component: ProgrammingFormDialogComponent;
   let fixture: ComponentFixture<ProgrammingFormDialogComponent>;
-  let programmingService: jasmine.SpyObj<ProgrammingService>;
+  let programmingService: ProgrammingService;
+  let snackBar: MatSnackBar;
+  let dialogRefSpy: { close: ReturnType<typeof vi.fn> };
+  let matDialogSpy: { open: ReturnType<typeof vi.fn> };
 
   const mockClientes: Customer[] = [
-    { id: 'cust-1', name: 'Cliente 1', documentType: 'CC', documentNumber: '123', status: 'ACTIVE', phone: '123', address: 'dir' },
-    { id: 'cust-2', name: 'Cliente 2', documentType: 'NIT', documentNumber: '456', status: 'ACTIVE', phone: '456', address: 'dir' },
+    { id: 'cust-1', name: 'Cliente 1', documentType: 'CC', documentNumber: '123', status: 'ACTIVE', phone: '123', address: 'dir', createdAt: '', updatedAt: '' },
+    { id: 'cust-2', name: 'Cliente 2', documentType: 'NIT', documentNumber: '456', status: 'ACTIVE', phone: '456', address: 'dir', createdAt: '', updatedAt: '' },
   ];
 
   const mockServicios: Service[] = [
@@ -28,12 +46,28 @@ describe('ProgrammingFormDialogComponent', () => {
     { id: 'serv-2', nombre: 'Servicio 2', precioBase: 200, isActive: true, createdAt: '', updatedAt: '', totalHoras: 8 },
   ];
 
+  const mockInsumos: Supply[] = [
+    { id: 'ins-1', nombre: 'Insumo 1', isActive: true, createdAt: '', updatedAt: '' },
+    { id: 'ins-2', nombre: 'Insumo 2', isActive: true, createdAt: '', updatedAt: '' },
+  ];
+
+  let createProgramadoMock: ReturnType<typeof vi.fn>;
+  let mockProgrammingService: Record<string, unknown>;
+  let mockSnackBar: { open: ReturnType<typeof vi.fn> };
+
   beforeEach(async () => {
-    const programmingSpy = jasmine.createSpyObj('ProgrammingService', ['createProgramado'], {
-      data: of([]),
-      meta: of(null),
-      loading: of(false),
-    });
+    TestBed.resetTestingModule();
+    dialogRefSpy = { close: vi.fn() };
+    matDialogSpy = { open: vi.fn(() => ({ afterClosed: vi.fn(() => of(false)) })) };
+    createProgramadoMock = vi.fn().mockReturnValue(of({} as any));
+    mockSnackBar = { open: vi.fn() };
+
+    mockProgrammingService = {
+      createProgramado: createProgramadoMock,
+      data: signal([]),
+      meta: signal(null),
+      loading: signal(false),
+    };
 
     await TestBed.configureTestingModule({
       imports: [
@@ -41,40 +75,49 @@ describe('ProgrammingFormDialogComponent', () => {
         MatDialogModule,
         MatSnackBarModule,
         ReactiveFormsModule,
+        NoopAnimationsModule,
       ],
       providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideNoopAnimations(),
         FormBuilder,
-        { provide: ProgrammingService, useValue: programmingSpy },
+        { provide: ProgrammingService, useValue: mockProgrammingService },
         {
           provide: CustomerService,
           useValue: {
             loadCustomers: () => of({}),
-            customers: () => mockClientes,
+            customers: signal(mockClientes),
           },
         },
         {
           provide: ServiceService,
           useValue: {
             loadServices: () => of({}),
-            services: () => mockServicios,
+            services: signal(mockServicios),
           },
         },
-        { provide: MatDialog, useValue: { closeAll: jasmine.createSpy('closeAll') } },
-        { provide: MatSnackBar, useValue: { open: jasmine.createSpy('open') } },
         {
-          provide: MatDialogRef,
-          useValue: { close: jasmine.createSpy('close') },
+          provide: SupplyService,
+          useValue: {
+            loadSupplies: () => of({}),
+            supplies: signal(mockInsumos),
+          },
         },
+        { provide: MatDialogRef, useValue: dialogRefSpy },
+        { provide: MatDialog, useValue: matDialogSpy },
+        { provide: MatSnackBar, useValue: mockSnackBar },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProgrammingFormDialogComponent);
     component = fixture.componentInstance;
-    programmingService = TestBed.inject(ProgrammingService) as jasmine.SpyObj<ProgrammingService>;
+    programmingService = TestBed.inject(ProgrammingService);
+    snackBar = TestBed.inject(MatSnackBar);
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    createProgramadoMock.mockClear();
+    mockSnackBar.open.mockClear();
+    dialogRefSpy.close.mockClear();
   });
 
   it('should create', () => {
@@ -89,45 +132,26 @@ describe('ProgrammingFormDialogComponent', () => {
 
   it('should have required validators on customerId', () => {
     const customerId = component.formGroup.get('customerId');
-    expect(customerId?.hasError('required')).toBeFalse();
-    customerId?.setValue('');
-    customerId?.markAsTouched();
-    expect(customerId?.hasError('required')).toBeTrue();
+    expect(customerId?.hasError('required')).toBeTruthy();
+    customerId?.setValue('cust-1');
+    expect(customerId?.hasError('required')).toBeFalsy();
   });
 
   it('should have required validators on servicioId', () => {
     const servicioId = component.formGroup.get('servicioId');
-    expect(servicioId?.hasError('required')).toBeFalse();
-    servicioId?.setValue('');
-    servicioId?.markAsTouched();
-    expect(servicioId?.hasError('required')).toBeTrue();
+    expect(servicioId?.hasError('required')).toBeTruthy();
+    servicioId?.setValue('serv-1');
+    expect(servicioId?.hasError('required')).toBeFalsy();
   });
 
   it('should have maxLength validator on notas', () => {
     const notas = component.formGroup.get('notas');
     notas?.setValue('a'.repeat(2001));
-    expect(notas?.hasError('maxlength')).toBeTrue();
+    expect(notas?.hasError('maxlength')).toBeTruthy();
   });
 
-  it('should have at least one insumo row', () => {
-    expect(component.insumos.length).toBe(1);
-  });
-
-  it('should add insumo row', () => {
-    component.addInsumoRow();
-    expect(component.insumos.length).toBe(2);
-  });
-
-  it('should remove insumo row', () => {
-    component.addInsumoRow();
-    expect(component.insumos.length).toBe(2);
-    component.removeInsumoRow(0);
-    expect(component.insumos.length).toBe(1);
-  });
-
-  it('should not remove last insumo row', () => {
-    component.removeInsumoRow(0);
-    expect(component.insumos.length).toBe(1);
+  it('should start with zero added insumos', () => {
+    expect(component.insumosCount()).toBe(0);
   });
 
   it('should get selected servicio', () => {
@@ -142,25 +166,12 @@ describe('ProgrammingFormDialogComponent', () => {
     expect(component.getTotalHorasPreview()).toBe(16);
   });
 
-  it('should return empty fecha fin preview when no servicio selected', () => {
-    component.formGroup.get('servicioId')?.setValue('');
-    expect(component.getFechaFinPreview()).toBe('');
-  });
-
-  it('should calculate fecha fin preview when servicio selected', () => {
-    component.formGroup.get('servicioId')?.setValue('serv-1');
-    component.formGroup.get('fechaInicioEstimada')?.setValue('2026-01-12T08:00');
-    const fechaFin = component.getFechaFinPreview();
-    expect(fechaFin).toBeTruthy();
-    expect(fechaFin).toContain('2026');
-  });
-
-  it('should submit form and call createProgramado', () => {
+  it('should submit form and call createProgramado without insumos', () => {
     component.formGroup.get('customerId')?.setValue('cust-1');
     component.formGroup.get('servicioId')?.setValue('serv-1');
     component.formGroup.get('fechaInicioEstimada')?.setValue('2026-01-12T08:00');
 
-    programmingService.createProgramado.and.returnValue(of({
+    createProgramadoMock.mockReturnValue(of({
       id: 'new-prog',
       customer: mockClientes[0],
       servicio: mockServicios[0],
@@ -178,6 +189,44 @@ describe('ProgrammingFormDialogComponent', () => {
     component.onSubmit();
 
     expect(programmingService.createProgramado).toHaveBeenCalled();
+    expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
+  });
+
+  it('should submit form with insumos when addedInsumos has items', () => {
+    component.formGroup.get('customerId')?.setValue('cust-1');
+    component.formGroup.get('servicioId')?.setValue('serv-1');
+    component.formGroup.get('fechaInicioEstimada')?.setValue('2026-01-12T08:00');
+
+    // Simulate adding insumos via the signal
+    component['_addedInsumos'].set([
+      { supplyId: 'ins-1', name: 'Insumo 1', quantity: 2 },
+      { supplyId: 'ins-2', name: 'Insumo 2', quantity: 1 },
+    ]);
+
+    createProgramadoMock.mockReturnValue(of({
+      id: 'new-prog',
+      customer: mockClientes[0],
+      servicio: mockServicios[0],
+      estado: 'PENDIENTE',
+      fechaInicioEstimada: '2026-01-12T08:00:00Z',
+      fechaFinEstimada: '2026-01-13T17:00:00Z',
+      totalHoras: 16,
+      insumos: [],
+      notas: '',
+      motivoEstado: '',
+      createdAt: '',
+      updatedAt: '',
+    } as any));
+
+    component.onSubmit();
+
+    const callArgs = (programmingService.createProgramado as any).mock.calls[0][0];
+    expect(callArgs.insumos).toHaveLength(2);
+    expect(callArgs.insumos[0].insumoId).toBe('ins-1');
+    expect(callArgs.insumos[0].cantidad).toBe(2);
+    expect(callArgs.insumos[1].insumoId).toBe('ins-2');
+    expect(callArgs.insumos[1].cantidad).toBe(1);
+    expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
   });
 
   it('should not submit when form is invalid', () => {
@@ -192,12 +241,147 @@ describe('ProgrammingFormDialogComponent', () => {
     component.formGroup.get('servicioId')?.setValue('serv-1');
     component.formGroup.get('fechaInicioEstimada')?.setValue('2026-01-12T08:00');
 
-    programmingService.createProgramado.and.returnValue(
-      new Observable(() => { throw new Error('Server error'); })
+    const mockError = new Error('Server error');
+    createProgramadoMock.mockReturnValue(
+      new Observable(observer => observer.error(mockError))
     );
 
     component.onSubmit();
 
-    expect(TestBed.inject(MatSnackBar).open).toHaveBeenCalled();
+    expect(snackBar.open).toHaveBeenCalled();
+  });
+
+  it('should calculate business hours end correctly (16h from Monday 08:00 = Tuesday 15:00)', () => {
+    const start = new Date('2026-01-12T08:00:00');
+    const result = calculateBusinessHoursEnd({ totalHours: 16, startDateTime: start });
+    expect(result.getDay()).toBe(2);
+    expect(result.getHours()).toBe(15);
+  });
+
+  it('should skip weekends (Friday 16:00 + 8h = Monday 15:00)', () => {
+    const start = new Date('2026-01-16T16:00:00');
+    const result = calculateBusinessHoursEnd({ totalHours: 8, startDateTime: start });
+    expect(result.getDay()).toBe(1);
+    expect(result.getHours()).toBe(15);
+  });
+
+  it('should handle zero or negative hours (returns start)', () => {
+    const start = new Date('2026-01-12T10:00:00');
+    expect(calculateBusinessHoursEnd({ totalHours: 0, startDateTime: start }).getTime()).toBe(start.getTime());
+    expect(calculateBusinessHoursEnd({ totalHours: -5, startDateTime: start }).getTime()).toBe(start.getTime());
+  });
+
+  it('should handle fractional hours (1.5h from Monday 08:00 = Monday 09:30)', () => {
+    const start = new Date('2026-01-12T08:00:00');
+    const result = calculateBusinessHoursEnd({ totalHours: 1.5, startDateTime: start });
+    expect(result.getHours()).toBe(9);
+    expect(result.getMinutes()).toBe(30);
+  });
+
+  it('should handle service options mapping', () => {
+    const options = component.servicioOptions;
+    expect(options.length).toBe(2);
+    expect(options[0].value).toBe('serv-1');
+    expect(options[0].label).toBe('Servicio 1');
+  });
+
+  it('should handle cliente options mapping', () => {
+    const options = component.clienteOptions;
+    expect(options.length).toBe(2);
+    expect(options[0].value).toBe('cust-1');
+    expect(options[0].label).toBe('Cliente 1');
+  });
+
+  it('should open create customer dialog when footerAction is triggered', () => {
+    component.openCreateCustomerDialog();
+    expect(matDialogSpy.open).toHaveBeenCalled();
+  });
+
+  it('should open create service dialog when footerAction is triggered', () => {
+    component.openCreateServiceDialog();
+    expect(matDialogSpy.open).toHaveBeenCalled();
+  });
+
+  it('should open add insumo dialog when openAddInsumoDialog is called', () => {
+    component.openAddInsumoDialog();
+    expect(matDialogSpy.open).toHaveBeenCalled();
+    const openCall = (matDialogSpy.open as any).mock.calls[0][0];
+    expect(openCall).toBeDefined();
+  });
+
+  it('should add insumo when dialog returns result', () => {
+    let resultCallback: any;
+    (matDialogSpy.open as any).mockReturnValue({
+      afterClosed: vi.fn(() => {
+        resultCallback = { supplyId: 'ins-1', name: 'Insumo 1', quantity: 3 };
+        return of(resultCallback);
+      }),
+    });
+
+    component.openAddInsumoDialog();
+
+    expect(component.insumosCount()).toBe(1);
+    expect(component.addedInsumos()[0].supplyId).toBe('ins-1');
+    expect(component.addedInsumos()[0].name).toBe('Insumo 1');
+    expect(component.addedInsumos()[0].quantity).toBe(3);
+  });
+
+  it('should edit insumo when dialog returns result', () => {
+    // Pre-populate with one insumo
+    component['_addedInsumos'].set([
+      { supplyId: 'ins-1', name: 'Insumo 1', quantity: 2 },
+    ]);
+
+    let resultCallback: any;
+    (matDialogSpy.open as any).mockReturnValue({
+      afterClosed: vi.fn(() => {
+        resultCallback = { supplyId: 'ins-2', name: 'Insumo 2', quantity: 5 };
+        return of(resultCallback);
+      }),
+    });
+
+    component.openEditInsumoDialog(0);
+
+    expect(component.insumosCount()).toBe(1);
+    expect(component.addedInsumos()[0].supplyId).toBe('ins-2');
+    expect(component.addedInsumos()[0].name).toBe('Insumo 2');
+    expect(component.addedInsumos()[0].quantity).toBe(5);
+  });
+
+  it('should remove insumo by index', () => {
+    component['_addedInsumos'].set([
+      { supplyId: 'ins-1', name: 'Insumo 1', quantity: 2 },
+      { supplyId: 'ins-2', name: 'Insumo 2', quantity: 1 },
+    ]);
+
+    component.removeInsumo(0);
+
+    expect(component.insumosCount()).toBe(1);
+    expect(component.addedInsumos()[0].supplyId).toBe('ins-2');
+  });
+
+  it('should not add insumo when dialog returns undefined', () => {
+    (matDialogSpy.open as any).mockReturnValue({
+      afterClosed: vi.fn(() => of(undefined)),
+    });
+
+    component.openAddInsumoDialog();
+
+    expect(component.insumosCount()).toBe(0);
+  });
+
+  it('should not edit insumo when dialog returns undefined', () => {
+    component['_addedInsumos'].set([
+      { supplyId: 'ins-1', name: 'Insumo 1', quantity: 2 },
+    ]);
+
+    (matDialogSpy.open as any).mockReturnValue({
+      afterClosed: vi.fn(() => of(undefined)),
+    });
+
+    component.openEditInsumoDialog(0);
+
+    expect(component.insumosCount()).toBe(1);
+    expect(component.addedInsumos()[0].supplyId).toBe('ins-1');
   });
 });

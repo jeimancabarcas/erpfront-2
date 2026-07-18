@@ -6,6 +6,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
+import { vi } from 'vitest';
 import { OperationsProgrammingPageComponent } from './operations-programacion-page.component';
 import { ProgrammingService } from '../../../../services/programming.service';
 import { CustomerService } from '../../../../services/customer.service';
@@ -14,12 +15,24 @@ import { ServicioProgramado, ChangeStateDto, CancelDto } from '../../../../model
 import { Customer } from '../../../../models/customer.model';
 import { Service } from '../../../../models/service.model';
 
+// Helper to create a mock service with spy methods
+function createMockService(methods: string[], props: Record<string, unknown>): Record<string, unknown> {
+  const mock: Record<string, unknown> = {};
+  for (const method of methods) {
+    (mock as Record<string, unknown>)[method] = vi.fn();
+  }
+  for (const [key, value] of Object.entries(props)) {
+    (mock as Record<string, unknown>)[key] = value;
+  }
+  return mock;
+}
+
 describe('OperationsProgrammingPageComponent', () => {
   let component: OperationsProgrammingPageComponent;
   let fixture: ComponentFixture<OperationsProgrammingPageComponent>;
-  let programmingService: jasmine.SpyObj<ProgrammingService>;
-  let customerService: jasmine.SpyObj<CustomerService>;
-  let serviceService: jasmine.SpyObj<ServiceService>;
+  let programmingService: ProgrammingService;
+  let customerService: CustomerService;
+  let serviceService: ServiceService;
 
   const mockProgramados: ServicioProgramado[] = [
     {
@@ -53,8 +66,8 @@ describe('OperationsProgrammingPageComponent', () => {
   ];
 
   const mockClientes: Customer[] = [
-    { id: 'cust-1', name: 'Cliente 1', documentType: 'CC', documentNumber: '123', status: 'ACTIVE', phone: '123', address: 'dir' },
-    { id: 'cust-2', name: 'Cliente 2', documentType: 'CC', documentNumber: '456', status: 'ACTIVE', phone: '456', address: 'dir' },
+    { id: 'cust-1', name: 'Cliente 1', documentType: 'CC', documentNumber: '123', status: 'ACTIVE', phone: '123', address: 'dir', createdAt: '', updatedAt: '' },
+    { id: 'cust-2', name: 'Cliente 2', documentType: 'CC', documentNumber: '456', status: 'ACTIVE', phone: '456', address: 'dir', createdAt: '', updatedAt: '' },
   ];
 
   const mockServicios: Service[] = [
@@ -63,17 +76,32 @@ describe('OperationsProgrammingPageComponent', () => {
   ];
 
   beforeEach(async () => {
-    const programmingSpy = jasmine.createSpyObj('ProgrammingService', ['loadProgramados', 'changeState', 'cancelProgramado'], {
-      data: of(mockProgramados),
-      meta: of({ total: 2, page: 1, lastPage: 1, limit: 10 }),
-      loading: of(false),
-    });
-    const customerSpy = jasmine.createSpyObj('CustomerService', ['loadCustomers'], {
-      customers: of(mockClientes),
-    });
-    const serviceSpy = jasmine.createSpyObj('ServiceService', ['loadServices'], {
-      services: of(mockServicios),
-    });
+    const programmingSpy = createMockService(
+      ['loadProgramados', 'changeState', 'cancelProgramado'],
+      {
+        data: of(mockProgramados),
+        meta: of({ total: 2, page: 1, lastPage: 1, limit: 10 }),
+        loading: of(false),
+      }
+    );
+
+    const customerSpy = createMockService(
+      ['loadCustomers'],
+      {
+        customers: of(mockClientes),
+      }
+    );
+
+    const serviceSpy = createMockService(
+      ['loadServices'],
+      {
+        services: of(mockServicios),
+      }
+    );
+
+    const dialogOpenMock = vi.fn().mockReturnValue({
+      afterClosed: () => of(false),
+    } as any);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -88,16 +116,16 @@ describe('OperationsProgrammingPageComponent', () => {
         { provide: ProgrammingService, useValue: programmingSpy },
         { provide: CustomerService, useValue: customerSpy },
         { provide: ServiceService, useValue: serviceSpy },
-        { provide: MatDialog, useValue: { open: jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(false) }) } },
-        { provide: MatSnackBar, useValue: { open: jasmine.createSpy('open') } },
+        { provide: MatDialog, useValue: { open: dialogOpenMock } },
+        { provide: MatSnackBar, useValue: { open: vi.fn() } },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(OperationsProgrammingPageComponent);
     component = fixture.componentInstance;
-    programmingService = TestBed.inject(ProgrammingService) as jasmine.SpyObj<ProgrammingService>;
-    customerService = TestBed.inject(CustomerService) as jasmine.SpyObj<CustomerService>;
-    serviceService = TestBed.inject(ServiceService) as jasmine.SpyObj<ServiceService>;
+    programmingService = TestBed.inject(ProgrammingService);
+    customerService = TestBed.inject(CustomerService);
+    serviceService = TestBed.inject(ServiceService);
     fixture.detectChanges();
   });
 
@@ -154,14 +182,14 @@ describe('OperationsProgrammingPageComponent', () => {
   });
 
   it('should open schedule dialog', () => {
-    const dialogSpy = (TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>).open;
+    const dialogSpy = TestBed.inject(MatDialog);
     component.openScheduleDialog();
-    expect(dialogSpy).toHaveBeenCalled();
+    expect(dialogSpy.open).toHaveBeenCalled();
   });
 
   it('should change estado via dialog confirmation', () => {
-    const dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
-    dialogSpy.open.and.returnValue({
+    const dialogSpy = TestBed.inject(MatDialog);
+    (dialogSpy.open as ReturnType<typeof vi.fn>).mockReturnValueOnce({
       afterClosed: () => of(true),
     } as any);
 
@@ -171,8 +199,8 @@ describe('OperationsProgrammingPageComponent', () => {
   });
 
   it('should cancel programado via dialog confirmation', () => {
-    const dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
-    dialogSpy.open.and.returnValue({
+    const dialogSpy = TestBed.inject(MatDialog);
+    (dialogSpy.open as ReturnType<typeof vi.fn>).mockReturnValueOnce({
       afterClosed: () => of(true),
     } as any);
 
@@ -190,8 +218,8 @@ describe('OperationsProgrammingPageComponent', () => {
 
   describe('debouncedFilter', () => {
     it('should clear previous timer before starting new one', fakeAsync(() => {
-      const loadDataSpy = spyOn(component, 'loadData');
-      const setTimeoutSpy = spyOn(window, 'setTimeout');
+      const loadDataSpy = vi.spyOn(component, 'loadData');
+      const setTimeoutSpy = vi.spyOn(globalThis.window as any, 'setTimeout');
 
       // First call
       component.debouncedFilter();
@@ -199,7 +227,7 @@ describe('OperationsProgrammingPageComponent', () => {
 
       // Second call should clear previous timer
       component.debouncedFilter();
-      expect(setTimeoutSpy).toHaveBeenCalledTimes(2); // Another setTimeout call
+      expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
 
       // Wait for the delay
       tick(500);
@@ -209,7 +237,7 @@ describe('OperationsProgrammingPageComponent', () => {
     }));
 
     it('should call loadData after 400ms delay', fakeAsync(() => {
-      const loadDataSpy = spyOn(component, 'loadData');
+      const loadDataSpy = vi.spyOn(component, 'loadData');
 
       component.debouncedFilter();
       expect(loadDataSpy).not.toHaveBeenCalled();
@@ -255,7 +283,6 @@ describe('OperationsProgrammingPageComponent', () => {
       fixture.detectChanges();
 
       const errorMessages = fixture.nativeElement.querySelectorAll('.text-red-500');
-      // No error messages should be present
       expect(errorMessages.length).toBe(0);
     });
   });

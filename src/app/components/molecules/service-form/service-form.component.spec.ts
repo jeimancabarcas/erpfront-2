@@ -61,7 +61,7 @@ describe('ServiceFormMolecule', () => {
       nombre: 'Masaje terapéutico',
       descripcion: 'Masaje relajante',
       precioBase: 50000,
-      actividadIds: ['act-1'],
+      actividades: [{ actividadId: 'act-1' }],
       isActive: true,
       createdAt: '',
       updatedAt: '',
@@ -105,7 +105,7 @@ describe('ServiceFormMolecule', () => {
     expect(component.service().precioBase).toBe(50000);
   });
 
-  it('onActivitySelect should add activity to selectedActivities', async () => {
+  it('onActivitySelect should add activity to selectedActivity', async () => {
     const mockServiceService = { createService: vi.fn(), updateService: vi.fn(), services: vi.fn(), meta: vi.fn() };
     const mockActivityService = {
       loadData: vi.fn().mockReturnValue({ subscribe: (cb: any) => cb({ data: mockActivities, meta: null }), unsubscribe: () => {} }),
@@ -128,8 +128,8 @@ describe('ServiceFormMolecule', () => {
     fixture.detectChanges();
 
     component.onActivitySelect('act-1');
-    expect(component.selectedActivities().length).toBe(1);
-    expect(component.selectedActivities()[0].id).toBe('act-1');
+    expect(component.selectedActivity().length).toBe(1);
+    expect(component.serviceActivities()[0].actividadId).toBe('act-1');
   });
 
   it('onActivitySelect should not add duplicate activity', async () => {
@@ -156,10 +156,10 @@ describe('ServiceFormMolecule', () => {
 
     component.onActivitySelect('act-1');
     component.onActivitySelect('act-1');
-    expect(component.selectedActivities().length).toBe(1);
+    expect(component.selectedActivity().length).toBe(1);
   });
 
-  it('removeActivity should remove activity from selectedActivities', async () => {
+  it('removeActivity should remove activity from selectedActivity', async () => {
     const mockServiceService = { createService: vi.fn(), updateService: vi.fn(), services: vi.fn(), meta: vi.fn() };
     const mockActivityService = {
       loadData: vi.fn().mockReturnValue({ subscribe: (cb: any) => cb({ data: mockActivities, meta: null }), unsubscribe: () => {} }),
@@ -181,13 +181,13 @@ describe('ServiceFormMolecule', () => {
     const component = fixture.componentInstance;
     fixture.detectChanges();
 
-    component.selectedActivities.set(mockActivities);
-    component.removeActivity('act-1');
-    expect(component.selectedActivities().length).toBe(1);
-    expect(component.selectedActivities()[0].id).toBe('act-2');
+    component.serviceActivities.set(mockActivities.map((a: any) => ({ actividadId: a.id, horasEstimadas: a.horasEstimadas })));
+    component.removeServiceActivity('act-1');
+    expect(component.selectedActivity().length).toBe(1);
+    expect(component.serviceActivities()[0].actividadId).toBe('act-2');
   });
 
-  it('getActivityLabel should return activity name', async () => {
+  it('getActivityName should return activity name', async () => {
     const mockServiceService = { createService: vi.fn(), updateService: vi.fn(), services: vi.fn(), meta: vi.fn() };
     const mockActivityService = {
       loadData: vi.fn().mockReturnValue({ subscribe: (cb: any) => cb({ data: mockActivities, meta: null }), unsubscribe: () => {} }),
@@ -209,8 +209,8 @@ describe('ServiceFormMolecule', () => {
     const component = fixture.componentInstance;
     fixture.detectChanges();
 
-    component.selectedActivities.set(mockActivities);
-    const label = component.getActivityLabel('act-1');
+    component.serviceActivities.set(mockActivities.map((a: any) => ({ actividadId: a.id, horasEstimadas: a.horasEstimadas })));
+    const label = component.getActivityName('act-1');
     expect(label).toBe('Masaje terapéutico');
   });
 
@@ -244,7 +244,7 @@ describe('ServiceFormMolecule', () => {
     const mockServiceService = {
       createService: vi.fn().mockReturnValue({
         subscribe: (cb: any) => {
-          const result = { id: 'new-1', nombre: 'Nuevo servicio', precioBase: 30000, actividadIds: [], isActive: true, createdAt: '', updatedAt: '' };
+          const result = { id: 'new-1', nombre: 'Nuevo servicio', precioBase: 30000, actividades: [], isActive: true, createdAt: '', updatedAt: '' };
           if (typeof cb === 'function') cb(result);
           else if (cb && typeof cb.next === 'function') cb.next(result);
           return { unsubscribe: () => {} };
@@ -275,8 +275,8 @@ describe('ServiceFormMolecule', () => {
     const component = fixture.componentInstance;
     fixture.detectChanges();
 
-    component.service.set({ nombre: 'Nuevo servicio', precioBase: 30000, actividadIdsArr: [] });
-    component.selectedActivities.set([]);
+    component.service.set({ nombre: 'Nuevo servicio', precioBase: 30000, descripcion: '' });
+    component.serviceActivities.set([]);
     component.saveService();
 
     expect(mockServiceService.createService).toHaveBeenCalled();
@@ -288,7 +288,7 @@ describe('ServiceFormMolecule', () => {
       nombre: 'Masaje terapéutico',
       descripcion: 'Masaje relajante',
       precioBase: 50000,
-      actividadIds: [],
+      actividades: [],
       isActive: true,
       createdAt: '',
       updatedAt: '',
@@ -328,8 +328,8 @@ describe('ServiceFormMolecule', () => {
     const component = fixture.componentInstance;
     fixture.detectChanges();
 
-    component.service.set({ ...mockService, nombre: 'Masaje actualizado', precioBase: 60000 });
-    component.selectedActivities.set([]);
+    component.service.update(s => ({ ...s, nombre: 'Masaje actualizado', precioBase: 60000 }));
+    component.serviceActivities.set([]);
     component.saveService();
 
     expect(mockServiceService.updateService).toHaveBeenCalledWith('svc-1', expect.objectContaining({ nombre: 'Masaje actualizado' }));

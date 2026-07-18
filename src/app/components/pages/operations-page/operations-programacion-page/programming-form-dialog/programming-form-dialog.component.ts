@@ -1,22 +1,15 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
   MatDialog,
-  MatDialogModule,
+  MatDialogRef,
 } from '@angular/material/dialog';
 import {
   FormBuilder,
   FormGroup,
   Validators,
-  FormArray,
   ReactiveFormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Customer } from '../../../../../models/customer.model';
 import { Service } from '../../../../../models/service.model';
@@ -25,28 +18,52 @@ import { CustomerService } from '../../../../../services/customer.service';
 import { ServiceService } from '../../../../../services/service.service';
 import { SupplyService } from '../../../../../services/supply.service';
 import { ProgrammingService } from '../../../../../services/programming.service';
-import { CreateProgramadoDto, CreateProgramadoInsumoDto } from '../../../../../models/programming.model';
-import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../../shared/constants/dialog.config';
+import { CreateProgramadoDto } from '../../../../../models/programming.model';
+import { DIALOG_DEFAULTS, DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../../../shared/constants/dialog.config';
+import { SelectOption, SelectAtom } from '../../../../../components/atoms/select/select.component';
+import { TextInputComponent } from '../../../../../components/atoms/text-input/text-input.component';
+import { DatepickerComponent } from '../../../../../components/atoms/datepicker/datepicker.component';
+import { TextareaComponent } from '../../../../../components/atoms/textarea/textarea.component';
+import { ButtonAtom } from '../../../../../components/atoms/button/button.component';
+import { TableComponent, TableColumn } from '../../../../../components/atoms/table/table.component';
+import { TableCellDirective } from '../../../../../components/atoms/table/table-cell.directive';
+import { CustomerDialogOrganism } from '../../../../../components/organisms/customer-dialog/customer-dialog.component';
+import { ServiceFormMolecule } from '../../../../../components/molecules/service-form/service-form.component';
+import {
+  SupplySelectionDialogComponent,
+  SupplySelectionDialogResult,
+} from '../../../../../components/organisms/supply-selection-dialog/supply-selection-dialog.component';
+import { calculateBusinessHoursEnd } from '../../../../../shared/utils/business-hours.utils';
+
+// ── Added Insumo Interface ──
+
+export interface AddedInsumo {
+  supplyId: string;
+  name: string;
+  quantity: number;
+}
 
 @Component({
   selector: 'app-programming-form-dialog',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatDialogModule,
+    SelectAtom,
+    TextInputComponent,
+    DatepickerComponent,
+    TextareaComponent,
+    ButtonAtom,
+    TableComponent,
+    TableCellDirective,
   ],
   templateUrl: 'programming-form-dialog.component.html',
   styleUrl: 'programming-form-dialog.component.scss',
 })
-export class ProgrammingFormDialogComponent {
-  public dialog = inject(MatDialog);
+export class ProgrammingFormDialogComponent implements OnInit {
+  public dialogRef = inject(MatDialogRef<ProgrammingFormDialogComponent>);
+  private matDialog = inject(MatDialog);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private programmingService = inject(ProgrammingService);
@@ -55,15 +72,29 @@ export class ProgrammingFormDialogComponent {
   private supplyService = inject(SupplyService);
 
   formGroup!: FormGroup;
-  clientes: Customer[] = [];
-  servicios: Service[] = [];
-  insumos: Supply[] = [];
 
-  ngOnInit() {
-    // Load customers, services, and supplies
+  private customerList = signal<Customer[]>([]);
+  private serviceList = signal<Service[]>([]);
+  private supplyList = signal<Supply[]>([]);
+
+  // Added insumos (signal-based array, not FormArray)
+  private _addedInsumos = signal<AddedInsumo[]>([]);
+  addedInsumos = this._addedInsumos.asReadonly();
+
+  selectedServicioId = signal<string>('');
+  totalHoras = signal<number>(0);
+
+  // Table columns for added insumos
+  protected readonly insumosColumns: TableColumn[] = [
+    { key: 'name', header: 'Insumo', width: '55%' },
+    { key: 'quantity', header: 'Cantidad', align: 'center', width: '120px' },
+    { key: 'actions', header: '', width: '80px' },
+  ];
+
+  ngOnInit(): void {
     this.customerService.loadCustomers().subscribe({
       next: () => {
-        this.clientes = this.customerService.customers();
+        this.customerList.set(this.customerService.customers());
       },
       error: () => {
         this.snackBar.open('Error al cargar clientes', 'Cerrar', { duration: 3000 });
@@ -72,7 +103,7 @@ export class ProgrammingFormDialogComponent {
 
     this.serviceService.loadServices().subscribe({
       next: () => {
-        this.servicios = this.serviceService.services();
+        this.serviceList.set(this.serviceService.services());
       },
       error: () => {
         this.snackBar.open('Error al cargar servicios', 'Cerrar', { duration: 3000 });
@@ -81,135 +112,148 @@ export class ProgrammingFormDialogComponent {
 
     this.supplyService.loadSupplies().subscribe({
       next: () => {
-        this.insumos = this.supplyService.supplies();
+        this.supplyList.set(this.supplyService.supplies());
       },
       error: () => {
         this.snackBar.open('Error al cargar insumos', 'Cerrar', { duration: 3000 });
       },
     });
 
-    // Initialize form
     this.formGroup = this.fb.group({
       customerId: ['', Validators.required],
       servicioId: ['', Validators.required],
-      insumos: this.fb.array([this.createInsumoRow()]),
       fechaInicioEstimada: ['', [Validators.required]],
       notas: ['', [Validators.maxLength(2000)]],
     });
 
-    // Set default fechaInicio to today 08:00
     const today = new Date();
     today.setHours(8, 0, 0, 0);
     const isoString = today.toISOString().slice(0, 16);
     this.formGroup.get('fechaInicioEstimada')?.setValue(isoString);
-  }
 
-  get insumosArray(): FormArray {
-    return this.formGroup.get('insumos') as FormArray;
-  }
-
-  createInsumoRow(): FormGroup {
-    return this.fb.group({
-      insumoId: ['', Validators.required],
-      cantidad: ['', [Validators.required, Validators.min(0.01)]],
+    this.formGroup.get('servicioId')?.valueChanges.subscribe((servicioId: string) => {
+      this.selectedServicioId.set(servicioId);
+      const servicio = this.serviceList().find(s => s.id === servicioId);
+      this.totalHoras.set(servicio?.totalHoras ?? 0);
     });
   }
 
-  addInsumoRow(): void {
-    this.insumosArray.push(this.createInsumoRow());
+  insumosCount = computed(() => this._addedInsumos().length);
+
+  openAddInsumoDialog(): void {
+    const ref = this.matDialog.open(SupplySelectionDialogComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { mode: 'add' },
+    });
+
+    ref.afterClosed().subscribe((result: SupplySelectionDialogResult | undefined) => {
+      if (!result) return;
+
+      this._addedInsumos.update(items => {
+        return [...items, {
+          supplyId: result.supplyId,
+          name: result.name,
+          quantity: result.quantity,
+        }];
+      });
+    });
   }
 
-  removeInsumoRow(index: number): void {
-    if (this.insumosArray.length > 1) {
-      this.insumosArray.removeAt(index);
-    }
+  openEditInsumoDialog(index: number): void {
+    const currentInsumo = this._addedInsumos()[index];
+    const ref = this.matDialog.open(SupplySelectionDialogComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        mode: 'edit',
+        lineItem: {
+          supplyId: currentInsumo.supplyId,
+          name: currentInsumo.name,
+          quantity: currentInsumo.quantity,
+        },
+        index,
+      },
+    });
+
+    ref.afterClosed().subscribe((result: SupplySelectionDialogResult | undefined) => {
+      if (!result) return;
+
+      this._addedInsumos.update(items => {
+        const updated = [...items];
+        updated[index] = {
+          supplyId: result.supplyId,
+          name: result.name,
+          quantity: result.quantity,
+        };
+        return updated;
+      });
+    });
+  }
+
+  removeInsumo(index: number): void {
+    this._addedInsumos.update(items => items.filter((_, i) => i !== index));
   }
 
   getSelectedServicio(): Service | undefined {
     const servicioId = this.formGroup.get('servicioId')?.value;
-    return this.servicios.find(s => s.id === servicioId);
+    return this.serviceList().find(s => s.id === servicioId);
+  }
+
+  get servicioOptions(): SelectOption[] {
+    return this.serviceList().map(s => ({
+      value: s.id,
+      label: s.nombre,
+    }));
+  }
+
+  get clienteOptions(): SelectOption[] {
+    return this.customerList().map(c => ({
+      value: c.id,
+      label: c.name,
+    }));
   }
 
   getTotalHorasPreview(): number {
-    const servicio = this.getSelectedServicio();
-    if (!servicio) return 0;
-    return servicio.totalHoras || 0;
+    return this.totalHoras();
   }
 
-  getFechaFinPreview(): string {
-    const inicio = this.formGroup.get('fechaInicioEstimada')?.value;
-    const totalHoras = this.getTotalHorasPreview();
-
-    if (!inicio || !totalHoras) return '';
-
-    const startDate = new Date(inicio);
-    const result = this.calculateEndDatePreview(totalHoras, startDate);
-    return result.toLocaleString('es-CO');
+  openCreateCustomerDialog(): void {
+    const ref = this.matDialog.open(CustomerDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {},
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
+        const allCustomers = this.customerService.customers();
+        if (allCustomers.length > 0) {
+          this.customerList.set(allCustomers);
+          this.formGroup.patchValue({ customerId: allCustomers[0].id });
+        }
+      }
+    });
   }
 
-  /**
-   * Frontend date calculation (mirrors backend logic for preview)
-   */
-  private calculateEndDatePreview(totalHours: number, startDateTime: Date): Date {
-    if (!totalHours || totalHours <= 0) {
-      return new Date(startDateTime);
-    }
-
-    const BUSINESS_DAY_HOURS = 8;
-    const DAY_START_HOUR = 8;
-    const DAY_END_HOUR = 17;
-
-    const current = new Date(startDateTime);
-    let hoursRemaining = totalHours;
-
-    while (hoursRemaining > 0) {
-      const dayOfWeek = current.getDay();
-
-      if (dayOfWeek === 0) {
-        const monday = new Date(current);
-        monday.setDate(monday.getDate() + (1 - dayOfWeek));
-        current.setHours(DAY_START_HOUR, 0, 0, 0);
-        continue;
+  openCreateServiceDialog(): void {
+    const ref = this.matDialog.open(ServiceFormMolecule, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.lg,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {},
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
+        const allServices = this.serviceService.services();
+        if (allServices.length > 0) {
+          this.serviceList.set(allServices);
+          this.formGroup.patchValue({ servicioId: allServices[0].id });
+        }
       }
-      if (dayOfWeek === 6) {
-        const monday = new Date(current);
-        monday.setDate(monday.getDate() + (1 - dayOfWeek));
-        current.setHours(DAY_START_HOUR, 0, 0, 0);
-        continue;
-      }
-
-      const dayStart = new Date(current);
-      const dayEnd = new Date(current);
-      dayEnd.setHours(DAY_END_HOUR, 0, 0, 0);
-
-      if (current.getHours() < DAY_START_HOUR) {
-        dayStart.setHours(DAY_START_HOUR, 0, 0, 0);
-      }
-
-      const availableMs = dayEnd.getTime() - dayStart.getTime();
-      const availableHours = availableMs / (1000 * 60 * 60);
-
-      if (availableHours <= 0) {
-        const nextDay = new Date(current);
-        nextDay.setDate(nextDay.getDate() + 1);
-        nextDay.setHours(DAY_START_HOUR, 0, 0, 0);
-        current.setTime(nextDay.getTime());
-        continue;
-      }
-
-      if (hoursRemaining <= availableHours) {
-        const endMs = current.getTime() + hoursRemaining * 60 * 60 * 1000;
-        return new Date(endMs);
-      }
-
-      hoursRemaining -= availableHours;
-      const nextDay = new Date(current);
-      nextDay.setDate(nextDay.getDate() + 1);
-      nextDay.setHours(DAY_START_HOUR, 0, 0, 0);
-      current.setTime(nextDay.getTime());
-    }
-
-    return new Date(current);
+    });
   }
 
   onSubmit(): void {
@@ -227,18 +271,17 @@ export class ProgrammingFormDialogComponent {
       notas: value.notas,
     };
 
-    // Transform insumos
-    if (value.insumos && value.insumos.length > 0) {
-      dto.insumos = value.insumos.map((row: any) => ({
-        insumoId: row.insumoId,
-        cantidad: parseFloat(row.cantidad),
+    const addedInsumos = this._addedInsumos();
+    if (addedInsumos.length > 0) {
+      dto.insumos = addedInsumos.map(insumo => ({
+        insumoId: insumo.supplyId,
+        cantidad: insumo.quantity,
       }));
     }
 
     this.programmingService.createProgramado(dto).subscribe({
       next: () => {
-        this.dialog.closeAll();
-        this.snackBar.open('Servicio programado exitosamente', 'Cerrar', { duration: 3000 });
+        this.dialogRef.close(true);
       },
       error: (err) => {
         const message = err?.error?.message || 'Error al crear el servicio programado';

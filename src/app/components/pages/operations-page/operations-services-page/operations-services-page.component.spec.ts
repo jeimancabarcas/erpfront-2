@@ -12,8 +12,8 @@ import { describe, it, expect, vi } from 'vitest';
 
 describe('OperationsServicesPageComponent', () => {
   const mockServices: Service[] = [
-    { id: '1', nombre: 'Masaje terapéutico', descripcion: 'Masaje', precioBase: 50000, actividadIds: ['act-1'], isActive: true, createdAt: '', updatedAt: '' },
-    { id: '2', nombre: 'Consulta general', descripcion: 'Consulta', precioBase: 30000, actividadIds: [], isActive: true, createdAt: '', updatedAt: '' },
+    { id: '1', nombre: 'Masaje terapéutico', descripcion: 'Masaje', precioBase: 50000, actividades: [{ actividadId: 'act-1' }], isActive: true, createdAt: '', updatedAt: '' },
+    { id: '2', nombre: 'Consulta general', descripcion: 'Consulta', precioBase: 30000, actividades: [], isActive: true, createdAt: '', updatedAt: '' },
   ];
 
   it('should be created', async () => {
