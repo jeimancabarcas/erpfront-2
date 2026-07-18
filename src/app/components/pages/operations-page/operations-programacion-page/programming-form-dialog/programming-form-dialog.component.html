@@ -1,0 +1,114 @@
+<div class="p-6 max-h-[90vh] overflow-y-auto">
+  <form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
+
+    <!-- Cliente -->
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Cliente *</mat-label>
+      <mat-select formControlName="customerId">
+        @for (cliente of clientes; track cliente.id) {
+          <mat-option [value]="cliente.id">{{ cliente.name }}</mat-option>
+        }
+      </mat-select>
+      @if (formGroup.get('customerId')?.hasError('required') && formGroup.get('customerId')?.touched) {
+        <mat-error>El cliente es obligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Servicio -->
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Servicio *</mat-label>
+      <mat-select formControlName="servicioId">
+        @for (servicio of servicios; track servicio.id) {
+          <mat-option [value]="servicio.id">{{ servicio.nombre }}</mat-option>
+        }
+      </mat-select>
+      @if (formGroup.get('servicioId')?.hasError('required') && formGroup.get('servicioId')?.touched) {
+        <mat-error>El servicio es obligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Total Horas Preview -->
+    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4 mb-4">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Horas totales del servicio:</span>
+        <span class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+          {{ getTotalHorasPreview() > 0 ? getTotalHorasPreview() + 'h' : '—' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Fecha Inicio -->
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Fecha de Inicio *</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="fechaInicioEstimada" />
+      <mat-hint>Por defecto: hoy a las 08:00</mat-hint>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      @if (formGroup.get('fechaInicioEstimada')?.hasError('required') && formGroup.get('fechaInicioEstimada')?.touched) {
+        <mat-error>La fecha de inicio es obligatoria</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Fecha Fin (Preview - Read Only) -->
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Fecha Fin Estimada</mat-label>
+      <input matInput [value]="getFechaFinPreview()" disabled />
+      <mat-hint>Calculada automáticamente</mat-hint>
+    </mat-form-field>
+
+    <!-- Insumos -->
+    <div class="mb-4">
+      <div class="flex items-center justify-between mb-3">
+        <label class="text-sm font-bold text-gray-700 dark:text-gray-300">Insumos (Opcional)</label>
+        <button type="button" ui-button variant="ghost" size="sm" (click)="addInsumoRow()">
+          <span class="material-icons mr-1" style="font-size: 18px;">add</span>
+          Agregar Insumo
+        </button>
+      </div>
+
+      <div formArrayName="insumos" class="space-y-3">
+        @for (row of insumosArray.controls; track $index) {
+          <div [formGroupName]="$index" class="flex gap-2 items-end bg-gray-50 dark:bg-gray-800 p-3 rounded-xl">
+            <div class="flex-1">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Insumo</mat-label>
+                <mat-select formControlName="insumoId">
+                  @for (insumo of insumos; track insumo.id) {
+                    <mat-option [value]="insumo.id">{{ insumo.nombre }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="w-28">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Cantidad</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="cantidad" />
+              </mat-form-field>
+            </div>
+            <button type="button" ui-button variant="icon" (click)="removeInsumoRow($index)" ariaLabel="Quitar insumo" [disabled]="insumosArray.length === 1">
+              <span class="material-icons text-red-500">delete</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Notas -->
+    <mat-form-field appearance="outline" class="w-full mb-6">
+      <mat-label>Notas</mat-label>
+      <textarea matInput rows="3" formControlName="notas" maxlength="2000"></textarea>
+      <mat-hint align="end">{{ (formGroup.get('notas')?.value || '').length }} / 2000</mat-hint>
+    </mat-form-field>
+
+    <!-- Actions -->
+    <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+      <button type="button" ui-button variant="ghost" (click)="dialog.closeAll()">
+        Cancelar
+      </button>
+      <button type="submit" ui-button variant="primary" [disabled]="formGroup.invalid">
+        Programar Servicio
+      </button>
+    </div>
+
+  </form>
+</div>

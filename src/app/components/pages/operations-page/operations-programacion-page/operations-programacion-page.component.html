@@ -1,0 +1,188 @@
+<app-breadcrumb
+  [items]="[
+    { label: 'Operaciones', link: '/operaciones/servicios' },
+    { label: 'Programación' }
+  ]"
+/>
+
+<header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-6">
+  <div>
+    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-2">Programación</h1>
+    <p class="text-gray-500 dark:text-gray-400 font-medium">Programa y gestiona los servicios programados para tus clientes.</p>
+  </div>
+  <ui-button variant="primary" (clicked)="openScheduleDialog()">
+    <span class="material-icons mr-2">add</span>
+    Programar Nuevo Servicio
+  </ui-button>
+</header>
+
+<!-- Barra de Filtros -->
+<div class="bg-white dark:bg-gray-900 p-6 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- Estado Filter -->
+    <div>
+      <ui-select
+        label="Estado"
+        placeholder="Seleccionar estado"
+        [options]="estadoOptions"
+        [(value)]="estadoFilter"
+        (valueChange)="debouncedFilter()"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Cliente Filter -->
+    <div>
+      <ui-select
+        label="Cliente"
+        placeholder="Buscar cliente..."
+        [options]="clienteOptions"
+        [(value)]="clienteFilter"
+        (valueChange)="debouncedFilter()"
+        [searchable]="true"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Date From -->
+    <div>
+      <ui-datepicker
+        label="Desde"
+        [(value)]="dateFromFilter"
+        (valueChange)="debouncedFilter()"
+        [error]="dateRangeError() ? 'La fecha fin no puede ser anterior a la fecha inicio' : ''"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Date To -->
+    <div>
+      <ui-datepicker
+        label="Hasta"
+        [(value)]="dateToFilter"
+        (valueChange)="debouncedFilter()"
+        [error]="dateRangeError() ? 'La fecha fin no puede ser anterior a la fecha inicio' : ''"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <!-- Filter Actions -->
+  <div class="flex justify-end mt-4">
+    <ui-button
+      variant="ghost"
+      size="sm"
+      (clicked)="applyFilters()"
+      [loading]="loading()"
+    >
+      <span class="material-icons mr-1" style="font-size: 18px;">filter_list</span>
+      Aplicar
+    </ui-button>
+    <ui-button
+      variant="ghost"
+      size="sm"
+      (clicked)="clearFilters()"
+      [loading]="loading()"
+      class="ml-2"
+    >
+      <span class="material-icons mr-1" style="font-size: 18px;">clear</span>
+      Limpiar
+    </ui-button>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="bg-white dark:bg-gray-900 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden">
+  <ui-table
+    [columns]="tableColumns"
+    [data]="programados()"
+    [loading]="loading()"
+    emptyMessage="No se encontraron servicios programados"
+    emptyIcon="calendar_today"
+  >
+    <!-- Estado cell template -->
+    <ng-template uiTableCell="estado" let-item>
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ getEstadoBadgeClass(item.estado) }}">
+        {{ item.estado }}
+      </span>
+    </ng-template>
+
+    <!-- Cliente cell template -->
+    <ng-template uiTableCell="cliente" let-item>
+      <div class="font-bold text-gray-900 dark:text-gray-100">{{ item.customer?.name || '—' }}</div>
+    </ng-template>
+
+    <!-- Fecha Inicio cell template -->
+    <ng-template uiTableCell="fechaInicio" let-item>
+      <div class="text-sm text-gray-600 dark:text-gray-400">{{ formatDate(item.fechaInicioEstimada) }}</div>
+    </ng-template>
+
+    <!-- Actividades cell template -->
+    <ng-template uiTableCell="actividades" let-item>
+      <div class="flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-indigo-400 dark:bg-indigo-500"></div>
+        <span class="font-medium text-gray-600 dark:text-gray-400">
+          {{ getActivityCount(item) }}
+        </span>
+      </div>
+    </ng-template>
+
+    <!-- Total Horas cell template -->
+    <ng-template uiTableCell="totalHoras" let-item>
+      <span class="font-medium text-gray-600 dark:text-gray-400">{{ getTotalHorasText(item.totalHoras) }}</span>
+    </ng-template>
+
+    <!-- Acciones cell template -->
+    <ng-template uiTableCell="acciones" let-item>
+      <div class="flex items-center gap-2">
+        @if (item.estado === 'PENDIENTE') {
+          <ui-button variant="icon" (clicked)="changeEstado(item, 'INICIADO')" ariaLabel="Iniciar servicio">
+            <span class="material-icons text-green-500">play_arrow</span>
+          </ui-button>
+        }
+        @if (item.estado === 'INICIADO') {
+          <ui-button variant="icon" (clicked)="changeEstado(item, 'PAUSADO')" ariaLabel="Pausar servicio">
+            <span class="material-icons text-orange-500">pause</span>
+          </ui-button>
+          <ui-button variant="icon" (clicked)="changeEstado(item, 'FINALIZADO')" ariaLabel="Finalizar servicio">
+            <span class="material-icons text-green-500">check_circle</span>
+          </ui-button>
+        }
+        @if (item.estado === 'PAUSADO') {
+          <ui-button variant="icon" (clicked)="changeEstado(item, 'INICIADO')" ariaLabel="Reanudar servicio">
+            <span class="material-icons text-blue-500">play_arrow</span>
+          </ui-button>
+          <ui-button variant="icon" (clicked)="changeEstado(item, 'FINALIZADO')" ariaLabel="Finalizar servicio">
+            <span class="material-icons text-green-500">check_circle</span>
+          </ui-button>
+        }
+        @if (item.estado !== 'FINALIZADO' && item.estado !== 'CANCELADO') {
+          <ui-button variant="icon" (clicked)="cancelProgramado(item)" ariaLabel="Cancelar servicio">
+            <span class="material-icons text-red-500">cancel</span>
+          </ui-button>
+        }
+      </div>
+    </ng-template>
+  </ui-table>
+
+  <!-- Pagination -->
+  <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 dark:border-gray-800">
+    <div class="flex items-center gap-2">
+      <ui-button variant="ghost" size="sm" [disabled]="pageIndex() <= 1" (clicked)="onPageChange({pageIndex: pageIndex() - 2, pageSize: pageSize(), length: meta()?.total || 0})">
+        Anterior
+      </ui-button>
+      <span class="text-xs font-bold text-gray-400 dark:text-gray-500">
+        Página {{ pageIndex() }} de {{ totalPages() }}
+      </span>
+      <ui-button variant="ghost" size="sm" [disabled]="pageIndex() >= totalPages()" (clicked)="onPageChange({pageIndex: pageIndex(), pageSize: pageSize(), length: meta()?.total || 0})">
+        Siguiente
+      </ui-button>
+    </div>
+    <select (change)="onPageSizeChange($event)" class="text-xs font-bold text-gray-500 dark:text-gray-400 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none">
+      <option value="5">5 / pág</option>
+      <option value="10" selected>10 / pág</option>
+      <option value="25">25 / pág</option>
+      <option value="100">100 / pág</option>
+    </select>
+  </div>
+</div>

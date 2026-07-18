@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+::ng-deep {
+  .mat-mdc-dialog-surface {
+    padding: 0 !important;
+  }
+}

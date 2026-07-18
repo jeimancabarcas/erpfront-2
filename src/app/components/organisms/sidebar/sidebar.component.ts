@@ -204,6 +204,18 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
                 <span class="text-xs font-bold tracking-wide">Insumos</span>
               </div>
             </a>
+            <a
+              mat-list-item
+              routerLink="/operaciones/programacion"
+              routerLinkActive="!bg-indigo-50 dark:!bg-indigo-900/20 !text-indigo-600 dark:!text-indigo-300"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="!rounded-full !h-12 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-all flex items-center text-gray-700 dark:text-gray-300"
+            >
+              <div class="flex items-center gap-3 px-4">
+                <mat-icon class="!text-[20px]">calendar_today</mat-icon>
+                <span class="text-xs font-bold tracking-wide">Programación</span>
+              </div>
+            </a>
           </div>
         </div>
 

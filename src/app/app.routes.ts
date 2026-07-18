@@ -111,6 +111,10 @@ export const routes: Routes = [
       {
         path: 'insumos',
         loadComponent: () => import('./components/pages/operations-page/operations-supplies-page/operations-supplies-page.component').then(m => m.OperationsSuppliesPageComponent)
+      },
+      {
+        path: 'programacion',
+        loadComponent: () => import('./components/pages/operations-page/operations-programacion-page/operations-programacion-page.component').then(m => m.OperationsProgrammingPageComponent)
       }
     ]
   },
