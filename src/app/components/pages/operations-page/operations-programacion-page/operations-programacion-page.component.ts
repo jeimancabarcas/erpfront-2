@@ -292,7 +292,6 @@ export class OperationsProgrammingPageComponent implements OnInit {
   }
 
   getActivityCount(programado: ServicioProgramado): number {
-    if (programado.servicio?.totalHoras) return Math.ceil(programado.servicio.totalHoras);
-    return 0;
+    return programado.actividades?.length ?? 0;
   }
 }

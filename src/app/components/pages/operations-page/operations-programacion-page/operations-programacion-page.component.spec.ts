@@ -43,6 +43,12 @@ describe('OperationsProgrammingPageComponent', () => {
       fechaInicioEstimada: '2026-01-12T08:00:00Z',
       fechaFinEstimada: '2026-01-13T17:00:00Z',
       totalHoras: 16,
+      actividades: [
+        { id: 'act-1', actividadNombre: 'Actividad 1', actividadHorasEstimadas: 4 },
+        { id: 'act-2', actividadNombre: 'Actividad 2', actividadHorasEstimadas: 6 },
+        { id: 'act-3', actividadNombre: 'Actividad 3', actividadHorasEstimadas: 3 },
+        { id: 'act-4', actividadNombre: 'Actividad 4', actividadHorasEstimadas: 3 },
+      ],
       insumos: [],
       notas: '',
       motivoEstado: '',
@@ -57,6 +63,10 @@ describe('OperationsProgrammingPageComponent', () => {
       fechaInicioEstimada: '2026-01-13T08:00:00Z',
       fechaFinEstimada: '2026-01-13T17:00:00Z',
       totalHoras: 8,
+      actividades: [
+        { id: 'act-5', actividadNombre: 'Actividad 5', actividadHorasEstimadas: 4 },
+        { id: 'act-6', actividadNombre: 'Actividad 6', actividadHorasEstimadas: 4 },
+      ],
       insumos: [{ id: 'pin-1', insumo: { id: 'ins-1', nombre: 'Insumo A' }, cantidad: 2 }],
       notas: 'Notas de prueba',
       motivoEstado: '',
@@ -168,9 +178,15 @@ describe('OperationsProgrammingPageComponent', () => {
     expect(component.getTotalHorasText(null as any)).toBe('—');
   });
 
-  it('should get activity count from servicio', () => {
+  it('should get activity count from actividades array', () => {
     const programado = mockProgramados[0];
-    expect(component.getActivityCount(programado)).toBe(16);
+    expect(component.getActivityCount(programado)).toBe(4);
+  });
+
+  it('should return 0 when actividades is empty', () => {
+    const programado = mockProgramados[1];
+    programado.actividades = [];
+    expect(component.getActivityCount(programado)).toBe(0);
   });
 
   it('should clear filters and reload', () => {

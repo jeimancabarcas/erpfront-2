@@ -1,3 +1,10 @@
+export interface ServicioProgramadoActividad {
+  id: string;
+  actividadNombre: string;
+  actividadDescripcion?: string;
+  actividadHorasEstimadas?: number | null;
+}
+
 export interface ServicioProgramadoInsumo {
   id: string;
   insumo: {
@@ -22,6 +29,7 @@ export interface ServicioProgramado {
   fechaInicioEstimada: string;
   fechaFinEstimada: string | null;
   totalHoras: number;
+  actividades: ServicioProgramadoActividad[];
   insumos: ServicioProgramadoInsumo[];
   notas: string;
   motivoEstado: string;

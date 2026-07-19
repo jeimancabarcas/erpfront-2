@@ -9,7 +9,7 @@ import {
   type ValidatorFn,
   type AbstractControl,
 } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { Subject, type Subscription, distinctUntilChanged, debounceTime } from 'rxjs';
 import { SupplyService } from '../../../services/supply.service';
@@ -17,6 +17,8 @@ import type { Supply } from '../../../models/supply.model';
 import { ButtonAtom } from '../../atoms/button/button.component';
 import { SelectAtom, type SelectOption } from '../../atoms/select/select.component';
 import { TextInputComponent } from '../../atoms/text-input/text-input.component';
+import { SupplyFormMolecule } from '../../molecules/supply-form/supply-form.component';
+import { DIALOG_DEFAULTS, DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../shared/constants/dialog.config';
 
 // ── Interfaces ──
 
@@ -122,7 +124,9 @@ function minQuantityValidator(): ValidatorFn {
                 [loading]="isLoadingSupplies()"
                 [required]="true"
                 emptyText="No se encontraron insumos"
+                footerLabel="Crear nuevo insumo"
                 (searchChange)="onSupplySearch($event)"
+                (footerAction)="onCreateNewSupply()"
               />
             }
 
@@ -191,6 +195,7 @@ export class SupplySelectionDialogComponent implements OnInit, OnDestroy {
   protected dialogData = inject<SupplySelectionDialogData>(MAT_DIALOG_DATA, { optional: true });
   private fb = inject(FormBuilder);
   private supplyService = inject(SupplyService);
+  private matDialog = inject(MatDialog);
 
   // State signals
   loading = signal(false);
@@ -322,6 +327,28 @@ export class SupplySelectionDialogComponent implements OnInit, OnDestroy {
 
   onSupplySearch(query: string) {
     this.supplySearch$.next(query);
+  }
+
+  onCreateNewSupply() {
+    const ref = this.matDialog.open(SupplyFormMolecule, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {},
+    });
+
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
+        this.supplyService.loadSupplies({ limit: 100 }).subscribe({
+          next: () => {
+            const options = this.supplyOptions();
+            if (options.length > 0) {
+              this.selectSupply(options[0].value);
+            }
+          },
+        });
+      }
+    });
   }
 
   onSave() {
