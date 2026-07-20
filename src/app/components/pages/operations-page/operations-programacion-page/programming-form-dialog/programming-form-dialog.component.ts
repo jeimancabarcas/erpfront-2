@@ -100,6 +100,11 @@ export class ProgrammingFormDialogComponent implements OnInit {
   private _addedActividades = signal<AddedActividad[]>([]);
   addedActividades = this._addedActividades.asReadonly();
 
+  // Inline edit state for actividades table
+  editingIndex = signal<number | null>(null);
+  editValue = signal<{ nombre?: string; horasEstimadas?: string | null }>({});
+  editField = signal<'nombre' | 'horasEstimadas' | null>(null);
+
   // Cached raw API response for service activities
   private _lastServiceActivities = signal<ServiceActivity[]>([]);
 
@@ -323,6 +328,83 @@ export class ProgrammingFormDialogComponent implements OnInit {
     this._addedActividades.update(items => items.filter((_, i) => i !== index));
   }
 
+  // ── Inline Edit Methods ──
+
+  startEdit(index: number, field: 'nombre' | 'horasEstimadas'): void {
+    const actividad = this._addedActividades()[index];
+    if (!actividad) return;
+
+    this.editingIndex.set(index);
+    this.editField.set(field);
+    this.editValue.set({
+      nombre: actividad.nombre,
+      horasEstimadas: actividad.horasEstimadas?.toString() ?? null,
+    });
+  }
+
+  saveEdit(): void {
+    const index = this.editingIndex();
+    const field = this.editField();
+    const value = this.editValue();
+
+    if (index === null || !field) {
+      this.cancelEdit();
+      return;
+    }
+
+    // Validate
+    if (field === 'nombre') {
+      if (!this.validateNombre(value.nombre ?? '')) {
+        this.snackBar.open('El nombre no puede estar vacío y debe tener máximo 255 caracteres', 'Cerrar', { duration: 3000 });
+        return;
+      }
+    }
+
+    if (field === 'horasEstimadas') {
+      if (!this.validateHorasEstimadas(value.horasEstimadas ?? '')) {
+        this.snackBar.open('Las horas no pueden ser negativas', 'Cerrar', { duration: 3000 });
+        return;
+      }
+    }
+
+    // Commit
+    this._addedActividades.update(items => {
+      const updated = [...items];
+      const item = { ...updated[index] };
+
+      if (field === 'nombre') {
+        item.nombre = (value.nombre ?? '').trim();
+      } else if (field === 'horasEstimadas') {
+        const parsed = value.horasEstimadas ?? '';
+        item.horasEstimadas = parsed === '' ? 0 : parseFloat(parsed);
+      }
+
+      updated[index] = item;
+      return updated;
+    });
+
+    this.cancelEdit();
+  }
+
+  cancelEdit(): void {
+    this.editingIndex.set(null);
+    this.editValue.set({});
+    this.editField.set(null);
+  }
+
+  validateNombre(value: string): boolean {
+    const trimmed = value.trim();
+    return trimmed.length > 0 && trimmed.length <= 255;
+  }
+
+  validateHorasEstimadas(value: string | number | null): boolean {
+    if (value === null || value === '' || value === undefined) {
+      return true; // null is allowed
+    }
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return !isNaN(num) && num >= 0;
+  }
+
   getSelectedServicio(): Service | undefined {
     const servicioId = this.formGroup.get('servicioId')?.value;
     return this.serviceList().find(s => s.id === servicioId);
@@ -421,6 +503,8 @@ export class ProgrammingFormDialogComponent implements OnInit {
     if (addedActividades.length > 0) {
       dto.actividades = addedActividades.map(act => ({
         actividadId: act.actividadId,
+        nombre: act.nombre,
+        horasEstimadas: act.horasEstimadas ?? 0,
       }));
     }
 

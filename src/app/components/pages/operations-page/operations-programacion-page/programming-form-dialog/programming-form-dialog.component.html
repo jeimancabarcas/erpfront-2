@@ -80,16 +80,59 @@
               [columns]="actividadesColumns"
               [data]="addedActividades()"
             >
-              <ng-template uiTableCell="nombre" let-actividad>
-                <div class="flex flex-col">
-                  <span class="font-bold text-gray-900 dark:text-gray-100">{{ actividad.nombre }}</span>
-                </div>
+              <ng-template uiTableCell="nombre" let-actividad let-i="index">
+                @if (editingIndex() === i && editField() === 'nombre') {
+                  <input
+                    type="text"
+                    [value]="editValue().nombre ?? actividad.nombre"
+                    class="inline-edit-input"
+                    (blur)="saveEdit()"
+                    (keydown.enter)="$event.preventDefault(); saveEdit()"
+                    (keydown.escape)="cancelEdit()"
+                    autofocus
+                  />
+                } @else {
+                  <div class="flex flex-col">
+                    <span
+                      class="font-bold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+                      (click)="startEdit(i, 'nombre')"
+                    >{{ actividad.nombre }}</span>
+                    <span
+                      class="text-[10px] text-gray-300 dark:text-gray-600 cursor-pointer hover:text-indigo-400 dark:hover:text-indigo-300 mt-0.5 flex items-center gap-0.5"
+                      (click)="startEdit(i, 'nombre')"
+                    >
+                      <span class="material-icons" style="font-size: 12px;">edit</span>
+                      editar
+                    </span>
+                  </div>
+                }
               </ng-template>
 
-              <ng-template uiTableCell="horasEstimadas" let-actividad>
-                <span class="text-sm font-black text-gray-900 dark:text-gray-100">
-                  {{ actividad.horasEstimadas ?? '—' }}
-                </span>
+              <ng-template uiTableCell="horasEstimadas" let-actividad let-i="index">
+                @if (editingIndex() === i && editField() === 'horasEstimadas') {
+                  <input
+                    type="number"
+                    [value]="editValue().horasEstimadas ?? (actividad.horasEstimadas ?? '')"
+                    class="inline-edit-input"
+                    (blur)="saveEdit()"
+                    (keydown.enter)="$event.preventDefault(); saveEdit()"
+                    (keydown.escape)="cancelEdit()"
+                    autofocus
+                  />
+                } @else {
+                  <div class="flex flex-col items-center gap-0.5">
+                    <span class="text-sm font-black text-gray-900 dark:text-gray-100 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400" (click)="startEdit(i, 'horasEstimadas')">
+                      {{ actividad.horasEstimadas ?? '—' }}
+                    </span>
+                    <span
+                      class="text-[10px] text-gray-300 dark:text-gray-600 cursor-pointer hover:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-0.5"
+                      (click)="startEdit(i, 'horasEstimadas')"
+                    >
+                      <span class="material-icons" style="font-size: 12px;">edit</span>
+                      editar
+                    </span>
+                  </div>
+                }
               </ng-template>
 
               <ng-template uiTableCell="actions" let-actividad let-i="index">

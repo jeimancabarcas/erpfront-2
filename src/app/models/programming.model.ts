@@ -44,6 +44,8 @@ export interface CreateProgramadoInsumoDto {
 
 export interface CreateProgramadoActividadDto {
   actividadId: string;
+  nombre?: string;
+  horasEstimadas?: number | null;
 }
 
 export interface CreateProgramadoDto {
