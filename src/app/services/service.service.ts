@@ -88,14 +88,12 @@ export class ServiceService {
   }
 
   /**
-    * Gets activities associated with a service
-    */
+   * Gets activities associated with a service.
+   * Reuses getServiceById which already eager-loads the 'actividades' relation.
+   */
   getServiceActivities(serviceId: string): Observable<ServiceActivity[]> {
-    return this.http.get<any>(`${this.apiUrl}/${serviceId}/actividades`).pipe(
-      map((response: any) => {
-        const data = response?.data || response?.actividades || response || [];
-        return Array.isArray(data) ? data : [];
-      })
+    return this.getServiceById(serviceId).pipe(
+      map((service) => service.actividades || [])
     );
   }
 }
