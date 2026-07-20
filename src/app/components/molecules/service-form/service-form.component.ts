@@ -107,9 +107,7 @@ export interface ServiceActivityRow {
             </ui-table>
           }
 
-          <div class="flex gap-2 items-center">
-            <ui-select placeholder="Agregar actividad..." [options]="availableActivityOptions()" [value]="selectedActivity()" (valueChange)="onActivitySelect($event)" [searchable]="true" [loading]="activityLoading()" (searchChange)="onActivitySearch($event)" footerLabel="Crear nueva actividad" (footerAction)="openCreateActivityDialog()" />
-          </div>
+          <ui-select placeholder="Agregar actividad..." [options]="availableActivityOptions()" [value]="selectedActivity()" (valueChange)="onActivitySelect($event)" [searchable]="true" [loading]="activityLoading()" (searchChange)="onActivitySearch($event)" footerLabel="Crear nueva actividad" (footerAction)="openCreateActivityDialog()" [showSubtitle]="true" />
         </div>
 
         <div class="flex justify-end gap-3 pt-6">
@@ -164,7 +162,8 @@ export class ServiceFormMolecule implements OnInit {
       .filter(act => !this.serviceActivities().some(s => s.actividadId === act.id))
       .map(act => ({
         value: act.id,
-        label: act.nombre
+        label: act.nombre,
+        subtitle: act.descripcion || undefined,
       }))
   );
 
