@@ -17,6 +17,7 @@ import { Supply } from '../../../../../models/supply.model';
 import { CustomerService } from '../../../../../services/customer.service';
 import { ServiceService } from '../../../../../services/service.service';
 import { SupplyService } from '../../../../../services/supply.service';
+import { ActivityService } from '../../../../../services/activity.service';
 import { ProgrammingService } from '../../../../../services/programming.service';
 import { CreateProgramadoDto } from '../../../../../models/programming.model';
 import { DIALOG_DEFAULTS, DIALOG_WIDTHS, DIALOG_PANEL_CLASS } from '../../../../../shared/constants/dialog.config';
@@ -38,7 +39,7 @@ import {
   ActivitySelectionDialogData,
   ActivitySelectionDialogResult,
 } from '../../../../../components/organisms/activity-selection-dialog/activity-selection-dialog.component';
-import { calculateBusinessHoursEnd } from '../../../../../shared/utils/business-hours.utils';
+
 
 // ── Added Insumo Interface ──
 
@@ -83,6 +84,7 @@ export class ProgrammingFormDialogComponent implements OnInit {
   private customerService = inject(CustomerService);
   private serviceService = inject(ServiceService);
   private supplyService = inject(SupplyService);
+  private activityService = inject(ActivityService);
 
   formGroup!: FormGroup;
 
@@ -143,6 +145,15 @@ export class ProgrammingFormDialogComponent implements OnInit {
       },
       error: () => {
         this.snackBar.open('Error al cargar insumos', 'Cerrar', { duration: 3000 });
+      },
+    });
+
+    this.activityService.loadData({ limit: 100 }).subscribe({
+      next: () => {
+        // Activities available for selection in the dialog
+      },
+      error: () => {
+        this.snackBar.open('Error al cargar actividades', 'Cerrar', { duration: 3000 });
       },
     });
 
@@ -288,17 +299,16 @@ export class ProgrammingFormDialogComponent implements OnInit {
         const existing = [...items];
         const existingIds = new Set(existing.map(a => a.actividadId));
 
-        // Add new activities that aren't already in the list
+        // Use ActivityService.data() to resolve activity details from the ID list
+        const allActivities = this.activityService.data();
         result.activityIds.forEach(activityId => {
           if (!existingIds.has(activityId)) {
-            const activity = this._lastServiceActivities().find(
-              sa => sa.actividad?.id === activityId || sa.actividadId === activityId
-            );
+            const activity = allActivities.find(a => a.id === activityId);
             if (activity) {
               existing.push({
-                actividadId: activity.actividad?.id ?? activity.actividadId ?? '',
-                nombre: activity.actividad?.nombre ?? '',
-                horasEstimadas: activity.actividad?.horasEstimadas ?? null,
+                actividadId: activity.id,
+                nombre: activity.nombre,
+                horasEstimadas: activity.horasEstimadas ?? null,
               });
             }
           }
