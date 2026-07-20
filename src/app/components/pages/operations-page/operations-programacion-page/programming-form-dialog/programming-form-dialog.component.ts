@@ -12,7 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Customer } from '../../../../../models/customer.model';
-import { Service } from '../../../../../models/service.model';
+import { Service, ServiceActivity } from '../../../../../models/service.model';
 import { Supply } from '../../../../../models/supply.model';
 import { CustomerService } from '../../../../../services/customer.service';
 import { ServiceService } from '../../../../../services/service.service';
@@ -33,6 +33,11 @@ import {
   SupplySelectionDialogComponent,
   SupplySelectionDialogResult,
 } from '../../../../../components/organisms/supply-selection-dialog/supply-selection-dialog.component';
+import {
+  ActivitySelectionDialogComponent,
+  ActivitySelectionDialogData,
+  ActivitySelectionDialogResult,
+} from '../../../../../components/organisms/activity-selection-dialog/activity-selection-dialog.component';
 import { calculateBusinessHoursEnd } from '../../../../../shared/utils/business-hours.utils';
 
 // ── Added Insumo Interface ──
@@ -41,6 +46,14 @@ export interface AddedInsumo {
   supplyId: string;
   name: string;
   quantity: number;
+}
+
+// ── Added Actividad Interface ──
+
+export interface AddedActividad {
+  actividadId: string;
+  nombre: string;
+  horasEstimadas: number | null;
 }
 
 @Component({
@@ -81,6 +94,13 @@ export class ProgrammingFormDialogComponent implements OnInit {
   private _addedInsumos = signal<AddedInsumo[]>([]);
   addedInsumos = this._addedInsumos.asReadonly();
 
+  // Added actividades (signal-based array, not FormArray)
+  private _addedActividades = signal<AddedActividad[]>([]);
+  addedActividades = this._addedActividades.asReadonly();
+
+  // Cached raw API response for service activities
+  private _lastServiceActivities = signal<ServiceActivity[]>([]);
+
   selectedServicioId = signal<string>('');
   totalHoras = signal<number>(0);
 
@@ -88,6 +108,13 @@ export class ProgrammingFormDialogComponent implements OnInit {
   protected readonly insumosColumns: TableColumn[] = [
     { key: 'name', header: 'Insumo', width: '55%' },
     { key: 'quantity', header: 'Cantidad', align: 'center', width: '120px' },
+    { key: 'actions', header: '', width: '80px' },
+  ];
+
+  // Table columns for added actividades
+  protected readonly actividadesColumns: TableColumn[] = [
+    { key: 'nombre', header: 'Actividad', width: '55%' },
+    { key: 'horasEstimadas', header: 'Horas Est.', align: 'center', width: '100px' },
     { key: 'actions', header: '', width: '80px' },
   ];
 
@@ -134,11 +161,45 @@ export class ProgrammingFormDialogComponent implements OnInit {
     this.formGroup.get('servicioId')?.valueChanges.subscribe((servicioId: string) => {
       this.selectedServicioId.set(servicioId);
       const servicio = this.serviceList().find(s => s.id === servicioId);
-      this.totalHoras.set(servicio?.totalHoras ?? 0);
+      const baseHoras = servicio?.totalHoras ?? 0;
+      this.totalHoras.set(this.computeTotalHoras(baseHoras));
+
+      // Auto-load activities for selected service
+      if (servicioId) {
+        this.loadActivitiesForService(servicioId);
+      } else {
+        this._addedActividades.set([]);
+        this._lastServiceActivities.set([]);
+      }
     });
   }
 
   insumosCount = computed(() => this._addedInsumos().length);
+  actividadesCount = computed(() => this._addedActividades().length);
+
+  loadActivitiesForService(servicioId: string): void {
+    if (!servicioId) {
+      this._addedActividades.set([]);
+      this._lastServiceActivities.set([]);
+      return;
+    }
+
+    this.serviceService.getServiceActivities(servicioId).subscribe({
+      next: (activities: ServiceActivity[]) => {
+        this._lastServiceActivities.set(activities);
+        this._addedActividades.set(
+          activities.map(sa => ({
+            actividadId: sa.actividad?.id ?? sa.actividadId ?? '',
+            nombre: sa.actividad?.nombre ?? '',
+            horasEstimadas: sa.actividad?.horasEstimadas ?? null,
+          }))
+        );
+      },
+      error: () => {
+        this.snackBar.open('Error al cargar actividades del servicio', 'Cerrar', { duration: 3000 });
+      },
+    });
+  }
 
   openAddInsumoDialog(): void {
     const ref = this.matDialog.open(SupplySelectionDialogComponent, {
@@ -197,6 +258,47 @@ export class ProgrammingFormDialogComponent implements OnInit {
     this._addedInsumos.update(items => items.filter((_, i) => i !== index));
   }
 
+  openAddActividadesDialog(): void {
+    const currentActivityIds = this._addedActividades().map(a => a.actividadId);
+    const ref = this.matDialog.open(ActivitySelectionDialogComponent, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.md,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: { selectedActivityIds: currentActivityIds } as ActivitySelectionDialogData,
+    });
+
+    ref.afterClosed().subscribe((result: ActivitySelectionDialogResult | undefined) => {
+      if (!result) return;
+
+      this._addedActividades.update(items => {
+        const existing = [...items];
+        const existingIds = new Set(existing.map(a => a.actividadId));
+
+        // Add new activities that aren't already in the list
+        result.activityIds.forEach(activityId => {
+          if (!existingIds.has(activityId)) {
+            const activity = this._lastServiceActivities().find(
+              sa => sa.actividad?.id === activityId || sa.actividadId === activityId
+            );
+            if (activity) {
+              existing.push({
+                actividadId: activity.actividad?.id ?? activity.actividadId ?? '',
+                nombre: activity.actividad?.nombre ?? '',
+                horasEstimadas: activity.actividad?.horasEstimadas ?? null,
+              });
+            }
+          }
+        });
+
+        return existing;
+      });
+    });
+  }
+
+  removeActividad(index: number): void {
+    this._addedActividades.update(items => items.filter((_, i) => i !== index));
+  }
+
   getSelectedServicio(): Service | undefined {
     const servicioId = this.formGroup.get('servicioId')?.value;
     return this.serviceList().find(s => s.id === servicioId);
@@ -216,8 +318,20 @@ export class ProgrammingFormDialogComponent implements OnInit {
     }));
   }
 
+  private computeTotalHoras(baseHoras: number): number {
+    const activities = this._addedActividades();
+    const activitiesHours = activities.reduce(
+      (sum, act) => sum + (act.horasEstimadas ?? 0),
+      0
+    );
+    return baseHoras + activitiesHours;
+  }
+
   getTotalHorasPreview(): number {
-    return this.totalHoras();
+    const servicioId = this.formGroup.get('servicioId')?.value;
+    const servicio = this.serviceList().find(s => s.id === servicioId);
+    const baseHoras = servicio?.totalHoras ?? 0;
+    return this.computeTotalHoras(baseHoras);
   }
 
   openCreateCustomerDialog(): void {
@@ -276,6 +390,13 @@ export class ProgrammingFormDialogComponent implements OnInit {
       dto.insumos = addedInsumos.map(insumo => ({
         insumoId: insumo.supplyId,
         cantidad: insumo.quantity,
+      }));
+    }
+
+    const addedActividades = this._addedActividades();
+    if (addedActividades.length > 0) {
+      dto.actividades = addedActividades.map(act => ({
+        actividadId: act.actividadId,
       }));
     }
 

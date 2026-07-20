@@ -42,11 +42,16 @@ export interface CreateProgramadoInsumoDto {
   cantidad: number;
 }
 
+export interface CreateProgramadoActividadDto {
+  actividadId: string;
+}
+
 export interface CreateProgramadoDto {
   customerId: string;
   servicioId: string;
   fechaInicioEstimada: string;
   insumos?: CreateProgramadoInsumoDto[];
+  actividades?: CreateProgramadoActividadDto[];
   notas?: string;
 }
 
