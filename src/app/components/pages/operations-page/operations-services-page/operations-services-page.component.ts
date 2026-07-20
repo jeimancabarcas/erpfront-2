@@ -209,7 +209,7 @@ export class OperationsServicesPageComponent implements OnInit {
 
   getTotalHorasText(service: Service): string {
     const total = this.getTotalHoras(service);
-    if (total === 0 && (!service.actividades || service.actividades.length === 0)) return '—';
+    if (isNaN(total) || total === 0) return '—';
     const hours = Math.floor(total);
     const minutes = Math.round((total - hours) * 60);
     return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
@@ -219,7 +219,8 @@ export class OperationsServicesPageComponent implements OnInit {
     if (!service.actividades || service.actividades.length === 0) return 0;
     return service.actividades.reduce((total, act) => {
       const horas = act.actividad?.horasEstimadas ?? 0;
-      return total + (horas || 0);
+      const valor = Number(horas);
+      return total + (isNaN(valor) ? 0 : valor);
     }, 0);
   }
 
