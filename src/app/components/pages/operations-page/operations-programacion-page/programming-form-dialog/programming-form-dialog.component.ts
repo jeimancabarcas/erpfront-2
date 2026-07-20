@@ -184,21 +184,35 @@ export class ProgrammingFormDialogComponent implements OnInit {
       return;
     }
 
-    this.serviceService.getServiceActivities(servicioId).subscribe({
-      next: (activities: ServiceActivity[]) => {
-        this._lastServiceActivities.set(activities);
-        this._addedActividades.set(
-          activities.map(sa => ({
-            actividadId: sa.actividad?.id ?? sa.actividadId ?? '',
-            nombre: sa.actividad?.nombre ?? '',
-            horasEstimadas: sa.actividad?.horasEstimadas ?? null,
-          }))
-        );
-      },
-      error: () => {
-        this.snackBar.open('Error al cargar actividades del servicio', 'Cerrar', { duration: 3000 });
-      },
-    });
+    // First check if the service is already loaded in the list (with activities eager-loaded)
+    const servicio = this.serviceList().find(s => s.id === servicioId);
+    if (servicio?.actividades && servicio.actividades.length > 0) {
+      this._lastServiceActivities.set(servicio.actividades);
+      this._addedActividades.set(
+        servicio.actividades.map(sa => ({
+          actividadId: sa.actividad?.id ?? sa.actividadId ?? '',
+          nombre: sa.actividad?.nombre ?? '',
+          horasEstimadas: sa.actividad?.horasEstimadas ?? null,
+        }))
+      );
+    } else {
+      // Fallback: fetch from API if not in local list
+      this.serviceService.getServiceActivities(servicioId).subscribe({
+        next: (activities: ServiceActivity[]) => {
+          this._lastServiceActivities.set(activities);
+          this._addedActividades.set(
+            activities.map(sa => ({
+              actividadId: sa.actividad?.id ?? sa.actividadId ?? '',
+              nombre: sa.actividad?.nombre ?? '',
+              horasEstimadas: sa.actividad?.horasEstimadas ?? null,
+            }))
+          );
+        },
+        error: () => {
+          this.snackBar.open('Error al cargar actividades del servicio', 'Cerrar', { duration: 3000 });
+        },
+      });
+    }
   }
 
   openAddInsumoDialog(): void {
