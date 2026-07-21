@@ -147,6 +147,8 @@ export class OperationsProgrammingPageComponent implements OnInit {
     const params: QueryParams = {
       page: this.pageIndex(),
       limit: this.pageSize(),
+      sortBy: 'createdAt',
+      order: 'DESC',
     };
 
     if (this.estadoFilter()) params['estado'] = this.estadoFilter();

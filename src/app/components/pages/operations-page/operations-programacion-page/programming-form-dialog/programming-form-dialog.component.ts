@@ -208,7 +208,7 @@ export class ProgrammingFormDialogComponent implements OnInit {
         servicio.actividades.map(sa => ({
           actividadId: sa.actividad?.id ?? sa.actividadId ?? '',
           nombre: sa.actividad?.nombre ?? '',
-          horasEstimadas: sa.actividad?.horasEstimadas ?? null,
+          horasEstimadas: sa.actividad?.horasEstimadas != null ? Number(sa.actividad.horasEstimadas) : null,
         }))
       );
     } else {
@@ -220,7 +220,7 @@ export class ProgrammingFormDialogComponent implements OnInit {
             activities.map(sa => ({
               actividadId: sa.actividad?.id ?? sa.actividadId ?? '',
               nombre: sa.actividad?.nombre ?? '',
-              horasEstimadas: sa.actividad?.horasEstimadas ?? null,
+          horasEstimadas: sa.actividad?.horasEstimadas != null ? Number(sa.actividad.horasEstimadas) : null,
             }))
           );
         },
@@ -313,7 +313,7 @@ export class ProgrammingFormDialogComponent implements OnInit {
               existing.push({
                 actividadId: activity.id,
                 nombre: activity.nombre,
-                horasEstimadas: activity.horasEstimadas ?? null,
+                horasEstimadas: activity.horasEstimadas != null ? Number(activity.horasEstimadas) : null,
               });
             }
           }
@@ -345,23 +345,27 @@ export class ProgrammingFormDialogComponent implements OnInit {
   saveEdit(): void {
     const index = this.editingIndex();
     const field = this.editField();
-    const value = this.editValue();
 
     if (index === null || !field) {
       this.cancelEdit();
       return;
     }
 
+    // Read the live DOM value instead of relying on editValue signal
+    const input = (document.activeElement as HTMLInputElement | null);
+    const domValue = input?.value ?? '';
+
     // Validate
     if (field === 'nombre') {
-      if (!this.validateNombre(value.nombre ?? '')) {
+      if (!this.validateNombre(domValue)) {
         this.snackBar.open('El nombre no puede estar vacío y debe tener máximo 255 caracteres', 'Cerrar', { duration: 3000 });
         return;
       }
     }
 
     if (field === 'horasEstimadas') {
-      if (!this.validateHorasEstimadas(value.horasEstimadas ?? '')) {
+      const num = domValue === '' ? 0 : parseFloat(domValue);
+      if (isNaN(num) || num < 0) {
         this.snackBar.open('Las horas no pueden ser negativas', 'Cerrar', { duration: 3000 });
         return;
       }
@@ -373,10 +377,10 @@ export class ProgrammingFormDialogComponent implements OnInit {
       const item = { ...updated[index] };
 
       if (field === 'nombre') {
-        item.nombre = (value.nombre ?? '').trim();
+        item.nombre = domValue.trim();
       } else if (field === 'horasEstimadas') {
-        const parsed = value.horasEstimadas ?? '';
-        item.horasEstimadas = parsed === '' ? 0 : parseFloat(parsed);
+        const num = domValue === '' ? 0 : parseFloat(domValue);
+        item.horasEstimadas = isNaN(num) ? 0 : num;
       }
 
       updated[index] = item;
@@ -504,7 +508,7 @@ export class ProgrammingFormDialogComponent implements OnInit {
       dto.actividades = addedActividades.map(act => ({
         actividadId: act.actividadId,
         nombre: act.nombre,
-        horasEstimadas: act.horasEstimadas ?? 0,
+        horasEstimadas: Number(act.horasEstimadas) || 0,
       }));
     }
 
