@@ -161,6 +161,11 @@
             <span class="material-icons text-red-500">cancel</span>
           </ui-button>
         }
+        @if (item.estado === 'CANCELADO') {
+          <ui-button variant="icon" (clicked)="deleteProgramado(item)" ariaLabel="Eliminar servicio">
+            <span class="material-icons text-red-600">delete</span>
+          </ui-button>
+        }
       </div>
     </ng-template>
   </ui-table>

@@ -13,6 +13,8 @@ import {
   ChangeStateDto,
   CancelDto,
 } from '../../../../models/programming.model';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import { QueryParams } from '../../../../models/pagination.model';
 import { ButtonAtom } from '../../../../components/atoms/button/button.component';
 import { TableComponent, TableColumn } from '../../../../components/atoms/table/table.component';
@@ -23,6 +25,7 @@ import { ProgrammingFormDialogComponent } from './programming-form-dialog/progra
 import { ConfirmDeleteDialogOrganism, ConfirmDeleteData } from '../../../../components/organisms/confirm-delete-dialog/confirm-delete-dialog.component';
 import { DIALOG_WIDTHS, DIALOG_PANEL_CLASS, DIALOG_DEFAULTS } from '../../../../shared/constants/dialog.config';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-operations-programming-page',
@@ -41,6 +44,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 export class OperationsProgrammingPageComponent implements OnInit {
   private dialog = inject(MatDialog);
+  private http = inject(HttpClient);
   private programmingService = inject(ProgrammingService);
   private customerService = inject(CustomerService);
   private serviceService = inject(ServiceService);
@@ -265,6 +269,32 @@ export class OperationsProgrammingPageComponent implements OnInit {
         this.programmingService.cancelProgramado(programado.id, dto).subscribe({
           next: () => {},
           error: () => this.snackBar.open('Error al cancelar el servicio', 'Cerrar', { duration: 3000 })
+        });
+      }
+    });
+  }
+
+  deleteProgramado(programado: ServicioProgramado) {
+    const ref = this.dialog.open(ConfirmDeleteDialogOrganism, {
+      ...DIALOG_DEFAULTS,
+      width: DIALOG_WIDTHS.sm,
+      panelClass: DIALOG_PANEL_CLASS,
+      data: {
+        title: '¿Eliminar servicio?',
+        message: 'Esta acción eliminará permanentemente el servicio cancelado. No se puede deshacer.',
+        itemName: programado.customer?.name || 'Servicio',
+        confirmText: 'Sí, eliminar',
+      } as ConfirmDeleteData,
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        const url = `${environment.apiUrl}/operational/servicio-programados/${programado.id}`;
+        this.http.delete(url).subscribe({
+          next: () => {
+            this.snackBar.open('Servicio eliminado correctamente', 'Cerrar', { duration: 3000 });
+            this.loadData();
+          },
+          error: () => this.snackBar.open('Error al eliminar el servicio', 'Cerrar', { duration: 3000 })
         });
       }
     });
